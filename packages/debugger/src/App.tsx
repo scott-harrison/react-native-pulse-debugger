@@ -1,55 +1,52 @@
 import { useState } from 'react';
-import { Sidebar } from './components/layout/Sidebar';
-import { ReduxPanel } from './components/panels/ReduxPanel';
-import { NetworkPanel } from './components/panels/NetworkPanel';
-import { ConsolePanel } from './components/panels/ConsolePanel';
-import {
-  mockReduxState,
-  mockActions,
-  mockNetworkRequests,
-  mockNetworkResponses,
-  mockConsoleLogs,
-} from './mocks/data';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { WelcomeScreen } from './screens/WelcomeScreen';
+import { DebuggerLayout } from './components/layout/DebuggerLayout';
+import { ConsoleScreen } from './screens/ConsoleScreen';
+import { ReduxScreen } from './screens/ReduxScreen';
+import { NetworkScreen } from './screens/NetworkScreen';
+import { StorageScreen } from './screens/StorageScreen';
+import { PerformanceScreen } from './screens/PerformanceScreen';
 
 export function App() {
-  const [selectedTool, setSelectedTool] = useState('redux');
   const [isConnected, setIsConnected] = useState(true); // This would come from your connection logic
 
-  const renderPanel = () => {
-    switch (selectedTool) {
-      case 'redux':
-        return <ReduxPanel state={mockReduxState} actions={mockActions} />;
-      case 'network':
-        return <NetworkPanel requests={mockNetworkRequests} responses={mockNetworkResponses} />;
-      case 'console':
-        return <ConsolePanel logs={mockConsoleLogs} />;
-      case 'storage':
-        return (
-          <div className="p-6 text-gray-400">
-            <h2 className="text-lg font-semibold text-white mb-4">Storage Panel</h2>
-            <p>Coming soon...</p>
-          </div>
-        );
-      case 'performance':
-        return (
-          <div className="p-6 text-gray-400">
-            <h2 className="text-lg font-semibold text-white mb-4">Performance Panel</h2>
-            <p>Coming soon...</p>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+  const router = createBrowserRouter([
+    {
+      path: '/',
+      element: <WelcomeScreen isConnected={isConnected} />,
+    },
+    {
+      path: '/debugger',
+      element: <DebuggerLayout isConnected={isConnected} />,
+      children: [
+        {
+          index: true,
+          element: <Navigate to="/debugger/console" replace />,
+        },
+        {
+          path: 'console',
+          element: <ConsoleScreen />,
+        },
+        {
+          path: 'redux',
+          element: <ReduxScreen />,
+        },
+        {
+          path: 'network',
+          element: <NetworkScreen />,
+        },
+        {
+          path: 'storage',
+          element: <StorageScreen />,
+        },
+        {
+          path: 'performance',
+          element: <PerformanceScreen />,
+        },
+      ],
+    },
+  ]);
 
-  return (
-    <div className="flex h-screen bg-gray-950 text-white overflow-hidden">
-      <Sidebar
-        selectedTool={selectedTool}
-        onToolSelect={setSelectedTool}
-        isConnected={isConnected}
-      />
-      <main className="flex-1 overflow-hidden">{renderPanel()}</main>
-    </div>
-  );
+  return <RouterProvider router={router} />;
 }

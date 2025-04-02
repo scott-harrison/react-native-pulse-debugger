@@ -1,58 +1,64 @@
-import { useState } from 'react'
-import { cn } from '@/lib/utils'
+import React from 'react';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface JSONViewerProps {
-  data: any
-  level?: number
-  initialExpanded?: boolean
-  objectKey?: string
-  isLast?: boolean
+  data: any;
+  level?: number;
+  initialExpanded?: boolean;
+  objectKey?: string;
+  isLast?: boolean;
+  className?: string;
 }
 
 function getDataType(value: any): string {
-  if (value === null) return 'null'
-  if (Array.isArray(value)) return 'array'
-  return typeof value
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return 'array';
+  return typeof value;
 }
 
 function getObjectSize(obj: any): number {
-  if (!obj || typeof obj !== 'object') return 0
-  return Object.keys(obj).length
+  if (!obj || typeof obj !== 'object') return 0;
+  return Object.keys(obj).length;
 }
 
-export function JSONViewer({ 
-  data, 
-  level = 0, 
-  initialExpanded = true, 
+export function JSONViewer({
+  data,
+  level = 0,
+  initialExpanded = true,
   objectKey,
-  isLast 
+  isLast,
+  className,
 }: JSONViewerProps) {
-  const [isExpanded, setIsExpanded] = useState(initialExpanded)
-  const dataType = getDataType(data)
-  const isCollapsible = ['object', 'array'].includes(dataType) && data !== null
-  const indent = level * 16
+  const [isExpanded, setIsExpanded] = useState(initialExpanded);
+  const dataType = getDataType(data);
+  const isCollapsible = ['object', 'array'].includes(dataType) && data !== null;
+  const indent = level * 16;
 
   if (!isCollapsible) {
-    const formattedValue = dataType === 'string' ? `"${data}"` : String(data)
+    const formattedValue = dataType === 'string' ? `"${data}"` : String(data);
     return (
-      <span className={cn(
-        "whitespace-nowrap",
-        {
-          'text-yellow-400': dataType === 'string',
-          'text-blue-400': dataType === 'number',
-          'text-purple-400': dataType === 'boolean',
-          'text-gray-400': dataType === 'null',
-        }
-      )}>
+      <span
+        className={cn(
+          'whitespace-nowrap',
+          {
+            'text-yellow-400': dataType === 'string',
+            'text-blue-400': dataType === 'number',
+            'text-purple-400': dataType === 'boolean',
+            'text-gray-400': dataType === 'null',
+          },
+          className
+        )}
+      >
         {formattedValue}
         {!isLast && <span className="text-zinc-400">,</span>}
       </span>
-    )
+    );
   }
 
-  const entries = Object.entries(data)
-  const isArray = Array.isArray(data)
-  const isEmpty = entries.length === 0
+  const entries = Object.entries(data);
+  const isArray = Array.isArray(data);
+  const isEmpty = entries.length === 0;
 
   if (isEmpty) {
     return (
@@ -60,25 +66,20 @@ export function JSONViewer({
         <span className="text-zinc-400">{isArray ? '[]' : '{}'}</span>
         {!isLast && <span className="text-zinc-400">,</span>}
       </div>
-    )
+    );
   }
 
   const renderCollapsed = () => (
     <div className="inline-flex items-center">
-      <span className="text-zinc-600">
-        {`${entries.length} ${isArray ? 'items' : 'keys'}...`}
-      </span>
+      <span className="text-zinc-600">{`${entries.length} ${isArray ? 'items' : 'keys'}...`}</span>
       <span className="text-zinc-400">{isArray ? ']' : '}'}</span>
       {!isLast && <span className="text-zinc-400">,</span>}
     </div>
-  )
+  );
 
   return (
     <div className="whitespace-pre leading-6">
-      <div
-        style={{ paddingLeft: level ? indent : 0 }}
-        className="flex items-baseline gap-1"
-      >
+      <div style={{ paddingLeft: level ? indent : 0 }} className="flex items-baseline gap-1">
         {objectKey ? (
           <>
             <button
@@ -104,9 +105,10 @@ export function JSONViewer({
       {isExpanded && (
         <>
           {entries.map(([key, value], index) => {
-            const isLastItem = index === entries.length - 1
-            const childDataType = getDataType(value)
-            const isChildCollapsible = ['object', 'array'].includes(childDataType) && value !== null
+            const isLastItem = index === entries.length - 1;
+            const childDataType = getDataType(value);
+            const isChildCollapsible =
+              ['object', 'array'].includes(childDataType) && value !== null;
 
             return (
               <div
@@ -115,12 +117,13 @@ export function JSONViewer({
                 className="flex items-baseline gap-1 leading-6"
               >
                 {isChildCollapsible ? (
-                  <JSONViewer 
-                    data={value} 
+                  <JSONViewer
+                    data={value}
                     level={level + 1}
                     initialExpanded={level < 1}
                     objectKey={isArray ? undefined : key}
                     isLast={isLastItem}
+                    className={className}
                   />
                 ) : (
                   <>
@@ -132,26 +135,24 @@ export function JSONViewer({
                         <span className="ml-1" />
                       </>
                     )}
-                    <JSONViewer 
-                      data={value} 
+                    <JSONViewer
+                      data={value}
                       level={level + 1}
                       initialExpanded={level < 1}
                       isLast={isLastItem}
+                      className={className}
                     />
                   </>
                 )}
               </div>
-            )
+            );
           })}
-          <div 
-            style={{ paddingLeft: indent }}
-            className="leading-6"
-          >
+          <div style={{ paddingLeft: indent }} className="leading-6">
             <span className="text-zinc-400">{isArray ? ']' : '}'}</span>
             {!isLast && <span className="text-zinc-400">,</span>}
           </div>
         </>
       )}
     </div>
-  )
-} 
+  );
+}
