@@ -1,5 +1,5 @@
 {
-  "name": "react-native-pulse-debugger",
+  "name": "@pulse/root",
   "packageManager": "yarn@4.8.1",
   "private": true,
   "workspaces": [
