@@ -70,6 +70,29 @@ export const store = configureStore({
 });
 ```
 
+## Network Monitoring
+
+The library provides a network middleware that intercepts fetch requests and sends them to the debugger:
+
+```js
+import { pulseNetworkMiddleware } from 'react-native-pulse-debugger';
+
+// Apply the middleware to the global fetch
+global.fetch = pulseNetworkMiddleware(fetch);
+
+// Now all fetch requests will be monitored
+fetch('https://api.example.com/data')
+  .then((response) => response.json())
+  .then((data) => console.log(data));
+```
+
+The network middleware captures:
+
+- Request details (URL, method, headers, body)
+- Response details (status, headers, body)
+- Timing information (duration)
+- Error information (if the request fails)
+
 ## Features
 
 - Real-time debugging through WebSocket connection
@@ -82,6 +105,7 @@ export const store = configureStore({
 - Type-safe API with TypeScript support
 - Development-only initialization
 - Redux middleware for automatic action tracking
+- Network middleware for automatic request tracking
 
 ## Contributing
 

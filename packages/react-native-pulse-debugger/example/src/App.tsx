@@ -17,7 +17,11 @@ import {
   incrementByAmount,
   incrementAsync,
 } from './features/counter/counterSlice';
-import { initializePulse, getPulse } from 'react-native-pulse-debugger';
+import {
+  initializePulse,
+  getPulse,
+  pulseNetworkMiddleware,
+} from 'react-native-pulse-debugger';
 import type { ConnectionStatus } from 'react-native-pulse-debugger';
 
 // Initialize Pulse Debugger
@@ -27,6 +31,9 @@ initializePulse({
   autoConnect: true,
   retryInterval: 5000,
 });
+
+// Apply network middleware
+global.fetch = pulseNetworkMiddleware(fetch);
 
 function Counter() {
   const count = useAppSelector((state) => state.counter.value);
@@ -67,6 +74,21 @@ function Counter() {
     addLog('Started async increment');
   };
 
+  const handleTestNetwork = async () => {
+    try {
+      addLog('Sending network request...');
+      const response = await fetch(
+        'https://jsonplaceholder.typicode.com/posts/1'
+      );
+      const data = await response.json();
+      addLog(`Network request successful: ${data.title.substring(0, 20)}...`);
+    } catch (error) {
+      addLog(
+        `Network request failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -101,6 +123,13 @@ function Counter() {
 
         <TouchableOpacity style={styles.button} onPress={handleIncrementAsync}>
           <Text style={styles.buttonText}>Async Increment</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.networkButton]}
+          onPress={handleTestNetwork}
+        >
+          <Text style={styles.buttonText}>Test Network</Text>
         </TouchableOpacity>
       </View>
 
@@ -191,6 +220,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     minWidth: 120,
     alignItems: 'center',
+  },
+  networkButton: {
+    backgroundColor: '#34C759',
   },
   buttonText: {
     color: '#FFF',
