@@ -3,6 +3,7 @@ import {
   validateEnvironment,
   getDefaultHost,
   DEFAULT_PORT,
+  getAppName,
 } from './environment';
 import type { ConnectionConfig, ConnectionStatus, DebugEvent } from './types';
 
@@ -19,6 +20,7 @@ class PulseConnection {
       port: config?.port ?? DEFAULT_PORT,
       autoConnect: config?.autoConnect ?? true,
       retryInterval: config?.retryInterval ?? 3000,
+      appName: config?.appName ?? getAppName(),
     };
 
     if (validateEnvironment() && this.config.autoConnect) {
@@ -52,7 +54,7 @@ class PulseConnection {
     this.send('handshake', {
       platform: Platform.OS,
       version: Platform.Version,
-      appName: 'YourAppName', // This should be configurable
+      appName: this.config.appName,
     });
   };
 

@@ -9,6 +9,7 @@ export interface ConnectionConfig {
   port?: number;
   autoConnect?: boolean;
   retryInterval?: number;
+  appName?: string;
 }
 
 export interface DebugEvent {

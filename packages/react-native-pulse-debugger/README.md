@@ -21,6 +21,7 @@ initializePulse({
   port: 8080,
   autoConnect: true,
   retryInterval: 5000,
+  appName: 'MyApp', // Optional: Override the automatically detected app name
 });
 
 // Get the debugger instance
@@ -53,6 +54,27 @@ pulse?.send('error', {
   stack: 'Error: Network request failed...',
 });
 ```
+
+## Configuration Options
+
+| Option          | Type    | Default                                   | Description                                                   |
+| --------------- | ------- | ----------------------------------------- | ------------------------------------------------------------- |
+| `host`          | string  | 'localhost' (iOS) or '10.0.2.2' (Android) | The host to connect to                                        |
+| `port`          | number  | 8973                                      | The port to connect to                                        |
+| `autoConnect`   | boolean | true                                      | Whether to automatically connect on initialization            |
+| `retryInterval` | number  | 3000                                      | The interval in milliseconds to retry connection              |
+| `appName`       | string  | Auto-detected                             | The name of your app (automatically detected if not provided) |
+
+### Automatic App Name Detection
+
+The library automatically detects your app name using the following methods in order of preference:
+
+1. **Expo Apps**: If your app is built with Expo, it uses the name from `expoConfig.name`
+2. **iOS Apps**: Uses the app name from `SettingsManager` (AppDisplayName or AppName)
+3. **Android Apps**: Uses the app name from `AppInfo` or extracts it from the package name
+4. **Fallback**: If all else fails, it uses 'React Native App'
+
+You can override this automatic detection by providing your own `appName` in the configuration.
 
 ## Redux Integration
 
