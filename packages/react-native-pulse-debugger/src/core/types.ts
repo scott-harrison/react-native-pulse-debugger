@@ -18,6 +18,12 @@ export interface DebugEvent {
   timestamp: number;
 }
 
+export interface BatchEventPayload {
+  events: DebugEvent[];
+  count: number;
+  timestamp: number;
+}
+
 export interface ConnectionState {
   status: ConnectionStatus;
   lastError?: Error;

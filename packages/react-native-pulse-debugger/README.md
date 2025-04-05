@@ -76,6 +76,40 @@ The library automatically detects your app name using the following methods in o
 
 You can override this automatic detection by providing your own `appName` in the configuration.
 
+### Performance Optimization
+
+The library includes built-in performance optimizations to reduce WebSocket traffic and improve overall performance:
+
+```js
+import { getPulse } from 'react-native-pulse-debugger';
+
+// Get the debugger instance
+const pulse = getPulse();
+
+// Configure performance settings
+pulse?.updateEventConfig({
+  // Maximum number of events to batch together before sending
+  batchSize: 20,
+
+  // Maximum time in milliseconds to wait before sending a batch
+  batchTimeout: 500,
+
+  // Minimum time in milliseconds between sending events of the same type
+  throttleInterval: 50,
+
+  // Whether to enable batching of events
+  enableBatching: true,
+
+  // Whether to enable throttling of events
+  enableThrottling: true,
+});
+
+// Manually flush queued events if needed
+pulse?.flushEvents();
+```
+
+These optimizations help reduce the number of WebSocket messages sent to the debugger, which can improve performance, especially in apps with high event frequency.
+
 ## Redux Integration
 
 The library provides a Redux middleware that automatically sends actions and state changes to the debugger:

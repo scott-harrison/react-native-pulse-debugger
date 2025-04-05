@@ -6,6 +6,8 @@ import {
   getAppName,
 } from './environment';
 import type { ConnectionConfig, ConnectionStatus, DebugEvent } from './types';
+import { EventManager } from './eventManager';
+import type { EventManagerConfig } from './eventManager';
 
 class PulseConnection {
   private ws: WebSocket | null = null;
@@ -13,6 +15,7 @@ class PulseConnection {
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private status: ConnectionStatus = 'disconnected';
   private reconnectAttempts = 0;
+  private eventManager: EventManager;
 
   constructor(config?: ConnectionConfig) {
     this.config = {
@@ -22,6 +25,9 @@ class PulseConnection {
       retryInterval: config?.retryInterval ?? 3000,
       appName: config?.appName ?? getAppName(),
     };
+
+    // Create event manager with default config
+    this.eventManager = new EventManager(this.sendToWebSocket.bind(this));
 
     if (validateEnvironment() && this.config.autoConnect) {
       this.connect();
@@ -90,22 +96,50 @@ class PulseConnection {
     }, this.config.retryInterval);
   };
 
-  public send = (type: string, payload: unknown) => {
+  /**
+   * Sends data directly to the WebSocket connection
+   * @param event The event to send
+   */
+  private sendToWebSocket = (event: DebugEvent) => {
     if (!validateEnvironment() || !this.ws || this.status !== 'connected') {
       return;
     }
-
-    const event: DebugEvent = {
-      type,
-      payload,
-      timestamp: Date.now(),
-    };
 
     try {
       this.ws.send(JSON.stringify(event));
     } catch (error) {
       console.warn('[react-native-pulse] Failed to send message:', error);
     }
+  };
+
+  /**
+   * Sends an event to the debugger, with performance optimizations
+   * @param type The type of event
+   * @param payload The event payload
+   */
+  public send = (type: string, payload: unknown) => {
+    const event: DebugEvent = {
+      type,
+      payload,
+      timestamp: Date.now(),
+    };
+
+    this.eventManager.send(event);
+  };
+
+  /**
+   * Flushes any queued events immediately
+   */
+  public flushEvents = () => {
+    this.eventManager.flush();
+  };
+
+  /**
+   * Updates the event manager configuration
+   * @param config The new configuration
+   */
+  public updateEventConfig = (config: Partial<EventManagerConfig>) => {
+    this.eventManager.updateConfig(config);
   };
 
   public disconnect = () => {

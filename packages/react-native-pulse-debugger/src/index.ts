@@ -6,4 +6,6 @@ export type {
   ConnectionStatus,
   DebugEvent,
   ConnectionState,
+  BatchEventPayload,
 } from './core/types';
+export type { EventManagerConfig } from './core/eventManager';
