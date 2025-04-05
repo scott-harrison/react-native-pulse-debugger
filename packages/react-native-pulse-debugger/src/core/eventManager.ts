@@ -104,7 +104,7 @@ export class EventManager {
 
     // If there's only one event, send it directly
     if (this.queue.length === 1) {
-      this.sendEvent(this.queue[0]);
+      this.sendEvent(this.queue[0]!);
     } else {
       // Otherwise, send a batch event containing all queued events
       this.sendEvent({

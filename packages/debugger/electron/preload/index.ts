@@ -1,27 +1,22 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron';
 
-// --------- Expose some API to the Renderer process ---------
+console.log('Setting up electron bridge in preload script');
+
+// Expose protected methods that allow the renderer process to use
+// the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
-    send: (channel: string, data?: any) => {
-      console.log('Renderer sending:', channel, data);
-      ipcRenderer.send(channel, data);
+    on: (channel: string, func: (...args: any[]) => void) => {
+      console.log('Registering IPC listener for channel:', channel);
+      ipcRenderer.on(channel, func);
     },
-    on: (channel: string, callback: (data: any) => void) => {
-      console.log('Renderer listening on:', channel);
-      const subscription = (_event: any, data: any) => {
-        console.log('Renderer received:', channel, data);
-        callback(data);
-      }
-      ipcRenderer.on(channel, subscription);
+    removeListener: (channel: string, func: (...args: any[]) => void) => {
+      console.log('Removing IPC listener for channel:', channel);
+      ipcRenderer.removeListener(channel, func);
     },
-    invoke: (channel: string, data?: any) => {
-      console.log('Renderer invoking:', channel, data);
-      return ipcRenderer.invoke(channel, data);
-    },
-    removeAllListeners: (channel: string) => {
-      console.log('Renderer removing listeners:', channel);
-      ipcRenderer.removeAllListeners(channel);
+    send: (channel: string, ...args: any[]) => {
+      console.log('Sending IPC message on channel:', channel, 'Args:', args);
+      ipcRenderer.send(channel, ...args);
     },
   },
 });
@@ -30,29 +25,29 @@ contextBridge.exposeInMainWorld('electron', {
 function domReady(condition: DocumentReadyState[] = ['complete', 'interactive']) {
   return new Promise(resolve => {
     if (condition.includes(document.readyState)) {
-      resolve(true)
+      resolve(true);
     } else {
       document.addEventListener('readystatechange', () => {
         if (condition.includes(document.readyState)) {
-          resolve(true)
+          resolve(true);
         }
-      })
+      });
     }
-  })
+  });
 }
 
 const safeDOM = {
   append(parent: HTMLElement, child: HTMLElement) {
     if (!Array.from(parent.children).find(e => e === child)) {
-      return parent.appendChild(child)
+      return parent.appendChild(child);
     }
   },
   remove(parent: HTMLElement, child: HTMLElement) {
     if (Array.from(parent.children).find(e => e === child)) {
-      return parent.removeChild(child)
+      return parent.removeChild(child);
     }
   },
-}
+};
 
 /**
  * https://tobiasahlin.com/spinkit
@@ -61,7 +56,7 @@ const safeDOM = {
  * https://matejkustec.github.io/SpinThatShit
  */
 function useLoading() {
-  const className = `loaders-css__square-spin`
+  const className = `loaders-css__square-spin`;
   const styleContent = `
 @keyframes square-spin {
   25% { transform: perspective(100px) rotateX(180deg) rotateY(0); }
@@ -88,34 +83,34 @@ function useLoading() {
   background: #282c34;
   z-index: 9;
 }
-    `
-  const oStyle = document.createElement('style')
-  const oDiv = document.createElement('div')
+    `;
+  const oStyle = document.createElement('style');
+  const oDiv = document.createElement('div');
 
-  oStyle.id = 'app-loading-style'
-  oStyle.innerHTML = styleContent
-  oDiv.className = 'app-loading-wrap'
-  oDiv.innerHTML = `<div class="${className}"><div></div></div>`
+  oStyle.id = 'app-loading-style';
+  oStyle.innerHTML = styleContent;
+  oDiv.className = 'app-loading-wrap';
+  oDiv.innerHTML = `<div class="${className}"><div></div></div>`;
 
   return {
     appendLoading() {
-      safeDOM.append(document.head, oStyle)
-      safeDOM.append(document.body, oDiv)
+      safeDOM.append(document.head, oStyle);
+      safeDOM.append(document.body, oDiv);
     },
     removeLoading() {
-      safeDOM.remove(document.head, oStyle)
-      safeDOM.remove(document.body, oDiv)
+      safeDOM.remove(document.head, oStyle);
+      safeDOM.remove(document.body, oDiv);
     },
-  }
+  };
 }
 
 // ----------------------------------------------------------------------
 
-const { appendLoading, removeLoading } = useLoading()
-domReady().then(appendLoading)
+const { appendLoading, removeLoading } = useLoading();
+domReady().then(appendLoading);
 
-window.onmessage = (ev) => {
-  ev.data.payload === 'removeLoading' && removeLoading()
-}
+window.onmessage = ev => {
+  ev.data.payload === 'removeLoading' && removeLoading();
+};
 
-setTimeout(removeLoading, 4999)
+setTimeout(removeLoading, 4999);

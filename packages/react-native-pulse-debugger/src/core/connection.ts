@@ -55,31 +55,61 @@ class PulseConnection {
   };
 
   private handleOpen = () => {
+    console.log('[react-native-pulse] WebSocket connection opened');
     this.status = 'connected';
     this.reconnectAttempts = 0;
-    this.send('handshake', {
+
+    const handshakePayload = {
       platform: Platform.OS,
       version: Platform.Version,
       appName: this.config.appName,
-    });
+      timestamp: Date.now(),
+    };
+    // console.log('[react-native-pulse] Sending handshake:', handshakePayload);
+    this.send('handshake', handshakePayload);
   };
 
   private handleClose = () => {
+    // console.log('[react-native-pulse] WebSocket connection closed');
     this.status = 'disconnected';
     this.scheduleReconnect();
   };
 
   private handleError = (error: Event) => {
+    console.log('[react-native-pulse] WebSocket connection error:', error);
     this.status = 'error';
-    console.warn('[react-native-pulse] Connection error:', error);
     this.scheduleReconnect();
   };
 
   private handleMessage = (event: WebSocketMessageEvent) => {
     try {
       const data = JSON.parse(event.data);
-      // Handle incoming messages from the debugger tool
-      console.log('[react-native-pulse] Received:', data);
+
+      // Handle ping messages by responding with a pong silently
+      if (data.type === 'ping') {
+        // Only respond to pings if we're already connected
+        if (
+          this.status === 'connected' &&
+          this.ws &&
+          this.ws.readyState === WebSocket.OPEN
+        ) {
+          // Send pong without logging or using the event manager
+          // This is more efficient for frequent ping/pong messages
+          this.ws.send(
+            JSON.stringify({
+              type: 'pong',
+              payload: { timestamp: Date.now() },
+              timestamp: Date.now(),
+            })
+          );
+        }
+        return; // Exit early for ping messages
+      }
+
+      // Only log non-ping/pong messages to reduce console noise
+      if (data.type !== 'pong') {
+        console.log('[react-native-pulse] Received:', data);
+      }
     } catch (error) {
       console.warn('[react-native-pulse] Failed to parse message:', error);
     }
@@ -154,6 +184,11 @@ class PulseConnection {
   };
 
   public getStatus = (): ConnectionStatus => this.status;
+
+  public reconnect = () => {
+    this.disconnect();
+    this.connect();
+  };
 }
 
 // Create a singleton instance

@@ -10,7 +10,7 @@ import {
   Smartphone,
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useConnection } from '@/lib/connection';
 
 type Tool = {
   id: string;
@@ -26,33 +26,12 @@ const tools: Tool[] = [
   { id: 'performance', name: 'Performance', icon: <Zap className="w-4 h-4" /> },
 ];
 
-interface SidebarProps {
-  isConnected: boolean;
-}
-
-export function Sidebar({ isConnected }: SidebarProps) {
+export function Sidebar() {
   const location = useLocation();
-  const [connectionTime, setConnectionTime] = useState<string>('');
-  const [deviceInfo, setDeviceInfo] = useState<{ name: string; platform: string } | null>(null);
-
-  useEffect(() => {
-    if (isConnected) {
-      const now = new Date();
-      setConnectionTime(now.toLocaleTimeString());
-
-      // In a real app, you would get this from your RN app
-      setDeviceInfo({
-        name: 'iPhone 14 Pro',
-        platform: 'iOS 17.2',
-      });
-    } else {
-      setConnectionTime('');
-      setDeviceInfo(null);
-    }
-  }, [isConnected]);
+  const { connectionState } = useConnection();
 
   return (
-    <div className="w-[240px] h-screen bg-zinc-900 border-r border-zinc-800 flex flex-col">
+    <div className="w-[240px] h-[calc(100vh-36px)] bg-zinc-900 border-r border-zinc-800 flex flex-col">
       <div className="p-4 border-b border-zinc-800">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-blue-500/10 rounded-lg">
@@ -70,7 +49,7 @@ export function Sidebar({ isConnected }: SidebarProps) {
         </div>
       </div>
 
-      <nav className="flex-1 p-2">
+      <nav className="overflow-y-auto p-2">
         {tools.map(tool => (
           <NavLink
             key={tool.id}
@@ -90,48 +69,51 @@ export function Sidebar({ isConnected }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="border-t border-zinc-800">
-        {isConnected && deviceInfo && (
+      <div className="mt-auto border-t border-zinc-800">
+        {connectionState.appInfo && (
           <div className="px-4 py-2 border-b border-zinc-800">
             <div className="flex items-center gap-2 bg-zinc-800/50 rounded-md p-2">
               <Smartphone className="w-3.5 h-3.5 text-zinc-400" />
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium text-zinc-200 truncate">{deviceInfo.name}</div>
-                <div className="text-[10px] text-zinc-500 font-medium">{deviceInfo.platform}</div>
+                <div className="text-xs font-medium text-zinc-200 truncate">
+                  {connectionState.appInfo.name}
+                </div>
+                <div className="text-[10px] text-zinc-500 font-medium">
+                  {connectionState.appInfo.platform} {connectionState.appInfo.version}
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        <div className="px-4 py-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div
-                className={cn(
-                  'w-2 h-2 rounded-full',
-                  isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'
-                )}
-              />
-              <span
-                className={cn(
-                  'text-xs font-medium',
-                  isConnected ? 'text-emerald-400' : 'text-red-400'
-                )}
-              >
-                {isConnected ? 'Connected' : 'Disconnected'}
-              </span>
+        {connectionState.status === 'connected' && (
+          <div className="px-4 py-2">
+            <div className="flex items-center gap-2 text-zinc-500">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              <div className="text-[10px] font-medium">
+                Connected at {connectionState.connectedAt}
+              </div>
             </div>
-            {isConnected && (
-              <div className="text-[10px] text-zinc-500 font-medium">{connectionTime}</div>
-            )}
           </div>
-        </div>
-      </div>
-
-      <div className="p-3 border-t border-zinc-800">
-        <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-medium">
-          React Native Pulse Debugger
-        </div>
+        )}
+        {connectionState.status !== 'connected' && connectionState.connectedAt && (
+          <div className="px-4 py-2">
+            <div className="flex items-center gap-2 text-zinc-500">
+              <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+              <div className="text-[10px] font-medium">
+                Last connected at {connectionState.connectedAt}
+              </div>
+            </div>
+          </div>
+        )}
+        {connectionState.status !== 'connected' && !connectionState.connectedAt && (
+          <div className="px-4 py-2">
+            <div className="flex items-center gap-2 text-zinc-500">
+              <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+              <div className="text-[10px] font-medium">Waiting for connection...</div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
