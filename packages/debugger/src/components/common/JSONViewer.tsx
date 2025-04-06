@@ -9,6 +9,8 @@ interface JSONViewerProps {
   objectKey?: string;
   isLast?: boolean;
   className?: string;
+  compareWith?: any;
+  showDiff?: boolean;
 }
 
 function getDataType(value: any): string {
@@ -29,11 +31,85 @@ export function JSONViewer({
   objectKey,
   isLast,
   className,
+  compareWith,
+  showDiff = false,
 }: JSONViewerProps) {
   const [isExpanded, setIsExpanded] = useState(initialExpanded);
   const dataType = getDataType(data);
   const isCollapsible = ['object', 'array'].includes(dataType) && data !== null;
   const indent = level * 16;
+
+  const renderDiffValue = (key: string, value: any, level: number = 0) => {
+    if (!showDiff || !compareWith) {
+      return renderValue(value, level);
+    }
+
+    const oldValue = compareWith[key];
+    const hasChanged = JSON.stringify(oldValue) !== JSON.stringify(value);
+
+    if (!hasChanged) {
+      return renderValue(value, level);
+    }
+
+    if (oldValue === undefined) {
+      return <span className="text-green-400">{renderValue(value, level)}</span>;
+    }
+
+    if (value === undefined) {
+      return <span className="text-red-400">{renderValue(oldValue, level)}</span>;
+    }
+
+    return (
+      <div className="pl-4">
+        <div className="text-red-400">- {renderValue(oldValue, level)}</div>
+        <div className="text-green-400">+ {renderValue(value, level)}</div>
+      </div>
+    );
+  };
+
+  const renderValue = (value: any, level: number = 0): React.ReactNode => {
+    if (value === null) return <span className="text-gray-500">null</span>;
+    if (value === undefined) return <span className="text-gray-500">undefined</span>;
+
+    switch (typeof value) {
+      case 'string':
+        return <span className="text-green-400">"{value}"</span>;
+      case 'number':
+        return <span className="text-yellow-400">{value}</span>;
+      case 'boolean':
+        return <span className="text-purple-400">{value.toString()}</span>;
+      case 'object':
+        if (Array.isArray(value)) {
+          return (
+            <div style={{ marginLeft: level * 20 }}>
+              [
+              {value.map((item, index) => (
+                <div key={index} style={{ marginLeft: 20 }}>
+                  {renderValue(item, level + 1)}
+                  {index < value.length - 1 && ','}
+                </div>
+              ))}
+              ]
+            </div>
+          );
+        }
+        return (
+          <div style={{ marginLeft: level * 20 }}>
+            {'{'}
+            {Object.entries(value).map(([key, val], index, arr) => (
+              <div key={key} style={{ marginLeft: 20 }}>
+                <span className="text-blue-400">"{key}"</span>:{' '}
+                {renderDiffValue(key, val, level + 1)}
+                {index < arr.length - 1 && ','}
+              </div>
+            ))}
+            {'}'}
+          </div>
+        );
+      default:
+        return <span>{String(value)}</span>;
+    }
+  };
 
   if (!isCollapsible) {
     const formattedValue = dataType === 'string' ? `"${data}"` : String(data);
@@ -78,7 +154,7 @@ export function JSONViewer({
   );
 
   return (
-    <div className="whitespace-pre leading-6">
+    <div className="whitespace-pre">
       <div style={{ paddingLeft: level ? indent : 0 }} className="flex items-baseline gap-1">
         {objectKey ? (
           <>
@@ -114,7 +190,7 @@ export function JSONViewer({
               <div
                 key={key}
                 style={{ paddingLeft: indent + 16 }}
-                className="flex items-baseline gap-1 leading-6"
+                className="flex items-baseline gap-1"
               >
                 {isChildCollapsible ? (
                   <JSONViewer
@@ -124,6 +200,8 @@ export function JSONViewer({
                     objectKey={isArray ? undefined : key}
                     isLast={isLastItem}
                     className={className}
+                    compareWith={compareWith}
+                    showDiff={showDiff}
                   />
                 ) : (
                   <>
@@ -141,13 +219,15 @@ export function JSONViewer({
                       initialExpanded={level < 1}
                       isLast={isLastItem}
                       className={className}
+                      compareWith={compareWith}
+                      showDiff={showDiff}
                     />
                   </>
                 )}
               </div>
             );
           })}
-          <div style={{ paddingLeft: indent }} className="leading-6">
+          <div style={{ paddingLeft: indent }}>
             <span className="text-zinc-400">{isArray ? ']' : '}'}</span>
             {!isLast && <span className="text-zinc-400">,</span>}
           </div>

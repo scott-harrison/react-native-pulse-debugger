@@ -35,6 +35,17 @@ export interface EventManagerConfig {
   enableThrottling?: boolean;
 }
 
+interface ReduxAction {
+  type: string;
+  payload?: any;
+  timestamp?: number;
+}
+
+interface ReduxEventPayload {
+  action?: ReduxAction;
+  [key: string]: any;
+}
+
 /**
  * Manages the sending of debug events to the Pulse debugger.
  * Provides batching and throttling capabilities to improve performance.
@@ -45,6 +56,7 @@ export class EventManager {
   private batchTimeout: NodeJS.Timeout | null = null;
   private config: Required<EventManagerConfig>;
   private sendFunction: (event: DebugEvent) => void;
+  private lastSentEvents: Record<string, DebugEvent> = {};
 
   constructor(
     sendFunction: (event: DebugEvent) => void,
@@ -65,8 +77,44 @@ export class EventManager {
    * @param event The event to send
    */
   public send(event: DebugEvent): void {
+    // Since type is required in DebugEvent interface, we can safely assert it's a string
+    const eventType = event.type as string;
+
+    // Special handling for Redux events to prevent duplicates
+    if (eventType === 'redux') {
+      const payload = event.payload as ReduxEventPayload;
+      const actionData = payload?.action || payload;
+      if (actionData && typeof actionData === 'object') {
+        const actionType = (actionData as ReduxAction).type || 'UNKNOWN_ACTION';
+        const actionTimestamp =
+          (actionData as ReduxAction).timestamp || event.timestamp;
+        const actionKey = `${actionType}-${actionTimestamp}`;
+
+        // Check if we've already sent this exact action
+        if (this.lastSentEvents[actionKey]) {
+          console.log(
+            `[react-native-pulse] Skipping duplicate Redux action: ${actionType}`
+          );
+          return;
+        }
+
+        // Store this action as the last sent action of this type
+        this.lastSentEvents[actionKey] = event;
+
+        // Clean up old entries to prevent memory leaks
+        const now = Date.now();
+        Object.keys(this.lastSentEvents).forEach((key) => {
+          const timestamp = parseInt(key.split('-')[1], 10);
+          if (now - timestamp > 5000) {
+            // Remove entries older than 5 seconds
+            delete this.lastSentEvents[key];
+          }
+        });
+      }
+    }
+
     // If throttling is enabled, check if we should throttle this event
-    if (this.config.enableThrottling && this.shouldThrottleEvent(event.type)) {
+    if (this.config.enableThrottling && this.shouldThrottleEvent(eventType)) {
       return;
     }
 

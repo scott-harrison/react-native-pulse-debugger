@@ -16,6 +16,7 @@ class PulseConnection {
   private status: ConnectionStatus = 'disconnected';
   private reconnectAttempts = 0;
   private eventManager: EventManager;
+  private reduxStore: any = null;
 
   constructor(config?: ConnectionConfig) {
     this.config = {
@@ -94,7 +95,6 @@ class PulseConnection {
           this.ws.readyState === WebSocket.OPEN
         ) {
           // Send pong without logging or using the event manager
-          // This is more efficient for frequent ping/pong messages
           this.ws.send(
             JSON.stringify({
               type: 'pong',
@@ -104,6 +104,29 @@ class PulseConnection {
           );
         }
         return; // Exit early for ping messages
+      }
+
+      // Handle request for Redux state
+      if (data.type === 'request-redux-state') {
+        console.log('[react-native-pulse] Received request for Redux state');
+        if (this.reduxStore) {
+          const currentState = this.reduxStore.getState();
+          console.log(
+            '[react-native-pulse] Sending current Redux state:',
+            currentState
+          );
+          // Send directly through WebSocket to bypass event manager batching
+          this.sendToWebSocket({
+            type: 'redux-state',
+            payload: { state: currentState },
+            timestamp: Date.now(),
+          });
+        } else {
+          console.warn(
+            '[react-native-pulse] Redux store not available for state request'
+          );
+        }
+        return;
       }
 
       // Only log non-ping/pong messages to reduce console noise
@@ -188,6 +211,15 @@ class PulseConnection {
   public reconnect = () => {
     this.disconnect();
     this.connect();
+  };
+
+  public setReduxStore = (store: any) => {
+    console.log('[react-native-pulse] Setting Redux store reference');
+    this.reduxStore = store;
+  };
+
+  public getReduxStore = () => {
+    return this.reduxStore;
   };
 }
 

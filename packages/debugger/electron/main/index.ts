@@ -51,6 +51,13 @@ let wsClient: WebSocket | null = null;
 const WS_PORT = 8080;
 let heartbeatInterval: NodeJS.Timeout | null = null;
 
+// Track the last processed Redux action to prevent duplicates
+let lastProcessedReduxAction: {
+  type: string;
+  timestamp: number;
+  payload: any;
+} | null = null;
+
 function startWebSocketServer() {
   if (wsServer) {
     console.log('WebSocket server already running');
@@ -94,14 +101,20 @@ function startWebSocketServer() {
         try {
           const message = JSON.parse(data.toString());
 
+          // Validate message structure
+          if (!message || typeof message !== 'object') {
+            console.warn('Received invalid message format:', data.toString());
+            return;
+          }
+
           // Handle handshake message
           if (message.type === 'handshake') {
             // console.log('Received handshake message:', message.payload);
             const appInfo = {
-              name: message.payload.appName || 'Unknown App',
-              platform: message.payload.platform || 'Unknown',
-              version: message.payload.version || 'Unknown',
-              timestamp: message.payload.timestamp || Date.now(),
+              name: message.payload?.appName || 'Unknown App',
+              platform: message.payload?.platform || 'Unknown',
+              version: message.payload?.version || 'Unknown',
+              timestamp: message.payload?.timestamp || Date.now(),
             };
 
             // Notify renderer process
@@ -113,21 +126,21 @@ function startWebSocketServer() {
             } else {
               console.log('Window not available to send handshake response');
             }
+            return;
           }
 
           // Handle pong message (response to our ping) silently
           if (message.type === 'pong') {
-            // Don't notify the renderer process for pong messages
-            // This prevents the UI from flickering between connected/disconnected states
             return; // Exit early for pong messages
           }
 
-          // Forward message to renderer process (except pong messages)
-          if (win && message.type !== 'pong') {
+          // Forward all other messages to the renderer process
+          if (win) {
+            // Forward the parsed message directly
             win.webContents.send('ws-message', message);
           }
         } catch (error) {
-          console.error('Failed to parse message:', error);
+          console.error('Error processing WebSocket message:', error);
         }
       });
 

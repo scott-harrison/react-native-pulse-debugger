@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import { useReduxStore, ReduxAction } from '../store/reduxStore';
 
 // Add type declaration for Electron IPC renderer
 declare global {
@@ -15,7 +16,7 @@ declare global {
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
-export interface ConnectionState {
+interface ConnectionState {
   status: ConnectionStatus;
   appInfo: {
     name: string;
@@ -23,173 +24,212 @@ export interface ConnectionState {
     version: string;
   } | null;
   error: string | null;
-  connectedAt: string | null;
   lastHeartbeat: number | null;
-}
-
-interface ConnectionContextType {
-  connectionState: ConnectionState;
-  sendMessage: (type: string, payload: unknown) => void;
+  connectedAt: string | null;
 }
 
 const defaultConnectionState: ConnectionState = {
   status: 'disconnected',
   appInfo: null,
   error: null,
-  connectedAt: null,
   lastHeartbeat: null,
+  connectedAt: null,
 };
 
-const ConnectionContext = createContext<ConnectionContextType>({
-  connectionState: defaultConnectionState,
-  sendMessage: () => {},
-});
+// Heartbeat timeout in milliseconds (5 seconds)
+const HEARTBEAT_TIMEOUT = 5000;
 
-export const useConnection = () => useContext(ConnectionContext);
+interface ConnectionContextType {
+  connectionState: ConnectionState;
+  sendMessage: (type: string, payload: unknown) => void;
+}
+
+const ConnectionContext = createContext<ConnectionContextType | undefined>(undefined);
 
 interface ConnectionProviderProps {
   children: ReactNode;
 }
 
-// Heartbeat timeout in milliseconds (5 seconds)
-const HEARTBEAT_TIMEOUT = 5000;
-
 export function ConnectionProvider({ children }: ConnectionProviderProps): React.ReactElement {
   const [connectionState, setConnectionState] = useState<ConnectionState>(defaultConnectionState);
+  const { setState, addAction } = useReduxStore();
   const heartbeatTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastHeartbeatRef = useRef<number | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Function to check if we've received a heartbeat recently
-  const checkHeartbeat = () => {
-    const now = Date.now();
-    const lastHeartbeat = lastHeartbeatRef.current;
+  // Track the last processed action to prevent duplicates
+  const lastProcessedActionRef = useRef<{
+    type: string;
+    timestamp: number;
+    payload: any;
+  } | null>(null);
 
-    if (lastHeartbeat && now - lastHeartbeat > HEARTBEAT_TIMEOUT) {
-      // Only update the state if we're currently connected
-      setConnectionState(prev => {
-        if (prev.status === 'connected') {
-          console.log('No heartbeat received for too long, marking as disconnected');
-          return {
-            ...prev,
-            status: 'disconnected',
-            error: 'Connection lost - no response from app',
-            // Don't clear connectedAt to maintain the connection time
-            // Don't clear appInfo to maintain the app information
-            lastHeartbeat: null,
-          };
-        }
-        return prev;
-      });
+  // Function to check if the connection is still alive based on the last heartbeat
+  const checkHeartbeat = () => {
+    if (
+      connectionState.status === 'connected' &&
+      connectionState.lastHeartbeat &&
+      Date.now() - connectionState.lastHeartbeat > HEARTBEAT_TIMEOUT
+    ) {
+      console.log('Heartbeat timeout, marking as disconnected');
+      setConnectionState(prev => ({
+        ...prev,
+        status: 'disconnected',
+      }));
     }
   };
 
-  // Function to request reconnection from the main process
+  // Function to request reconnection
   const requestReconnection = () => {
-    console.log('Requesting reconnection from main process');
-    window.electron.ipcRenderer.send('request-reconnection');
+    if (connectionState.status === 'disconnected') {
+      console.log('Requesting reconnection');
+      window.electron.ipcRenderer.send('request-reconnection');
+    }
   };
 
   useEffect(() => {
     // Listen for connection status updates from the main process
     const handleConnectionStatus = (_event: any, status: ConnectionStatus) => {
-      console.log('Renderer received connection status:', status);
-
-      // Clear any existing connection timeout
-      if (connectionTimeoutRef.current) {
-        clearTimeout(connectionTimeoutRef.current);
-        connectionTimeoutRef.current = null;
-      }
-
-      setConnectionState(prev => {
-        if (status === 'connected' && prev.status !== 'connected') {
-          return {
-            ...prev,
-            status,
-            connectedAt: new Date().toLocaleTimeString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true,
-            }),
-            lastHeartbeat: Date.now(),
-          };
-        }
-        if (status !== 'connected') {
-          // When disconnected, keep the appInfo and connectedAt
-          return {
-            ...prev,
-            status,
-            // Don't clear connectedAt to maintain the connection time
-            // Don't clear appInfo to maintain the app information
-            lastHeartbeat: null,
-          };
-        }
-        return { ...prev, status };
-      });
+      console.log('Connection status update:', status);
+      setConnectionState(prev => ({
+        ...prev,
+        status,
+        error: null,
+        connectedAt: status === 'connected' ? new Date().toLocaleTimeString() : prev.connectedAt,
+      }));
     };
 
     // Listen for app info updates from the main process
-    const handleAppInfo = (
-      _event: any,
-      appInfo: ConnectionState['appInfo'] & { timestamp?: number }
-    ) => {
-      console.log('Renderer received app info:', appInfo);
-      setConnectionState(prev => {
-        // Use the timestamp from the app info if available, otherwise use current time
-        const timestamp = appInfo.timestamp ? new Date(appInfo.timestamp) : new Date();
-        const connectedAt = timestamp.toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true,
-        });
-
-        return {
-          ...prev,
-          appInfo: {
-            name: appInfo.name,
-            platform: appInfo.platform,
-            version: appInfo.version,
-          },
-          status: 'connected',
-          connectedAt,
-          lastHeartbeat: Date.now(),
-        };
-      });
-    };
-
-    // Listen for error updates from the main process
-    const handleError = (_event: any, error: string) => {
-      console.log('Renderer received error:', error);
+    const handleAppInfo = (_event: any, appInfo: any) => {
+      console.log('App info update:', appInfo);
       setConnectionState(prev => ({
         ...prev,
-        error,
+        appInfo,
+      }));
+    };
+
+    // Listen for connection errors from the main process
+    const handleError = (_event: any, error: string) => {
+      console.error('Connection error:', error);
+      setConnectionState(prev => ({
+        ...prev,
         status: 'error',
-        connectedAt: null,
-        lastHeartbeat: null,
+        error,
       }));
     };
 
     // Listen for heartbeat messages from the main process
-    const handleHeartbeat = (_event: any) => {
-      // Update the last heartbeat time without changing the connection status
-      const now = Date.now();
-      lastHeartbeatRef.current = now;
+    const handleHeartbeat = (_event: any, timestamp: number) => {
+      console.log('Heartbeat received:', new Date(timestamp).toISOString());
+      setConnectionState(prev => ({
+        ...prev,
+        lastHeartbeat: timestamp,
+      }));
+    };
 
-      // Only update the state if we're already connected and it's been a while since the last update
-      // This prevents UI flickering and reduces unnecessary state updates
-      setConnectionState(prev => {
-        if (
-          prev.status === 'connected' &&
-          (!prev.lastHeartbeat || now - prev.lastHeartbeat > 1000)
-        ) {
-          return {
-            ...prev,
-            lastHeartbeat: now,
-          };
+    // Handle Redux state updates
+    const handleReduxState = (_event: any, state: any) => {
+      console.log('Received Redux state update:', state ? 'State received' : 'No state');
+      if (state) {
+        setState(state);
+      } else {
+        console.warn('Received empty Redux state');
+      }
+    };
+
+    // Handle WebSocket messages
+    const handleWsMessage = (_event: any, message: any) => {
+      console.log('Received WebSocket message:', message);
+
+      try {
+        // Handle Redux state update message
+        if (message.type === 'redux-state' && message.payload?.state) {
+          console.log('Received Redux state update');
+          setState(message.payload.state);
+          return;
         }
-        return prev;
-      });
+
+        // Handle Redux messages from the WebSocket
+        if (message.type === 'redux') {
+          console.log('Processing Redux message from WebSocket:', message);
+
+          // Check if the action is directly in the message or nested in the payload
+          const actionData = message.action || (message.payload && message.payload.action);
+          const stateData = message.state || (message.payload && message.payload.state);
+
+          console.log('Extracted action data:', actionData);
+          console.log('Extracted state data:', stateData);
+
+          if (actionData) {
+            let actionType = '';
+            let actionPayload = null;
+
+            if (typeof actionData === 'string') {
+              actionType = actionData;
+              actionPayload = message.payload || null;
+            } else if (actionData && typeof actionData === 'object') {
+              actionType = actionData.type || 'UNKNOWN_ACTION';
+              actionPayload = actionData.payload || null;
+            } else {
+              console.warn('Invalid Redux action format in renderer:', actionData);
+              return;
+            }
+
+            console.log('Processed action type:', actionType);
+            console.log('Processed action payload:', actionPayload);
+
+            const actionTimestamp = message.timestamp || actionData.timestamp || Date.now();
+
+            // Check if this is a duplicate action
+            const lastAction = lastProcessedActionRef.current;
+            if (
+              lastAction &&
+              lastAction.type === actionType &&
+              lastAction.timestamp === actionTimestamp &&
+              JSON.stringify(lastAction.payload) === JSON.stringify(actionPayload)
+            ) {
+              console.log('Skipping duplicate action:', actionType);
+              return;
+            }
+
+            // Update the last processed action
+            lastProcessedActionRef.current = {
+              type: actionType,
+              timestamp: actionTimestamp,
+              payload: actionPayload,
+            };
+
+            // Capture the current state before updating
+            const currentState = useReduxStore.getState().state;
+
+            // Create the action with state diff
+            const action: ReduxAction = {
+              type: actionType,
+              payload: actionPayload,
+              timestamp: actionTimestamp,
+              stateDiff: stateData
+                ? {
+                    before: currentState || {},
+                    after: stateData,
+                  }
+                : undefined,
+            };
+
+            // Add the action to the store
+            addAction(action);
+
+            // Update state if provided
+            if (stateData) {
+              console.log('Updating Redux state from action');
+              setState(stateData);
+            }
+          } else {
+            console.warn('Redux message missing action property:', message);
+          }
+        }
+      } catch (error) {
+        console.error('Error handling WebSocket message:', error);
+      }
     };
 
     console.log('Setting up IPC event listeners');
@@ -198,6 +238,8 @@ export function ConnectionProvider({ children }: ConnectionProviderProps): React
     window.electron.ipcRenderer.on('app-info', handleAppInfo);
     window.electron.ipcRenderer.on('connection-error', handleError);
     window.electron.ipcRenderer.on('heartbeat', handleHeartbeat);
+    window.electron.ipcRenderer.on('redux-state', handleReduxState);
+    window.electron.ipcRenderer.on('ws-message', handleWsMessage);
 
     // Set up heartbeat check interval
     heartbeatTimerRef.current = setInterval(checkHeartbeat, 1000);
@@ -206,6 +248,7 @@ export function ConnectionProvider({ children }: ConnectionProviderProps): React
     reconnectTimeoutRef.current = setInterval(() => {
       if (connectionState.status === 'disconnected') {
         // Only request reconnection if we're not already in the process of connecting
+        console.log('Connection is disconnected, requesting reconnection');
         requestReconnection();
       }
     }, 5000); // Try to reconnect every 5 seconds if disconnected
@@ -217,6 +260,8 @@ export function ConnectionProvider({ children }: ConnectionProviderProps): React
       window.electron.ipcRenderer.removeListener('app-info', handleAppInfo);
       window.electron.ipcRenderer.removeListener('connection-error', handleError);
       window.electron.ipcRenderer.removeListener('heartbeat', handleHeartbeat);
+      window.electron.ipcRenderer.removeListener('redux-state', handleReduxState);
+      window.electron.ipcRenderer.removeListener('ws-message', handleWsMessage);
 
       if (heartbeatTimerRef.current) {
         clearInterval(heartbeatTimerRef.current);
@@ -248,4 +293,12 @@ export function ConnectionProvider({ children }: ConnectionProviderProps): React
   const value = { connectionState, sendMessage };
 
   return <ConnectionContext.Provider value={value}>{children}</ConnectionContext.Provider>;
+}
+
+export function useConnection() {
+  const context = useContext(ConnectionContext);
+  if (context === undefined) {
+    throw new Error('useConnection must be used within a ConnectionProvider');
+  }
+  return context;
 }
