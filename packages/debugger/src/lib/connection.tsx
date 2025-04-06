@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useRef,
+  useCallback,
+} from 'react';
 import { useReduxStore, ReduxAction } from '../store/reduxStore';
 
 // Add type declaration for Electron IPC renderer
@@ -41,10 +49,10 @@ const HEARTBEAT_TIMEOUT = 5000;
 
 interface ConnectionContextType {
   connectionState: ConnectionState;
-  sendMessage: (type: string, payload: unknown) => void;
+  sendMessage: (message: any) => void;
 }
 
-const ConnectionContext = createContext<ConnectionContextType | undefined>(undefined);
+const ConnectionContext = createContext<ConnectionContextType | null>(null);
 
 interface ConnectionProviderProps {
   children: ReactNode;
@@ -65,27 +73,24 @@ export function ConnectionProvider({ children }: ConnectionProviderProps): React
   } | null>(null);
 
   // Function to check if the connection is still alive based on the last heartbeat
-  const checkHeartbeat = () => {
+  const checkHeartbeat = useCallback(() => {
     if (
       connectionState.status === 'connected' &&
       connectionState.lastHeartbeat &&
       Date.now() - connectionState.lastHeartbeat > HEARTBEAT_TIMEOUT
     ) {
       console.log('Heartbeat timeout, marking as disconnected');
-      setConnectionState(prev => ({
-        ...prev,
-        status: 'disconnected',
-      }));
+      setConnectionState(prev => ({ ...prev, status: 'disconnected' }));
     }
-  };
+  }, [connectionState.status, connectionState.lastHeartbeat]);
 
   // Function to request reconnection
-  const requestReconnection = () => {
+  const requestReconnection = useCallback(() => {
     if (connectionState.status === 'disconnected') {
       console.log('Requesting reconnection');
       window.electron.ipcRenderer.send('request-reconnection');
     }
-  };
+  }, [connectionState.status]);
 
   useEffect(() => {
     // Listen for connection status updates from the main process
@@ -94,8 +99,7 @@ export function ConnectionProvider({ children }: ConnectionProviderProps): React
       setConnectionState(prev => ({
         ...prev,
         status,
-        error: null,
-        connectedAt: status === 'connected' ? new Date().toLocaleTimeString() : prev.connectedAt,
+        connectedAt: status === 'connected' ? new Date().toISOString() : prev.connectedAt,
       }));
     };
 
@@ -139,8 +143,6 @@ export function ConnectionProvider({ children }: ConnectionProviderProps): React
 
     // Handle WebSocket messages
     const handleWsMessage = (_event: any, message: any) => {
-      console.log('Received WebSocket message:', message);
-
       try {
         // Handle Redux state update message
         if (message.type === 'redux-state' && message.payload?.state) {
@@ -157,9 +159,6 @@ export function ConnectionProvider({ children }: ConnectionProviderProps): React
           const actionData = message.action || (message.payload && message.payload.action);
           const stateData = message.state || (message.payload && message.payload.state);
 
-          console.log('Extracted action data:', actionData);
-          console.log('Extracted state data:', stateData);
-
           if (actionData) {
             let actionType = '';
             let actionPayload = null;
@@ -174,9 +173,6 @@ export function ConnectionProvider({ children }: ConnectionProviderProps): React
               console.warn('Invalid Redux action format in renderer:', actionData);
               return;
             }
-
-            console.log('Processed action type:', actionType);
-            console.log('Processed action payload:', actionPayload);
 
             const actionTimestamp = message.timestamp || actionData.timestamp || Date.now();
 
@@ -251,7 +247,7 @@ export function ConnectionProvider({ children }: ConnectionProviderProps): React
         console.log('Connection is disconnected, requesting reconnection');
         requestReconnection();
       }
-    }, 5000); // Try to reconnect every 5 seconds if disconnected
+    }, 5000);
 
     // Clean up event listeners
     return () => {
@@ -275,29 +271,27 @@ export function ConnectionProvider({ children }: ConnectionProviderProps): React
         clearTimeout(connectionTimeoutRef.current);
       }
     };
-  }, [connectionState.status]);
+  }, [checkHeartbeat, requestReconnection, setState, addAction]);
 
-  const sendMessage = (type: string, payload: unknown) => {
-    if (connectionState.status === 'connected') {
-      const message = {
-        type,
-        payload,
-        timestamp: Date.now(),
-      };
+  const sendMessage = useCallback(
+    (message: any) => {
+      if (connectionState.status === 'connected') {
+        window.dispatchEvent(new CustomEvent('send_message', { detail: message }));
+      }
+    },
+    [connectionState.status]
+  );
 
-      // Send message to the main process
-      window.electron.ipcRenderer.send('send-message', message);
-    }
-  };
-
-  const value = { connectionState, sendMessage };
-
-  return <ConnectionContext.Provider value={value}>{children}</ConnectionContext.Provider>;
+  return (
+    <ConnectionContext.Provider value={{ connectionState, sendMessage }}>
+      {children}
+    </ConnectionContext.Provider>
+  );
 }
 
 export function useConnection() {
   const context = useContext(ConnectionContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useConnection must be used within a ConnectionProvider');
   }
   return context;

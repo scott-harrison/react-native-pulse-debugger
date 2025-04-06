@@ -32,6 +32,15 @@ initializePulse({
   retryInterval: 5000,
 });
 
+// Disable event batching to prevent duplicate messages
+const pulse = getPulse();
+if (pulse) {
+  pulse.updateEventConfig({
+    enableBatching: false,
+    enableThrottling: false,
+  });
+}
+
 // Apply network middleware
 global.fetch = pulseNetworkMiddleware(fetch);
 

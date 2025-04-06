@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { JSONViewer } from '../components/common/JSONViewer';
-import { mockNetworkRequests, mockNetworkResponses } from '../mocks/data';
+import { useConnection } from '@/lib/connection';
+import { useNetworkStore } from '../store/networkStore';
 
 interface NetworkRequest {
   id: string;
@@ -10,6 +11,7 @@ interface NetworkRequest {
   headers: Record<string, string>;
   body?: any;
   timestamp: number;
+  status?: 'pending' | 'completed' | 'error';
 }
 
 interface NetworkResponse {
@@ -18,14 +20,159 @@ interface NetworkResponse {
   headers: Record<string, string>;
   body?: any;
   timestamp: number;
+  duration?: number;
+}
+
+interface BatchEvent {
+  type: string;
+  payload: any;
+  timestamp: number;
+}
+
+function generateCurlCommand(request: NetworkRequest): string {
+  let curl = `curl '${request.url}'`;
+
+  // Add method if not GET
+  if (request.method !== 'GET') {
+    curl += ` -X ${request.method}`;
+  }
+
+  // Add headers
+  Object.entries(request.headers).forEach(([key, value]) => {
+    // Escape single quotes in header values
+    const escapedValue = value.replace(/'/g, "'\\''");
+    curl += ` \\\n  -H '${key}: ${escapedValue}'`;
+  });
+
+  // Add body if present
+  if (request.body) {
+    let bodyStr = typeof request.body === 'string' ? request.body : JSON.stringify(request.body);
+    // Escape single quotes in body
+    bodyStr = bodyStr.replace(/'/g, "'\\''");
+    curl += ` \\\n  -d '${bodyStr}'`;
+  }
+
+  return curl;
+}
+
+async function copyToClipboard(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    console.log('Copied to clipboard');
+  } catch (err) {
+    console.error('Failed to copy:', err);
+  }
 }
 
 export function NetworkScreen() {
-  const [selectedRequest, setSelectedRequest] = useState<NetworkRequest | null>(null);
-  const [selectedResponse, setSelectedResponse] = useState<NetworkResponse | null>(null);
+  const { connectionState, sendMessage } = useConnection();
+  const {
+    requests,
+    responses,
+    selectedRequestId,
+    selectedResponseId,
+    addRequest,
+    addResponse,
+    updateRequestStatus,
+    selectRequest,
+    getResponseForRequest,
+    clear,
+  } = useNetworkStore();
+  const [copiedTimeout, setCopiedTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
-  const getResponseForRequest = (requestId: string) => {
-    return mockNetworkResponses.find(response => response.id === requestId);
+  const selectedRequest = selectedRequestId ? requests.find(r => r.id === selectedRequestId) : null;
+  const selectedResponse = selectedResponseId
+    ? responses.find(r => r.id === selectedResponseId)
+    : null;
+
+  // Use a ref to persist the processed events set between renders
+  const processedEventsRef = useRef<Set<string>>(new Set());
+
+  // Clear the processed events set when the component mounts
+  useEffect(() => {
+    processedEventsRef.current.clear();
+  }, []);
+
+  // Clear the copied timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (copiedTimeout) {
+        clearTimeout(copiedTimeout);
+      }
+    };
+  }, [copiedTimeout]);
+
+  useEffect(() => {
+    if (connectionState.status === 'connected') {
+      // Request initial network data
+      sendMessage('get_network_data');
+    }
+  }, [connectionState.status, sendMessage]);
+
+  useEffect(() => {
+    const handleBatchEvents = (data: { events: BatchEvent[] }) => {
+      // Process each event in the batch, filtering duplicates by timestamp and id
+      data.events.forEach(event => {
+        const eventKey = `${event.type}_${event.timestamp}_${event.payload?.id}`;
+        if (processedEventsRef.current.has(eventKey)) {
+          console.log('Skipping duplicate event:', eventKey);
+          return;
+        }
+        processedEventsRef.current.add(eventKey);
+
+        switch (event.type) {
+          case 'network_request':
+            addRequest(event.payload);
+            break;
+          case 'network_response':
+            addResponse(event.payload);
+            break;
+          case 'network_error':
+            updateRequestStatus(event.payload.id, 'error');
+            break;
+        }
+      });
+    };
+
+    const handleMessage = (_event: any, data: any) => {
+      console.log('Network message received:', data);
+      if (data.type === 'batch' && Array.isArray(data.events)) {
+        handleBatchEvents(data);
+      } else {
+        // For single events, check if we've already processed this exact event
+        const eventKey = `${data.type}_${data.timestamp}_${data.payload?.id}`;
+        if (processedEventsRef.current.has(eventKey)) {
+          console.log('Skipping duplicate single event:', eventKey);
+          return;
+        }
+        processedEventsRef.current.add(eventKey);
+
+        switch (data.type) {
+          case 'network_request':
+            addRequest(data.payload);
+            break;
+          case 'network_response':
+            addResponse(data.payload);
+            break;
+          case 'network_error':
+            updateRequestStatus(data.payload.id, 'error');
+            break;
+        }
+      }
+    };
+
+    // Subscribe to WebSocket messages through Electron IPC
+    window.electron.ipcRenderer.on('ws-message', handleMessage);
+
+    return () => {
+      window.electron.ipcRenderer.removeListener('ws-message', handleMessage);
+    };
+  }, [addRequest, addResponse, updateRequestStatus]);
+
+  const handleClear = () => {
+    clear();
+    processedEventsRef.current.clear();
   };
 
   const getMethodColor = (method: string) => {
@@ -49,6 +196,21 @@ export function NetworkScreen() {
     return 'bg-green-500/20 text-green-400';
   };
 
+  const handleCopyCurl = async (request: NetworkRequest) => {
+    await copyToClipboard(generateCurlCommand(request));
+    setIsCopied(true);
+
+    if (copiedTimeout) {
+      clearTimeout(copiedTimeout);
+    }
+
+    const timeout = setTimeout(() => {
+      setIsCopied(false);
+    }, 2000);
+
+    setCopiedTimeout(timeout);
+  };
+
   return (
     <div className="h-full flex bg-zinc-950">
       {/* Request List */}
@@ -58,34 +220,51 @@ export function NetworkScreen() {
             <h2 className="text-sm font-semibold text-zinc-100">Network Requests</h2>
             <p className="text-xs text-zinc-500 mt-0.5">Recent network activity</p>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wider">
-              Live
-            </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleClear}
+              className="text-xs text-zinc-400 hover:text-zinc-200 px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors"
+            >
+              Clear
+            </button>
+            <div className="flex items-center gap-1.5">
+              <div
+                className={cn(
+                  'w-1.5 h-1.5 rounded-full',
+                  connectionState.status === 'connected'
+                    ? 'bg-emerald-400 animate-pulse'
+                    : 'bg-red-400'
+                )}
+              />
+              <span
+                className={cn(
+                  'text-[10px] font-medium uppercase tracking-wider',
+                  connectionState.status === 'connected' ? 'text-emerald-400' : 'text-red-400'
+                )}
+              >
+                {connectionState.status === 'connected' ? 'Live' : 'Disconnected'}
+              </span>
+            </div>
           </div>
         </div>
         <div className="flex-1 overflow-auto">
-          {mockNetworkRequests.map(request => {
+          {requests.map(request => {
             const response = getResponseForRequest(request.id);
+            const uniqueKey = `${request.id}_${request.timestamp}`;
             return (
               <div
-                key={request.id}
-                onClick={() => {
-                  setSelectedRequest(request);
-                  if (response) setSelectedResponse(response);
-                }}
+                key={uniqueKey}
+                onClick={() => selectRequest(request.id)}
                 role="button"
                 tabIndex={0}
                 onKeyDown={e => {
                   if (e.key === 'Enter' || e.key === ' ') {
-                    setSelectedRequest(request);
-                    if (response) setSelectedResponse(response);
+                    selectRequest(request.id);
                   }
                 }}
                 className={cn(
                   'w-full text-left px-4 py-3 border-b border-zinc-800/50 transition-colors cursor-pointer',
-                  selectedRequest?.id === request.id ? 'bg-zinc-800' : 'hover:bg-zinc-900'
+                  selectedRequestId === request.id ? 'bg-zinc-800' : 'hover:bg-zinc-900'
                 )}
               >
                 <div className="flex items-start justify-between">
@@ -117,6 +296,19 @@ export function NetworkScreen() {
                     <span className="text-[10px] text-zinc-500">
                       {new Date(response.timestamp).toLocaleTimeString()}
                     </span>
+                    {response.duration && (
+                      <span className="text-[10px] text-zinc-500">({response.duration}ms)</span>
+                    )}
+                  </div>
+                )}
+                {request.status === 'error' && (
+                  <div className="mt-1.5">
+                    <span className="text-xs text-red-400">Request failed</span>
+                  </div>
+                )}
+                {request.status === 'pending' && (
+                  <div className="mt-1.5">
+                    <span className="text-xs text-yellow-400">Pending...</span>
                   </div>
                 )}
               </div>
@@ -138,7 +330,20 @@ export function NetworkScreen() {
             <div className="space-y-4">
               {selectedRequest && (
                 <div>
-                  <h3 className="text-xs font-medium text-zinc-400 mb-1">Request</h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-medium text-zinc-400">Request</h3>
+                    <button
+                      onClick={() => handleCopyCurl(selectedRequest)}
+                      className={cn(
+                        'text-xs px-2 py-1 rounded transition-colors',
+                        isCopied
+                          ? 'bg-emerald-900/50 text-emerald-400'
+                          : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
+                      )}
+                    >
+                      {isCopied ? 'Copied!' : 'Copy as cURL'}
+                    </button>
+                  </div>
                   <div className="space-y-2">
                     <div>
                       <span className="text-[10px] text-zinc-500">Method</span>
@@ -146,16 +351,29 @@ export function NetworkScreen() {
                     </div>
                     <div>
                       <span className="text-[10px] text-zinc-500">URL</span>
-                      <p className="text-xs font-mono text-zinc-200">{selectedRequest.url}</p>
+                      <p className="text-xs font-mono text-zinc-200 break-all">
+                        {selectedRequest.url}
+                      </p>
                     </div>
                     <div>
                       <span className="text-[10px] text-zinc-500">Headers</span>
-                      <JSONViewer data={selectedRequest.headers} className="text-xs" />
+                      <div className="bg-zinc-900 p-2 rounded-md mt-1">
+                        <JSONViewer data={selectedRequest.headers} className="text-xs" />
+                      </div>
                     </div>
                     {selectedRequest.body && (
                       <div>
                         <span className="text-[10px] text-zinc-500">Body</span>
-                        <JSONViewer data={selectedRequest.body} className="text-xs" />
+                        <div className="bg-zinc-900 p-2 rounded-md mt-1">
+                          <JSONViewer
+                            data={
+                              typeof selectedRequest.body === 'string'
+                                ? JSON.parse(selectedRequest.body)
+                                : selectedRequest.body
+                            }
+                            className="text-xs"
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -171,12 +389,31 @@ export function NetworkScreen() {
                     </div>
                     <div>
                       <span className="text-[10px] text-zinc-500">Headers</span>
-                      <JSONViewer data={selectedResponse.headers} className="text-xs" />
+                      <div className="bg-zinc-900 p-2 rounded-md mt-1">
+                        <JSONViewer data={selectedResponse.headers} className="text-xs" />
+                      </div>
                     </div>
                     {selectedResponse.body && (
                       <div>
                         <span className="text-[10px] text-zinc-500">Body</span>
-                        <JSONViewer data={selectedResponse.body} className="text-xs" />
+                        <div className="bg-zinc-900 p-2 rounded-md mt-1">
+                          <JSONViewer
+                            data={
+                              typeof selectedResponse.body === 'string'
+                                ? JSON.parse(selectedResponse.body)
+                                : selectedResponse.body
+                            }
+                            className="text-xs"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {selectedResponse.duration && (
+                      <div>
+                        <span className="text-[10px] text-zinc-500">Duration</span>
+                        <p className="text-xs font-mono text-zinc-200">
+                          {selectedResponse.duration}ms
+                        </p>
                       </div>
                     )}
                   </div>

@@ -73,6 +73,13 @@ export function JSONViewer({
 
     switch (typeof value) {
       case 'string':
+        if (value.length > 60 || value.startsWith('http')) {
+          return (
+            <span className="text-green-400 break-all whitespace-pre-wrap inline-block max-w-full">
+              "{value}"
+            </span>
+          );
+        }
         return <span className="text-green-400">"{value}"</span>;
       case 'number':
         return <span className="text-yellow-400">{value}</span>;
@@ -81,7 +88,7 @@ export function JSONViewer({
       case 'object':
         if (Array.isArray(value)) {
           return (
-            <div style={{ marginLeft: level * 20 }}>
+            <div style={{ marginLeft: level * 20 }} className="whitespace-pre-wrap break-all">
               [
               {value.map((item, index) => (
                 <div key={index} style={{ marginLeft: 20 }}>
@@ -94,7 +101,7 @@ export function JSONViewer({
           );
         }
         return (
-          <div style={{ marginLeft: level * 20 }}>
+          <div style={{ marginLeft: level * 20 }} className="whitespace-pre-wrap break-all">
             {'{'}
             {Object.entries(value).map(([key, val], index, arr) => (
               <div key={key} style={{ marginLeft: 20 }}>
@@ -116,7 +123,7 @@ export function JSONViewer({
     return (
       <span
         className={cn(
-          'whitespace-nowrap',
+          'break-all whitespace-pre-wrap inline-block max-w-full',
           {
             'text-yellow-400': dataType === 'string',
             'text-blue-400': dataType === 'number',
@@ -154,7 +161,7 @@ export function JSONViewer({
   );
 
   return (
-    <div className="whitespace-pre">
+    <div className="whitespace-pre break-words">
       <div style={{ paddingLeft: level ? indent : 0 }} className="flex items-baseline gap-1">
         {objectKey ? (
           <>
@@ -164,7 +171,7 @@ export function JSONViewer({
             >
               {isExpanded ? '▼' : '▶'}
             </button>
-            <span className="text-zinc-400">{`"${objectKey}"`}</span>
+            <span className="text-zinc-400 break-all">{`"${objectKey}"`}</span>
             <span className="text-zinc-400">:</span>
             <span className="ml-1" />
             <span className="text-zinc-400">{isArray ? '[' : '{'}</span>
@@ -190,7 +197,7 @@ export function JSONViewer({
               <div
                 key={key}
                 style={{ paddingLeft: indent + 16 }}
-                className="flex items-baseline gap-1"
+                className="flex items-baseline gap-1 break-all"
               >
                 {isChildCollapsible ? (
                   <JSONViewer
@@ -208,7 +215,7 @@ export function JSONViewer({
                     <span className="w-3" />
                     {!isArray && (
                       <>
-                        <span className="text-zinc-400">{`"${key}"`}</span>
+                        <span className="text-zinc-400 break-all">{`"${key}"`}</span>
                         <span className="text-zinc-400">:</span>
                         <span className="ml-1" />
                       </>
