@@ -227,24 +227,6 @@ export function NetworkScreen() {
             >
               Clear
             </button>
-            <div className="flex items-center gap-1.5">
-              <div
-                className={cn(
-                  'w-1.5 h-1.5 rounded-full',
-                  connectionState.status === 'connected'
-                    ? 'bg-emerald-400 animate-pulse'
-                    : 'bg-red-400'
-                )}
-              />
-              <span
-                className={cn(
-                  'text-[10px] font-medium uppercase tracking-wider',
-                  connectionState.status === 'connected' ? 'text-emerald-400' : 'text-red-400'
-                )}
-              >
-                {connectionState.status === 'connected' ? 'Live' : 'Disconnected'}
-              </span>
-            </div>
           </div>
         </div>
         <div className="flex-1 overflow-auto">

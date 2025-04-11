@@ -129,6 +129,18 @@ class PulseConnection {
         return;
       }
 
+      // Handle console log events
+      if (data.type === 'console_log') {
+        console.log('[react-native-pulse] Received console log:', data.payload);
+        // Send directly through WebSocket to bypass event manager batching
+        this.sendToWebSocket({
+          type: 'console_log',
+          payload: data.payload,
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
       // Only log non-ping/pong messages to reduce console noise
       if (data.type !== 'pong') {
         console.log('[react-native-pulse] Received:', data);

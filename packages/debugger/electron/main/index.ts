@@ -48,7 +48,7 @@ const indexHtml = path.join(RENDERER_DIST, 'index.html');
 // WebSocket server
 let wsServer: WebSocketServer | null = null;
 let wsClient: WebSocket | null = null;
-const WS_PORT = 8080;
+const WS_PORT = 8973;
 let heartbeatInterval: NodeJS.Timeout | null = null;
 
 // Track the last processed Redux action to prevent duplicates

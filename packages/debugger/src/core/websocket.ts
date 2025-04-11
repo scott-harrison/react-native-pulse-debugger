@@ -1,4 +1,4 @@
-class WebSocketManager {
+export class WebSocketManager {
   private ws: WebSocket | null = null;
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private reconnectAttempts = 0;
@@ -46,25 +46,54 @@ class WebSocketManager {
     this.dispatchConnectionState('disconnected');
   }
 
+  private dispatchEvent(type: string, payload: any) {
+    console.log('[Pulse Debugger] WebSocketManager dispatching event:', { type, payload });
+    window.dispatchEvent(new CustomEvent(type, { detail: payload }));
+  }
+
   private handleMessage(event: MessageEvent) {
     try {
       const data = JSON.parse(event.data);
+      console.log('[Pulse Debugger] WebSocketManager received message:', data);
 
-      // Dispatch appropriate event based on message type
       switch (data.type) {
         case 'network_request':
-          window.dispatchEvent(new CustomEvent('network_request', { detail: data }));
+          this.dispatchEvent('network_request', data.payload);
+          console.log('[Pulse Debugger] Dispatched network_request event');
           break;
         case 'network_response':
-          window.dispatchEvent(new CustomEvent('network_response', { detail: data }));
+          this.dispatchEvent('network_response', data.payload);
+          console.log('[Pulse Debugger] Dispatched network_response event');
           break;
         case 'network_error':
-          window.dispatchEvent(new CustomEvent('network_error', { detail: data }));
+          this.dispatchEvent('network_error', data.payload);
+          console.log('[Pulse Debugger] Dispatched network_error event');
           break;
-        // Add more event types as needed
+        case 'console_log':
+          // The payload is the entire log object
+          console.log('[Pulse Debugger] Processing console_log event:', {
+            id: data.payload.id,
+            level: data.payload.level,
+            message: data.payload.message,
+            hasData: !!data.payload.data,
+            hasStack: !!data.payload.stack,
+            timestamp: data.payload.timestamp,
+          });
+
+          // Validate the payload
+          if (!data.payload.id || !data.payload.level || !data.payload.message) {
+            console.error('[Pulse Debugger] Invalid console log payload:', data.payload);
+            break;
+          }
+
+          this.dispatchEvent('console_log', data.payload);
+          console.log('[Pulse Debugger] Dispatched console_log event:', data.payload);
+          break;
+        default:
+          console.warn('[Pulse Debugger] Unknown message type:', data.type);
       }
     } catch (error) {
-      console.error('Failed to parse WebSocket message:', error);
+      console.error('[Pulse Debugger] Error handling message:', error);
     }
   }
 
@@ -103,5 +132,5 @@ class WebSocketManager {
 }
 
 // Create and export a singleton instance
-const wsManager = new WebSocketManager('ws://localhost:8080');
+const wsManager = new WebSocketManager('ws://localhost:8973');
 export default wsManager;

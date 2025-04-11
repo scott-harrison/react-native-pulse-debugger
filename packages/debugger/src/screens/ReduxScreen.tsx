@@ -29,7 +29,7 @@ export const ReduxScreen: React.FC = () => {
   const requestReduxState = () => {
     if (connectionState.status === 'connected') {
       console.log('Requesting Redux state');
-      sendMessage('request-redux-state', {});
+      sendMessage('request-redux-state');
     }
   };
 
@@ -125,8 +125,8 @@ export const ReduxScreen: React.FC = () => {
           </div>
           <div className="p-4">
             {!state && connectionState.status === 'connected' ? (
-              <div className="flex justify-center items-center h-32">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              <div className="text-center text-gray-500">
+                No Redux state available. Click "Refresh State" to request the current state.
               </div>
             ) : !state ? (
               <div className="text-center text-gray-500">

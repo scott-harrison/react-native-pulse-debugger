@@ -1,14 +1,5 @@
 import { cn } from '@/lib/utils';
-import {
-  RefreshCw,
-  Network,
-  HardDrive,
-  Zap,
-  Terminal,
-  Activity,
-  Clock,
-  Smartphone,
-} from 'lucide-react';
+import { RefreshCw, Network, Terminal, Activity, Smartphone } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useConnection } from '@/lib/connection';
 
@@ -22,8 +13,6 @@ const tools: Tool[] = [
   { id: 'console', name: 'Console', icon: <Terminal className="w-4 h-4" /> },
   { id: 'redux', name: 'Redux', icon: <RefreshCw className="w-4 h-4" /> },
   { id: 'network', name: 'Network', icon: <Network className="w-4 h-4" /> },
-  { id: 'storage', name: 'Storage', icon: <HardDrive className="w-4 h-4" /> },
-  { id: 'performance', name: 'Performance', icon: <Zap className="w-4 h-4" /> },
 ];
 
 export function Sidebar() {

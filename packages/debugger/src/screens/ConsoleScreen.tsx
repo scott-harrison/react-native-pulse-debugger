@@ -1,7 +1,8 @@
+import { useEffect } from 'react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { JSONViewer } from '../components/common/JSONViewer';
-import { mockConsoleLogs } from '../mocks/data';
+import { useConsoleStore } from '../store/consoleStore';
 
 type LogLevel = 'log' | 'info' | 'warn' | 'error' | 'debug';
 
@@ -15,7 +16,36 @@ interface ConsoleLog {
 }
 
 export function ConsoleScreen() {
-  const [selectedLog, setSelectedLog] = useState<ConsoleLog | null>(null);
+  const { logs, selectedLogId, selectLog, addLog, clear } = useConsoleStore();
+
+  useEffect(() => {
+    const handleConsoleLog = (event: CustomEvent<ConsoleLog>) => {
+      console.log('[Pulse Debugger] ConsoleScreen received console_log event:', event.detail);
+
+      // Add more detailed debugging
+      console.log('[Pulse Debugger] Log details:', {
+        id: event.detail.id,
+        level: event.detail.level,
+        message: event.detail.message,
+        hasData: !!event.detail.data,
+        hasStack: !!event.detail.stack,
+        timestamp: event.detail.timestamp,
+      });
+
+      // Check if the log is valid
+      if (!event.detail.id || !event.detail.level || !event.detail.message) {
+        console.error('[Pulse Debugger] Invalid log format:', event.detail);
+        return;
+      }
+
+      addLog(event.detail);
+    };
+
+    window.addEventListener('console_log', handleConsoleLog as EventListener);
+    return () => {
+      window.removeEventListener('console_log', handleConsoleLog as EventListener);
+    };
+  }, [addLog]);
 
   const getLogLevelColor = (level: LogLevel) => {
     switch (level) {
@@ -48,10 +78,15 @@ export function ConsoleScreen() {
   };
 
   const getDataPreview = (data: any) => {
+    if (!data) return null;
+
     if (Array.isArray(data)) {
       return `[${data.length} items]`;
     }
     if (typeof data === 'object' && data !== null) {
+      if (data instanceof Error || 'message' in data) {
+        return data.message;
+      }
       return `{${Object.keys(data).length} keys}`;
     }
     return String(data);
@@ -66,28 +101,28 @@ export function ConsoleScreen() {
             <h2 className="text-sm font-semibold text-zinc-100">Console</h2>
             <p className="text-xs text-zinc-500 mt-0.5">Application logs and errors</p>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wider">
-              Live
-            </span>
-          </div>
+          <button
+            onClick={clear}
+            className="px-2 py-1 text-xs font-medium text-zinc-400 hover:text-zinc-200 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors"
+          >
+            Clear Logs
+          </button>
         </div>
         <div className="flex-1 overflow-auto">
-          {mockConsoleLogs.map(log => (
+          {logs.map(log => (
             <div
               key={log.id}
-              onClick={() => setSelectedLog(log)}
+              onClick={() => selectLog(log.id)}
               role="button"
               tabIndex={0}
               onKeyDown={e => {
                 if (e.key === 'Enter' || e.key === ' ') {
-                  setSelectedLog(log);
+                  selectLog(log.id);
                 }
               }}
               className={cn(
                 'w-full text-left px-4 py-3 border-b border-zinc-800/50 transition-colors cursor-pointer',
-                selectedLog?.id === log.id ? 'bg-zinc-800' : 'hover:bg-zinc-900'
+                selectedLogId === log.id ? 'bg-zinc-800' : 'hover:bg-zinc-900'
               )}
             >
               <div className="flex items-start justify-between">
@@ -112,7 +147,7 @@ export function ConsoleScreen() {
               </div>
               {log.data && (
                 <div className="mt-1.5 text-[10px] text-zinc-500 font-mono">
-                  {Array.isArray(log.data) ? `Array[${log.data.length}]` : 'Object'}
+                  {getDataPreview(log.data)}
                 </div>
               )}
             </div>
@@ -121,7 +156,7 @@ export function ConsoleScreen() {
       </div>
 
       {/* Log Details */}
-      {selectedLog && (
+      {selectedLogId && (
         <div className="w-1/2 border-l border-zinc-800 flex flex-col">
           <div className="px-3 py-2 border-b border-zinc-800">
             <h2 className="text-sm font-semibold text-zinc-100">Log Details</h2>
@@ -131,24 +166,26 @@ export function ConsoleScreen() {
             <div className="space-y-4">
               <div>
                 <h3 className="text-xs font-medium text-zinc-400 mb-1">Message</h3>
-                <p className="text-sm font-mono text-zinc-200">{selectedLog.message}</p>
+                <p className="text-sm font-mono text-zinc-200">
+                  {logs.find(log => log.id === selectedLogId)?.message}
+                </p>
               </div>
-              {selectedLog.data && (
+              {logs.find(log => log.id === selectedLogId)?.data && (
                 <div>
                   <h3 className="text-xs font-medium text-zinc-400 mb-1">Data</h3>
                   <JSONViewer
-                    data={selectedLog.data}
+                    data={logs.find(log => log.id === selectedLogId)?.data}
                     className="text-xs"
                     initialExpanded={true}
                     level={0}
                   />
                 </div>
               )}
-              {selectedLog.stack && (
+              {logs.find(log => log.id === selectedLogId)?.stack && (
                 <div>
                   <h3 className="text-xs font-medium text-zinc-400 mb-1">Stack Trace</h3>
                   <pre className="text-xs font-mono text-zinc-300 whitespace-pre-wrap">
-                    {selectedLog.stack}
+                    {logs.find(log => log.id === selectedLogId)?.stack}
                   </pre>
                 </div>
               )}

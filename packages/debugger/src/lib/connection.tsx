@@ -144,16 +144,28 @@ export function ConnectionProvider({ children }: ConnectionProviderProps): React
     // Handle WebSocket messages
     const handleWsMessage = (_event: any, message: any) => {
       try {
+        console.log('[Pulse Debugger] ConnectionProvider received WebSocket message:', message);
+
+        // Handle console log messages
+        if (message.type === 'console_log' && message.payload) {
+          console.log(
+            '[Pulse Debugger] ConnectionProvider dispatching console log event:',
+            message.payload
+          );
+          window.dispatchEvent(new CustomEvent('console_log', { detail: message.payload }));
+          return;
+        }
+
         // Handle Redux state update message
         if (message.type === 'redux-state' && message.payload?.state) {
-          console.log('Received Redux state update');
+          console.log('[Pulse Debugger] Received Redux state update');
           setState(message.payload.state);
           return;
         }
 
         // Handle Redux messages from the WebSocket
         if (message.type === 'redux') {
-          console.log('Processing Redux message from WebSocket:', message);
+          console.log('[Pulse Debugger] Processing Redux message from WebSocket:', message);
 
           // Check if the action is directly in the message or nested in the payload
           const actionData = message.action || (message.payload && message.payload.action);

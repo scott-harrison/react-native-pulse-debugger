@@ -21,13 +21,14 @@ import {
   initializePulse,
   getPulse,
   pulseNetworkMiddleware,
+  pulseConsoleMiddleware,
 } from 'react-native-pulse-debugger';
 import type { ConnectionStatus } from 'react-native-pulse-debugger';
 
 // Initialize Pulse Debugger
 initializePulse({
   host: 'localhost',
-  port: 8080,
+  port: 8973,
   autoConnect: true,
   retryInterval: 5000,
 });
@@ -43,6 +44,9 @@ if (pulse) {
 
 // Apply network middleware
 global.fetch = pulseNetworkMiddleware(fetch);
+
+// Apply console middleware
+global.console = pulseConsoleMiddleware(console);
 
 function Counter() {
   const count = useAppSelector((state) => state.counter.value);
@@ -98,6 +102,37 @@ function Counter() {
     }
   };
 
+  const handleTestConsoleLog = () => {
+    console.log('This is a regular log message');
+    addLog('Sent test console log message');
+  };
+
+  const handleTestConsoleWarn = () => {
+    console.warn('This is a warning message', [1, 2, 3]);
+    addLog('Sent test console warn message');
+  };
+
+  const handleTestConsoleError = () => {
+    console.error('An error occurred:', new Error('Test error'));
+    addLog('Sent test console error message');
+  };
+
+  const handleTestConsoleDebug = () => {
+    console.debug('This is a debug message', { nested: { data: true } });
+    addLog('Sent test console debug message');
+  };
+
+  const handleTestError = () => {
+    try {
+      // Simulate an error
+      const obj: any = null;
+      obj.nonExistentMethod();
+    } catch (error) {
+      console.error('An error occurred:', error);
+      addLog('Triggered test error');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -139,6 +174,41 @@ function Counter() {
           onPress={handleTestNetwork}
         >
           <Text style={styles.buttonText}>Test Network</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.consoleButton]}
+          onPress={handleTestConsoleWarn}
+        >
+          <Text style={styles.buttonText}>Test Console Warn</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.consoleButton]}
+          onPress={handleTestConsoleLog}
+        >
+          <Text style={styles.buttonText}>Test Console Log</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.consoleButton]}
+          onPress={handleTestConsoleError}
+        >
+          <Text style={styles.buttonText}>Test Console Error</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.consoleButton]}
+          onPress={handleTestConsoleDebug}
+        >
+          <Text style={styles.buttonText}>Test Console Debug</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.errorButton]}
+          onPress={handleTestError}
+        >
+          <Text style={styles.buttonText}>Test Error</Text>
         </TouchableOpacity>
       </View>
 
@@ -233,6 +303,12 @@ const styles = StyleSheet.create({
   networkButton: {
     backgroundColor: '#34C759',
   },
+  consoleButton: {
+    backgroundColor: '#5856D6',
+  },
+  errorButton: {
+    backgroundColor: '#FF3B30',
+  },
   buttonText: {
     color: '#FFF',
     fontSize: 16,
@@ -252,24 +328,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   logText: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 5,
+    marginBottom: 8,
   },
 });
 
-type StatusStyles = {
-  [key in ConnectionStatus]: {
-    backgroundColor: string;
-  };
-};
-
-const statusStyles: StatusStyles = {
-  connecting: { backgroundColor: '#FFA500' },
-  connected: { backgroundColor: '#4CAF50' },
-  disconnected: { backgroundColor: '#FF5252' },
-  error: { backgroundColor: '#FF5252' },
+const statusStyles: Record<ConnectionStatus, { backgroundColor: string }> = {
+  connecting: { backgroundColor: '#FF9500' },
+  connected: { backgroundColor: '#34C759' },
+  disconnected: { backgroundColor: '#FF3B30' },
+  error: { backgroundColor: '#FF3B30' },
 };

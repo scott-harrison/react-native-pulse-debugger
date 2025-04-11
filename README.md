@@ -1,9 +1,9 @@
 ```txt
 ██████╗ ██╗   ██╗██╗     ███████╗███████╗
 ██╔══██╗██║   ██║██║     ██╔════╝██╔════╝
-██████╔╝██║   ██║██║     █████╗  ███████╗
-██╔═══╝ ██║   ██║██║     ██╔══╝  ╚════██║
-██║     ╚██████╔╝███████╗███████╗███████║
+██████╔╝██║   ██║██║     ███████╗█████╗
+██╔═══╝ ██║   ██║██║     ╚════██║██╔══╝
+██║     ╚██████╔╝███████╗███████║███████╗
 ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚══════╝
       React Native Debugging Reimagined
 ```
@@ -12,8 +12,8 @@
 
 It provides a **real-time dashboard** to visualize:
 
-- ⚙️ Redux actions and state changes  
-- 🌐 Network requests (`fetch`, `axios`)  
+- ⚙️ Redux actions and state changes
+- 🌐 Network requests (`fetch`, `axios`)
 - 🕵️ Logs and system events (coming soon)
 
 > Built for developers who want to go beyond Flipper — Pulse gives you a focused debugging experience that works reliably across devices and emulators.
@@ -24,20 +24,20 @@ It provides a **real-time dashboard** to visualize:
 
 This repo contains two packages:
 
-| Package | Description |
-|--------|-------------|
-| [`packages/client`](./packages/client) | The Pulse SDK for React Native apps. Includes Redux middleware and network tracking utilities. |
-| [`packages/debugger`](./packages/debugger) | The Electron + React app that serves as the Pulse desktop debugger. |
+| Package                                    | Description                                                                                    |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| [`packages/client`](./packages/client)     | The Pulse SDK for React Native apps. Includes Redux middleware and network tracking utilities. |
+| [`packages/debugger`](./packages/debugger) | The Electron + React app that serves as the Pulse desktop debugger.                            |
 
 ---
 
 ## ⚙️ Features
 
-- ✅ Works with React Native 0.78+  
-- ✅ Time-stamped action/state tracking  
-- ✅ Full or diff-based Redux state inspection  
-- ✅ Network request/response logging (with duration + status)  
-- ✅ Zero config to get started  
+- ✅ Works with React Native 0.78+
+- ✅ Time-stamped action/state tracking
+- ✅ Full or diff-based Redux state inspection
+- ✅ Network request/response logging (with duration + status)
+- ✅ Zero config to get started
 - ✅ Written in TypeScript
 
 ---
@@ -81,7 +81,11 @@ yarn add react-native-pulse-debugger-client
 In your Redux store setup:
 
 ```ts
-import { connectToPulseDebugger, createDebugMiddleware, patchFetch } from 'react-native-pulse-debugger-client';
+import {
+  connectToPulseDebugger,
+  createDebugMiddleware,
+  patchFetch,
+} from 'react-native-pulse-debugger-client';
 
 // Connect to debugger
 const socket = connectToPulseDebugger(); // defaults to ws://localhost:39842
