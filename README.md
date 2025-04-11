@@ -47,21 +47,40 @@ This repo contains two packages:
 
 ## 🚀 Quick Start
 
-### 1. Clone the repo
+### For Users (Using the Released App)
+
+1. Download the latest release from the [Releases page](https://github.com/your-org/react-native-pulse-debugger/releases)
+2. Install the app on your computer
+3. Launch the Pulse Debugger app
+4. Install the Pulse SDK in your React Native app:
+
+TODO - UPDATE WITH PACKAGE NAME ONCE UPLOADED TO NPM
+
+```bash
+yarn add <NPM_PACKAGE_NAME>
+# or
+npm install <NPM_PACKAGE_NAME>
+```
+
+5. Connect your React Native app by following the [Client SDK Usage](#-client-sdk-usage) instructions below
+
+### For Developers (Building from Source)
+
+1. Clone the repo
 
 ```bash
 git clone https://github.com/your-org/react-native-pulse-debugger.git
 cd react-native-pulse-debugger
 ```
 
-### 2. Install dependencies
+2. Install dependencies
 
 ```bash
 # At the root
 yarn install
 ```
 
-### 3. Run the debugger app
+3. Run the debugger app in development mode
 
 ```bash
 yarn debugger:dev
@@ -69,9 +88,17 @@ yarn debugger:dev
 
 This starts the Pulse debugger UI at `ws://localhost:8973`.
 
+4. Build the app for distribution
+
+```bash
+yarn debugger:build
+```
+
+This will create distributable packages in the `packages/debugger/dist` directory.
+
 ---
 
-## 📲 Client SDK Usage
+## 🚀 Client SDK Usage
 
 Inside your React Native app:
 
@@ -79,26 +106,83 @@ Inside your React Native app:
 yarn add react-native-pulse-debugger
 ```
 
-In your Redux store setup:
+### 1. Initialize Pulse Debugger
 
-```ts
-import {
-  connectToPulseDebugger,
-  createDebugMiddleware,
-  patchFetch,
-} from 'react-native-pulse-debugger';
+In your `App.tsx` or entry file:
 
-// Connect to debugger
-const socket = connectToPulseDebugger(); // defaults to ws://localhost:8973
+```tsx
+import { initializePulse, getPulse } from 'react-native-pulse-debugger';
 
-// Optional: patch fetch
-patchFetch(socket.send);
-
-// Add Redux middleware
-const pulseMiddleware = createDebugMiddleware({
-  send: socket.send,
-  diffMode: true,
+// Initialize Pulse Debugger
+initializePulse({
+  host: 'localhost',
+  port: 8973,
+  autoConnect: true,
+  retryInterval: 5000,
 });
+
+// Optional: Configure event handling
+const pulse = getPulse();
+if (pulse) {
+  pulse.updateEventConfig({
+    enableBatching: false,
+    enableThrottling: false,
+  });
+}
+```
+
+### 2. Set up Redux Middleware
+
+In your Redux store configuration:
+
+```tsx
+import { configureStore } from '@reduxjs/toolkit';
+import { pulseReduxMiddleware } from 'react-native-pulse-debugger';
+
+export const store = configureStore({
+  reducer: {
+    // your reducers...
+  },
+  middleware: getDefaultMiddleware => getDefaultMiddleware().concat(pulseReduxMiddleware),
+});
+```
+
+### 3. Add Network and Console Middleware
+
+In your `App.tsx` or entry file:
+
+```tsx
+import { pulseNetworkMiddleware, pulseConsoleMiddleware } from 'react-native-pulse-debugger';
+
+// Apply network middleware to track fetch requests
+global.fetch = pulseNetworkMiddleware(fetch);
+
+// Apply console middleware to track console logs
+global.console = pulseConsoleMiddleware(console);
+```
+
+### 4. Monitor Connection Status (Optional)
+
+```tsx
+import { getPulse } from 'react-native-pulse-debugger';
+import type { ConnectionStatus } from 'react-native-pulse-debugger';
+
+function YourComponent() {
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+
+  useEffect(() => {
+    const pulse = getPulse();
+    if (pulse) {
+      setConnectionStatus(pulse.getStatus());
+    }
+  }, []);
+
+  return (
+    <View>
+      <Text>Debugger Status: {connectionStatus}</Text>
+    </View>
+  );
+}
 ```
 
 ---
@@ -132,10 +216,7 @@ pulse/
 
 - [ ] Action re-dispatch (time travel)
 - [ ] AsyncStorage visualizer
-- [ ] Mobile web dashboard
-- [ ] Plugin architecture
 - [ ] Network request mocking
-- [ ] Performance profiling
 
 ---
 
