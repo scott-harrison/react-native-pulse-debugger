@@ -1,4 +1,5 @@
 import { getPulse } from './connection';
+import { OutgoingEventType } from './enums/events';
 
 /**
  * Network middleware that intercepts fetch requests and sends them to the Pulse debugger.
@@ -17,6 +18,7 @@ export const pulseNetworkMiddleware = (originalFetch: typeof fetch) => {
     const startTime = Date.now();
     const requestId = Math.random().toString(36).substring(2, 15);
     const pulse = getPulse();
+    const eventManager = pulse?.getEventManager();
 
     // Create a request object for logging
     const request = {
@@ -34,8 +36,8 @@ export const pulseNetworkMiddleware = (originalFetch: typeof fetch) => {
     };
 
     // Send request event to debugger
-    if (pulse) {
-      pulse.send('network_request', {
+    if (eventManager) {
+      eventManager.emit(OutgoingEventType.NETWORK_REQUEST, {
         ...request,
         status: 'pending',
       });
@@ -54,18 +56,18 @@ export const pulseNetworkMiddleware = (originalFetch: typeof fetch) => {
       try {
         // Try to parse the response as JSON
         responseBody = await responseClone.json();
-      } catch (e) {
+      } catch (jsonError) {
         // If not JSON, try to get text
         try {
           responseBody = await responseClone.text();
-        } catch (e) {
+        } catch (textError) {
           responseBody = 'Unable to parse response body';
         }
       }
 
       // Send response event to debugger
-      if (pulse) {
-        pulse.send('network_response', {
+      if (eventManager) {
+        eventManager.emit(OutgoingEventType.NETWORK_REQUEST, {
           id: requestId,
           url: request.url,
           method: request.method,
@@ -84,8 +86,8 @@ export const pulseNetworkMiddleware = (originalFetch: typeof fetch) => {
       const duration = endTime - startTime;
 
       // Send error event to debugger
-      if (pulse) {
-        pulse.send('network_error', {
+      if (eventManager) {
+        eventManager.emit(OutgoingEventType.NETWORK_REQUEST, {
           id: requestId,
           url: request.url,
           method: request.method,
@@ -93,6 +95,7 @@ export const pulseNetworkMiddleware = (originalFetch: typeof fetch) => {
           stack: error instanceof Error ? error.stack : undefined,
           duration,
           timestamp: endTime,
+          status: 'error',
         });
       }
 

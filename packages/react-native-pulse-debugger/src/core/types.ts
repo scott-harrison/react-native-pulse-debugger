@@ -1,31 +1,25 @@
-export type ConnectionStatus =
+export type ConnectionState =
   | 'connecting'
   | 'connected'
   | 'disconnected'
   | 'error';
 
-export interface ConnectionConfig {
-  host?: string;
-  port?: number;
-  autoConnect?: boolean;
-  retryInterval?: number;
-  appName?: string;
+export interface ConnectionOptions {
+  url: string;
+  reconnectAttempts?: number;
+  initialReconnectDelay?: number;
+  maxReconnectDelay?: number;
+  reconnectBackoffMultiplier?: number;
 }
 
-export interface DebugEvent {
+export interface ValidationResult {
+  isValid: boolean;
+  error?: string;
+}
+
+export type EventHandler<T = unknown> = (payload: T) => void;
+
+export interface EventMessage<T = unknown> {
   type: string;
-  payload: unknown;
-  timestamp: number;
-}
-
-export interface BatchEventPayload {
-  events: DebugEvent[];
-  count: number;
-  timestamp: number;
-}
-
-export interface ConnectionState {
-  status: ConnectionStatus;
-  lastError?: Error;
-  reconnectAttempts: number;
+  payload: T;
 }

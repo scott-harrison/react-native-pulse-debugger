@@ -1,23 +1,16 @@
-import type { Middleware } from '@reduxjs/toolkit';
+import type { Middleware } from 'redux';
 import { getPulse } from './connection';
-
-// Track the last sent action to prevent duplicates
-let lastSentAction: {
-  type: string;
-  timestamp: number;
-  payload: any;
-} | null = null;
+import { OutgoingEventType } from './enums/events';
 
 /**
- * Redux middleware that sends actions to the Pulse debugger.
- * Add this middleware to your Redux store to automatically send actions to the debugger.
+ * Redux middleware that sends state updates to the Pulse debugger.
+ * This middleware should be added to your Redux store configuration.
  *
  * @example
  * ```ts
- * import { configureStore } from '@reduxjs/toolkit';
- * import { pulseReduxMiddleware } from '@pulse-debugger/react-native';
+ * import { pulseReduxMiddleware } from 'react-native-pulse-debugger';
  *
- * export const store = configureStore({
+ * const store = configureStore({
  *   reducer: rootReducer,
  *   middleware: (getDefaultMiddleware) =>
  *     getDefaultMiddleware().concat(pulseReduxMiddleware),
@@ -25,58 +18,34 @@ let lastSentAction: {
  * ```
  */
 export const pulseReduxMiddleware: Middleware =
-  (store) => (next) => (action) => {
-    const result = next(action);
+  (store) => (next) => (action: unknown) => {
     const pulse = getPulse();
+    const eventManager = pulse?.getEventManager();
 
-    if (pulse) {
-      // Set the store reference in the Pulse connection
-      if (!pulse.getReduxStore()) {
-        pulse.setReduxStore(store);
-      }
+    // Get the state before the action is applied
+    const prevState = store.getState();
 
-      // Safely access action properties
-      const actionType =
-        typeof action === 'object' && action !== null && 'type' in action
-          ? String(action.type)
-          : 'UNKNOWN_ACTION';
+    // Apply the action
+    const result = next(action);
 
-      const actionPayload =
-        typeof action === 'object' && action !== null && 'payload' in action
-          ? action.payload
-          : undefined;
+    // Get the state after the action is applied
+    const nextState = store.getState();
 
-      const actionTimestamp = Date.now();
-
-      // Check if this is a duplicate action
-      if (
-        lastSentAction &&
-        lastSentAction.type === actionType &&
-        lastSentAction.timestamp === actionTimestamp &&
-        JSON.stringify(lastSentAction.payload) === JSON.stringify(actionPayload)
-      ) {
-        console.log(
-          'Skipping duplicate Redux action in middleware:',
-          actionType
-        );
-        return result;
-      }
-
-      // Update the last sent action
-      lastSentAction = {
-        type: actionType,
-        timestamp: actionTimestamp,
-        payload: actionPayload,
-      };
-
-      // Send a properly formatted message with the action type and payload
-      pulse.send('redux', {
+    // Send state update to debugger
+    if (
+      eventManager &&
+      typeof action === 'object' &&
+      action !== null &&
+      'type' in action
+    ) {
+      eventManager.emit(OutgoingEventType.REDUX_STATE_UPDATE, {
         action: {
-          type: actionType,
-          payload: actionPayload,
-          timestamp: actionTimestamp,
+          type: String(action.type),
+          payload: 'payload' in action ? action.payload : undefined,
         },
-        state: store.getState(),
+        prevState,
+        nextState,
+        timestamp: Date.now(),
       });
     }
 

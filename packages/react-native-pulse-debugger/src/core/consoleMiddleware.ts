@@ -1,106 +1,92 @@
 import { getPulse } from './connection';
-
-type LogLevel = 'log' | 'info' | 'warn' | 'error' | 'debug';
+import { OutgoingEventType } from './enums/events';
 
 interface ConsoleLogPayload {
-  id: string;
-  level: LogLevel;
+  level: 'log' | 'info' | 'warn' | 'error' | 'debug';
   message: string;
-  data?: any;
-  stack?: string;
+  data?: unknown[];
   timestamp: number;
+  stack?: string;
 }
 
-/**
- * Console middleware that intercepts console logs and sends them to the Pulse debugger.
- * This middleware should be used to wrap the global console methods.
- *
- * @example
- * ```ts
- * import { pulseConsoleMiddleware } from 'react-native-pulse-debugger';
- *
- * // Apply the middleware to the global console
- * global.console = pulseConsoleMiddleware(console);
- * ```
- */
-export const pulseConsoleMiddleware = (originalConsole: typeof console) => {
-  const createLogPayload = (
-    level: LogLevel,
-    message: string,
-    data?: any,
-    stack?: string
-  ): ConsoleLogPayload => ({
-    id: Math.random().toString(36).substring(2, 15),
-    level,
-    message,
-    data,
-    stack,
-    timestamp: Date.now(),
-  });
+// Define a partial console type
+type PartialConsole = Pick<
+  typeof console,
+  'log' | 'info' | 'warn' | 'error' | 'debug'
+>;
 
+/**
+ * Middleware that intercepts console logs and sends them to the Pulse debugger
+ * @param originalConsole The original console object to wrap
+ * @returns A wrapped console object that sends logs to the debugger
+ */
+export const pulseConsoleMiddleware = (originalConsole: PartialConsole) => {
   const sendToDebugger = (payload: ConsoleLogPayload) => {
     const pulse = getPulse();
     if (pulse) {
-      pulse.send('console_log', payload);
-    } else {
-      originalConsole.error('[Pulse Debugger] No pulse instance available');
+      const eventManager = pulse.getEventManager();
+      eventManager.emit(OutgoingEventType.CONSOLE, payload);
     }
   };
 
   return {
-    ...originalConsole,
-    log: (...args: any[]) => {
+    log: (...args: unknown[]) => {
       originalConsole.log(...args);
       const [message, ...data] = args;
-      sendToDebugger(
-        createLogPayload('log', String(message), data.length ? data : undefined)
-      );
+      sendToDebugger({
+        level: 'log',
+        message: String(message),
+        data,
+        timestamp: Date.now(),
+      });
     },
-    info: (...args: any[]) => {
+
+    info: (...args: unknown[]) => {
       originalConsole.info(...args);
       const [message, ...data] = args;
-      sendToDebugger(
-        createLogPayload(
-          'info',
-          String(message),
-          data.length ? data : undefined
-        )
-      );
+      sendToDebugger({
+        level: 'info',
+        message: String(message),
+        data,
+        timestamp: Date.now(),
+      });
     },
-    warn: (...args: any[]) => {
+
+    warn: (...args: unknown[]) => {
       originalConsole.warn(...args);
       const [message, ...data] = args;
-      sendToDebugger(
-        createLogPayload(
-          'warn',
-          String(message),
-          data.length ? data : undefined
-        )
-      );
+      sendToDebugger({
+        level: 'warn',
+        message: String(message),
+        data,
+        timestamp: Date.now(),
+      });
     },
-    error: (...args: any[]) => {
+
+    error: (...args: unknown[]) => {
       originalConsole.error(...args);
       const [message, ...data] = args;
-      const error = data[0] instanceof Error ? data[0] : null;
-      sendToDebugger(
-        createLogPayload(
-          'error',
-          String(message),
-          data.length ? data : undefined,
-          error?.stack
-        )
-      );
+      const error = data.find((arg) => arg instanceof Error) as
+        | Error
+        | undefined;
+      sendToDebugger({
+        level: 'error',
+        message: String(message),
+        data,
+        timestamp: Date.now(),
+        stack: error?.stack,
+      });
     },
-    debug: (...args: any[]) => {
+
+    debug: (...args: unknown[]) => {
       originalConsole.debug(...args);
       const [message, ...data] = args;
-      sendToDebugger(
-        createLogPayload(
-          'debug',
-          String(message),
-          data.length ? data : undefined
-        )
-      );
+      sendToDebugger({
+        level: 'debug',
+        message: String(message),
+        data,
+        timestamp: Date.now(),
+      });
     },
   };
 };
