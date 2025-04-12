@@ -1,12 +1,13 @@
-export { initializePulse, getPulse } from './core/connection';
-export { pulseReduxMiddleware } from './core/reduxMiddleware';
-export { pulseNetworkMiddleware } from './core/networkMiddleware';
-export { pulseConsoleMiddleware } from './core/consoleMiddleware';
+export { initializePulse, getPulse } from './connectionManager';
+export { pulseReduxMiddleware } from './reduxMiddleware';
+export { pulseNetworkMiddleware } from './networkMiddleware';
+export { pulseConsoleMiddleware } from './consoleMiddleware';
+
 export type {
-  ConnectionConfig,
-  ConnectionStatus,
-  DebugEvent,
+  ConnectionOptions,
   ConnectionState,
-  BatchEventPayload,
-} from './core/types';
-export type { EventManagerConfig } from './core/eventManager';
+  ValidationResult,
+  ReduxStore,
+  EventMessage,
+  EventHandler,
+} from './types';
