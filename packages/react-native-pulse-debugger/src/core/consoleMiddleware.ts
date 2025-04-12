@@ -1,4 +1,4 @@
-import { getPulse } from './connection';
+import { getPulse } from './connectionManager';
 import { OutgoingEventType } from './enums/events';
 
 interface ConsoleLogPayload {
@@ -25,7 +25,9 @@ export const pulseConsoleMiddleware = (originalConsole: PartialConsole) => {
     const pulse = getPulse();
     if (pulse) {
       const eventManager = pulse.getEventManager();
-      eventManager.emit(OutgoingEventType.CONSOLE, payload);
+      if (eventManager) {
+        eventManager.emit(OutgoingEventType.CONSOLE, payload);
+      }
     }
   };
 

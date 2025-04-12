@@ -1,13 +1,18 @@
 import { pulseReduxMiddleware } from '../reduxMiddleware';
-import { getPulse } from '../connection';
+import { getPulse } from '../connectionManager';
+import { setReduxStore } from '../utils/reduxStore';
 import { OutgoingEventType } from '../enums/events';
 
-jest.mock('../connection', () => ({
+jest.mock('../connectionManager', () => ({
   getPulse: jest.fn(),
 }));
 
+jest.mock('../utils/reduxStore', () => ({
+  setReduxStore: jest.fn(),
+}));
+
 describe('pulseReduxMiddleware', () => {
-  let mockEventManager: { emit: jest.Mock; setReduxStore: jest.Mock };
+  let mockEventManager: { emit: jest.Mock };
   let mockStore: { getState: jest.Mock; dispatch: jest.Mock };
   let mockNext: jest.Mock;
   let middleware: any;
@@ -17,7 +22,6 @@ describe('pulseReduxMiddleware', () => {
 
     mockEventManager = {
       emit: jest.fn(),
-      setReduxStore: jest.fn(),
     };
 
     (getPulse as jest.Mock).mockReturnValue({
@@ -167,5 +171,11 @@ describe('pulseReduxMiddleware', () => {
 
     // Verify result was preserved
     expect(result).toBe(expectedResult);
+  });
+
+  it('should register the store with setReduxStore', () => {
+    const action = { type: 'TEST' };
+    middleware(action);
+    expect(setReduxStore).toHaveBeenCalledWith(mockStore);
   });
 });

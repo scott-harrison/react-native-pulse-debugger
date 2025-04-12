@@ -9,3 +9,7 @@ export interface EventMessage<T = unknown> {
   type: string;
   payload: T;
 }
+
+export interface ReduxStore {
+  getState: () => unknown;
+}

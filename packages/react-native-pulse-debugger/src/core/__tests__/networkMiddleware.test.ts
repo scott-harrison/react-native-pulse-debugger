@@ -1,8 +1,8 @@
 import { pulseNetworkMiddleware } from '../networkMiddleware';
-import { getPulse } from '../connection';
+import { getPulse } from '../connectionManager';
 import { OutgoingEventType } from '../enums/events';
 
-jest.mock('../connection', () => ({
+jest.mock('../connectionManager', () => ({
   getPulse: jest.fn(),
 }));
 

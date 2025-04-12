@@ -1,5 +1,21 @@
 import type { ConnectionOptions, ConnectionState } from './types';
 import { EventManager } from './eventManager';
+import { OutgoingEventType, IncomingEventType } from './enums/events';
+import { getReduxStore, setReduxStore } from './utils/reduxStore';
+
+// Create a singleton instance
+let instance: ConnectionManager | null = null;
+
+export const initializePulse = (
+  options: ConnectionOptions
+): ConnectionManager => {
+  if (!instance) {
+    instance = new ConnectionManager(options);
+  }
+  return instance;
+};
+
+export const getPulse = (): ConnectionManager | null => instance;
 
 /**
  * Manages WebSocket connection for the Pulse Debugger using polling.
@@ -19,7 +35,7 @@ export class ConnectionManager {
   private options: ConnectionOptions;
   private isPollingEnabled = true;
   private eventListeners: Map<string, Set<(data: unknown) => void>> = new Map();
-  private eventManager: EventManager | null = null;
+  private eventManager: EventManager;
 
   // Polling configuration
   private readonly POLL_INTERVAL = 1000; // Check connection every second
@@ -41,6 +57,8 @@ export class ConnectionManager {
    */
   constructor(options: ConnectionOptions) {
     this.options = options;
+    this.eventManager = new EventManager(this);
+    this.setupMessageListener();
   }
 
   /**
@@ -160,11 +178,6 @@ export class ConnectionManager {
       this.emit(ConnectionManager.EVENTS.CONNECT, null);
       this.emit(ConnectionManager.EVENTS.STATE_CHANGE, this.state);
       this.startPolling();
-
-      // Initialize EventManager when connection is established
-      if (!this.eventManager) {
-        this.eventManager = new EventManager(this);
-      }
     };
 
     this.ws.onclose = () => {
@@ -187,7 +200,48 @@ export class ConnectionManager {
 
     this.ws.onmessage = (event: WebSocketMessageEvent) => {
       this.emit(ConnectionManager.EVENTS.MESSAGE, event.data);
+      this.handleIncomingMessage(event.data);
     };
+  }
+
+  /**
+   * Handles incoming messages from the debugger
+   * @param data - The message data
+   */
+  private handleIncomingMessage(data: string): void {
+    try {
+      const message = JSON.parse(data);
+
+      if (message.type === IncomingEventType.REDUX_STATE_REQUEST) {
+        this.sendReduxState();
+      }
+    } catch (error) {
+      console.error('Error parsing message:', error);
+    }
+  }
+
+  /**
+   * Sends the current Redux state to the debugger
+   */
+  private sendReduxState(): void {
+    if (!this.eventManager) return;
+
+    try {
+      const state = getReduxStore().getState();
+      this.eventManager.emit(OutgoingEventType.REDUX_STATE_UPDATE, {
+        state,
+        timestamp: Date.now(),
+      });
+    } catch (error) {
+      console.error('Error sending Redux state:', error);
+    }
+  }
+
+  /**
+   * Sends the initial Redux state to the debugger on connection
+   */
+  private sendInitialReduxState(): void {
+    this.sendReduxState();
   }
 
   /**
@@ -253,12 +307,26 @@ export class ConnectionManager {
   }
 
   /**
-   * Gets the EventManager instance. Creates one if it doesn't exist.
+   * Returns the EventManager instance for this connection
+   * @returns The EventManager instance or null if not initialized
    */
-  public getEventManager(): EventManager {
-    if (!this.eventManager) {
-      this.eventManager = new EventManager(this);
-    }
+  public getEventManager(): EventManager | null {
     return this.eventManager;
+  }
+
+  /**
+   * Returns the current connection state
+   * @returns The current connection state
+   */
+  public getState(): ConnectionState {
+    return this.state;
+  }
+
+  private setupMessageListener(): void {
+    // Implementation of setupMessageListener method
+  }
+
+  public setReduxStore(store: { getState: () => unknown }): void {
+    setReduxStore(store);
   }
 }

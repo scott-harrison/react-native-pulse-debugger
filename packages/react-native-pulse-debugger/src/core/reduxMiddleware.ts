@@ -1,5 +1,6 @@
 import type { Middleware } from 'redux';
-import { getPulse } from './connection';
+import { getPulse } from './connectionManager';
+import { setReduxStore } from './utils/reduxStore';
 import { OutgoingEventType } from './enums/events';
 
 /**
@@ -19,6 +20,9 @@ import { OutgoingEventType } from './enums/events';
  */
 export const pulseReduxMiddleware: Middleware =
   (store) => (next) => (action: unknown) => {
+    // Register the store with the ConnectionManager
+    setReduxStore(store);
+
     const pulse = getPulse();
     const eventManager = pulse?.getEventManager();
 

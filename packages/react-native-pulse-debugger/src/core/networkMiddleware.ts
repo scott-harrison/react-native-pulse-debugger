@@ -1,4 +1,4 @@
-import { getPulse } from './connection';
+import { getPulse } from './connectionManager';
 import { OutgoingEventType } from './enums/events';
 
 /**

@@ -1,6 +1,6 @@
 import { pulseConsoleMiddleware } from '../consoleMiddleware';
 import { OutgoingEventType } from '../enums/events';
-import { initializePulse } from '../connection';
+import { initializePulse } from '../connectionManager';
 import { MockWebSocket } from './mocks/MockWebSocket';
 
 (global as any).WebSocket = MockWebSocket;
