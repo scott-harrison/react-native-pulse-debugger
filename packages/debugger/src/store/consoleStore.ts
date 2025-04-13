@@ -1,14 +1,5 @@
 import { create } from 'zustand';
-import { LogLevel } from '@/types';
-
-interface ConsoleLog {
-  id: string;
-  level: LogLevel;
-  message: string;
-  data?: any;
-  stack?: string;
-  timestamp: number;
-}
+import { LogLevel, ConsoleLog } from '@pulse/shared-types';
 
 interface ConsoleState {
   logs: ConsoleLog[];

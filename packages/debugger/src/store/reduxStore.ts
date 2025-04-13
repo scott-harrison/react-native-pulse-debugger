@@ -1,18 +1,5 @@
 import { create } from 'zustand';
-
-export interface ReduxState {
-  [key: string]: any;
-}
-
-export interface ReduxAction {
-  type: string;
-  payload: any;
-  timestamp: number;
-  stateDiff?: {
-    before: ReduxState;
-    after: ReduxState;
-  };
-}
+import { ReduxState, ReduxAction } from '@pulse/shared-types';
 
 interface ReduxStore {
   state: ReduxState | null;

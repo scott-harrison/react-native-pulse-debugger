@@ -12,6 +12,7 @@
     }
   },
   "dependencies": {
+    "@pulse/shared-types": "0.1.0",
     "@types/ws": "^8.18.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

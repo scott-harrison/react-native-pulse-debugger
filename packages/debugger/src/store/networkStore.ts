@@ -1,22 +1,9 @@
 import { create } from 'zustand';
+import { NetworkRequest as SharedNetworkRequest, NetworkResponse } from '@pulse/shared-types';
 
-interface NetworkRequest {
-  id: string;
-  method: string;
-  url: string;
-  headers: Record<string, string>;
-  body?: any;
-  timestamp: number;
+// Extend the shared NetworkRequest type with additional fields
+interface NetworkRequest extends SharedNetworkRequest {
   status?: 'pending' | 'completed' | 'error';
-}
-
-interface NetworkResponse {
-  id: string;
-  status: number;
-  headers: Record<string, string>;
-  body?: any;
-  timestamp: number;
-  duration?: number;
 }
 
 interface NetworkState {

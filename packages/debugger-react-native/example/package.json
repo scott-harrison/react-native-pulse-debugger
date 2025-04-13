@@ -1,0 +1,30 @@
+{
+  "name": "pulse-debugger-example",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "REACT_NATIVE_PACKAGER_HOSTNAME='127.0.0.1' expo start --localhost",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.24.0",
+    "@expo/metro-runtime": "~4.0.1",
+    "@pulse/debugger-react-native": "link:../",
+    "@reduxjs/toolkit": "^2.6.1",
+    "expo": "~52.0.43",
+    "expo-status-bar": "~2.0.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-native": "0.76.9",
+    "react-native-web": "~0.19.13",
+    "react-redux": "^9.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "react-native-builder-bob": "^0.38.3",
+    "typescript": "^5.3.0"
+  },
+  "private": true
+}
