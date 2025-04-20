@@ -15,10 +15,10 @@ export const validators: Record<
       return { isValid: false, error: 'Payload must be an object' };
     }
 
-    const { state } = payload as any;
-    if (!state || typeof state !== 'object') {
-      return { isValid: false, error: 'Payload must contain a state object' };
-    }
+    // const { state } = payload as any;
+    // if (!state || typeof state !== 'object') {
+    //   return { isValid: false, error: 'Payload must contain a state object' };
+    // }
 
     return { isValid: true };
   },
@@ -49,6 +49,5 @@ export const validators: Record<
 
   [LibToDebuggerEventType.CONSOLE]: () => ({ isValid: true }),
   [LibToDebuggerEventType.REDUX_ACTION]: () => ({ isValid: true }),
-
   [DebuggerToLibEventType.REDUX_STATE_REQUEST]: () => ({ isValid: true }),
 };

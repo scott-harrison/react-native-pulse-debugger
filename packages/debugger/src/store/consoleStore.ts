@@ -31,19 +31,8 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
     // Create a unique key for this log
     const logKey = `${log.id}_${log.timestamp}`;
 
-    console.log('[Pulse Debugger] ConsoleStore processing log:', {
-      id: log.id,
-      level: log.level,
-      message: log.message,
-      hasData: !!log.data,
-      hasStack: !!log.stack,
-      timestamp: log.timestamp,
-      logKey,
-    });
-
     // Check if we've already processed this log
     if (processedLogs.has(logKey)) {
-      console.log('[Pulse Debugger] Skipping duplicate log:', log.id);
       return;
     }
 

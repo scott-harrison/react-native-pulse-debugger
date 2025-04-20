@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, screen } from 'electron';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -6,9 +6,61 @@ import os from 'node:os';
 import { networkInterfaces } from 'os';
 import { createServer } from 'net';
 import { WebSocketServer, WebSocket } from 'ws';
+import Store from 'electron-store';
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Initialize store for window state
+const store = new Store({
+  defaults: {
+    windowState: {
+      x: undefined,
+      y: undefined,
+      width: 1200,
+      height: 800,
+    },
+  },
+});
+
+function restoreWindowState(win: BrowserWindow) {
+  const windowState = store.get('windowState') as {
+    x?: number;
+    y?: number;
+    width: number;
+    height: number;
+  };
+
+  // Check if the saved position is on a currently available display
+  if (typeof windowState.x === 'number' && typeof windowState.y === 'number') {
+    const displays = screen.getAllDisplays();
+    const isOnScreen = displays.some(display => {
+      const bounds = display.bounds;
+      return (
+        windowState.x! >= bounds.x &&
+        windowState.y! >= bounds.y &&
+        windowState.x! + windowState.width <= bounds.x + bounds.width &&
+        windowState.y! + windowState.height <= bounds.y + bounds.height
+      );
+    });
+
+    if (isOnScreen) {
+      win.setBounds({
+        x: windowState.x,
+        y: windowState.y,
+        width: windowState.width,
+        height: windowState.height,
+      });
+    }
+  }
+}
+
+function saveWindowState(win: BrowserWindow) {
+  if (!win.isMaximized() && !win.isMinimized()) {
+    const bounds = win.getBounds();
+    store.set('windowState', bounds);
+  }
+}
 
 // The built directory structure
 //
@@ -49,14 +101,6 @@ const indexHtml = path.join(RENDERER_DIST, 'index.html');
 let wsServer: WebSocketServer | null = null;
 let wsClient: WebSocket | null = null;
 const WS_PORT = 8973;
-let heartbeatInterval: NodeJS.Timeout | null = null;
-
-// Track the last processed Redux action to prevent duplicates
-let lastProcessedReduxAction: {
-  type: string;
-  timestamp: number;
-  payload: any;
-} | null = null;
 
 function startWebSocketServer() {
   if (wsServer) {
@@ -71,34 +115,17 @@ function startWebSocketServer() {
     wsServer.on('connection', socket => {
       console.log('Client connected to WebSocket server');
 
-      // Notify renderer process
-      if (win) {
-        win.webContents.send('connection-status', 'connecting');
+      // Close existing connection if any
+      if (wsClient && wsClient !== socket) {
+        console.log('Closing existing connection for new client');
+        wsClient.close();
       }
 
       wsClient = socket;
 
-      // Start sending heartbeat messages
-      if (heartbeatInterval) {
-        clearInterval(heartbeatInterval);
-      }
-
-      heartbeatInterval = setInterval(() => {
-        if (wsClient && wsClient.readyState === WebSocket.OPEN) {
-          try {
-            // Send a ping message to the client silently
-            wsClient.send(JSON.stringify({ type: 'ping' }));
-          } catch (error) {
-            // Only log errors if they're not related to the connection being closed
-            if (error.message && !error.message.includes('WebSocket is not open')) {
-              console.error('Failed to send heartbeat:', error);
-            }
-          }
-        }
-      }, 3000); // Send heartbeat every 3 seconds
-
       socket.on('message', data => {
         try {
+          // Try to parse the message
           const message = JSON.parse(data.toString());
 
           // Validate message structure
@@ -109,34 +136,16 @@ function startWebSocketServer() {
 
           // Handle handshake message
           if (message.type === 'handshake') {
-            // console.log('Received handshake message:', message.payload);
-            const appInfo = {
-              name: message.payload?.appName || 'Unknown App',
-              platform: message.payload?.platform || 'Unknown',
-              version: message.payload?.version || 'Unknown',
-              timestamp: message.payload?.timestamp || Date.now(),
-            };
-
             // Notify renderer process
             if (win) {
-              console.log('Sending app info to renderer:', appInfo);
-              win.webContents.send('app-info', appInfo);
               console.log('Sending connected status to renderer');
-              win.webContents.send('connection-status', 'connected');
-            } else {
-              console.log('Window not available to send handshake response');
+              win.webContents.send('CONNECTION_STATUS', 'connected');
             }
             return;
           }
 
-          // Handle pong message (response to our ping) silently
-          if (message.type === 'pong') {
-            return; // Exit early for pong messages
-          }
-
           // Forward all other messages to the renderer process
           if (win) {
-            // Forward the parsed message directly
             win.webContents.send('ws-message', message);
           }
         } catch (error) {
@@ -146,17 +155,17 @@ function startWebSocketServer() {
 
       socket.on('close', () => {
         console.log('Client disconnected from WebSocket server');
-        wsClient = null;
-
-        // Notify renderer process
-        if (win) {
-          win.webContents.send('connection-status', 'disconnected');
+        if (wsClient === socket) {
+          wsClient = null;
+          // Notify renderer process
+          if (win) {
+            win.webContents.send('connection-status', 'disconnected');
+          }
         }
       });
 
       socket.on('error', error => {
         console.error('WebSocket error:', error);
-
         // Notify renderer process
         if (win) {
           win.webContents.send('connection-error', error.message || 'Connection error');
@@ -181,10 +190,15 @@ function startWebSocketServer() {
 
 async function createWindow() {
   try {
+    const windowState = store.get('windowState') as {
+      width: number;
+      height: number;
+    };
+
     win = new BrowserWindow({
       title: 'React Native Debugger',
-      width: 1200,
-      height: 800,
+      width: windowState.width,
+      height: windowState.height,
       transparent: true,
       frame: false,
       titleBarStyle: 'hiddenInset',
@@ -198,12 +212,29 @@ async function createWindow() {
       },
     });
 
-    if (VITE_DEV_SERVER_URL) {
-      await win.loadURL(VITE_DEV_SERVER_URL);
-    } else {
-      await win.loadFile(indexHtml);
-    }
+    // Restore window position after creation
+    restoreWindowState(win);
 
+    // Save window state on close and move
+    win.on('close', () => {
+      if (win) saveWindowState(win);
+    });
+
+    win.on('moved', () => {
+      if (win) saveWindowState(win);
+    });
+
+    win.on('resized', () => {
+      if (win) saveWindowState(win);
+    });
+
+    if (VITE_DEV_SERVER_URL) {
+      win.loadURL(VITE_DEV_SERVER_URL);
+      win.webContents.openDevTools();
+    } else {
+      win.loadFile(indexHtml);
+      win.webContents.openDevTools();
+    }
     // Start WebSocket server after window is created
     startWebSocketServer();
   } catch (error) {
@@ -229,6 +260,15 @@ app.on('activate', () => {
 ipcMain.on('send-message', (_, message) => {
   if (wsClient) {
     wsClient.send(JSON.stringify(message));
+  }
+});
+
+// Handle WebSocket messages from renderer
+ipcMain.on('ws-message', (_, message) => {
+  if (wsClient) {
+    wsClient.send(JSON.stringify(message));
+  } else {
+    console.warn('Cannot send WebSocket message: No client connected');
   }
 });
 

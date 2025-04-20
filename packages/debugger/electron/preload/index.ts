@@ -1,9 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import { handlers } from '../../src/lib/ipcSetup';
 
 console.log('Setting up electron bridge in preload script');
 
-// Expose protected methods that allow the renderer process to use
-// the ipcRenderer without exposing the entire object
+// Set up the bridge and IPC listeners together
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
     on: (channel: string, func: (...args: any[]) => void) => {
@@ -20,6 +20,28 @@ contextBridge.exposeInMainWorld('electron', {
     },
   },
 });
+
+// Set up IPC listeners immediately after exposing the bridge
+function setupIpcListeners() {
+  console.log('Setting up IPC event listeners');
+  ipcRenderer.on('CONNECTION_STATUS', handlers.connectionStatus);
+  ipcRenderer.on('ws-message', handlers.wsMessage);
+}
+
+// Clean up function
+function cleanupIpcListeners() {
+  console.log('Cleaning up IPC event listeners');
+  ipcRenderer.removeListener('CONNECTION_STATUS', handlers.connectionStatus);
+  ipcRenderer.removeListener('ws-message', handlers.wsMessage);
+}
+
+// Wait for DOM to be ready before setting up listeners
+domReady().then(() => {
+  setupIpcListeners();
+});
+
+// Clean up on window unload
+window.addEventListener('unload', cleanupIpcListeners);
 
 // --------- Preload scripts loading ---------
 function domReady(condition: DocumentReadyState[] = ['complete', 'interactive']) {

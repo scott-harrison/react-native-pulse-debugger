@@ -19,9 +19,70 @@ function getDataType(value: any): string {
   return typeof value;
 }
 
-function getObjectSize(obj: any): number {
-  if (!obj || typeof obj !== 'object') return 0;
-  return Object.keys(obj).length;
+function formatData(data: any): { formattedData: any; error: string | null } {
+  try {
+    // Handle null or undefined
+    if (data === null || data === undefined) {
+      return { formattedData: data, error: null };
+    }
+
+    // If it's already an object or array, no need to parse
+    if (typeof data === 'object') {
+      // Handle nested string properties that might be JSON
+      if (Array.isArray(data)) {
+        return {
+          formattedData: data.map(item => {
+            if (typeof item === 'string') {
+              try {
+                return JSON.parse(item);
+              } catch {
+                return item;
+              }
+            }
+            return item;
+          }),
+          error: null,
+        };
+      }
+
+      // Handle object properties that might be JSON strings
+      const formatted = Object.entries(data).reduce(
+        (acc, [key, value]) => {
+          if (typeof value === 'string') {
+            try {
+              acc[key] = JSON.parse(value);
+            } catch {
+              acc[key] = value;
+            }
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, any>
+      );
+
+      return { formattedData: formatted, error: null };
+    }
+
+    // If it's a string, try to parse it as JSON
+    if (typeof data === 'string') {
+      try {
+        return { formattedData: JSON.parse(data), error: null };
+      } catch {
+        // If it's not valid JSON, return as is
+        return { formattedData: data, error: null };
+      }
+    }
+
+    // For all other types (number, boolean, etc.), return as is
+    return { formattedData: data, error: null };
+  } catch (error) {
+    return {
+      formattedData: String(data),
+      error: error instanceof Error ? error.message : 'Unknown error formatting data',
+    };
+  }
 }
 
 export function JSONViewer({
@@ -35,8 +96,20 @@ export function JSONViewer({
   showDiff = false,
 }: JSONViewerProps) {
   const [isExpanded, setIsExpanded] = useState(initialExpanded);
-  const dataType = getDataType(data);
-  const isCollapsible = ['object', 'array'].includes(dataType) && data !== null;
+  const { formattedData, error } = formatData(data);
+
+  // If there was an error formatting the data, display it as a string with error indication
+  if (error) {
+    return (
+      <div className="text-red-400 break-all whitespace-pre-wrap">
+        {String(data)}
+        <div className="text-xs text-red-500 mt-1">Error: {error}</div>
+      </div>
+    );
+  }
+
+  const dataType = getDataType(formattedData);
+  const isCollapsible = ['object', 'array'].includes(dataType) && formattedData !== null;
   const indent = level * 16;
 
   const renderDiffValue = (key: string, value: any, level: number = 0) => {
@@ -44,56 +117,59 @@ export function JSONViewer({
       return renderValue(value, level);
     }
 
-    const oldValue = compareWith[key];
-    const hasChanged = JSON.stringify(oldValue) !== JSON.stringify(value);
+    const { formattedData: formattedOldValue } = formatData(compareWith[key]);
+    const { formattedData: formattedNewValue } = formatData(value);
+    const hasChanged = JSON.stringify(formattedOldValue) !== JSON.stringify(formattedNewValue);
 
     if (!hasChanged) {
-      return renderValue(value, level);
+      return renderValue(formattedNewValue, level);
     }
 
-    if (oldValue === undefined) {
-      return <span className="text-green-400">{renderValue(value, level)}</span>;
+    if (formattedOldValue === undefined) {
+      return <span className="text-green-400">{renderValue(formattedNewValue, level)}</span>;
     }
 
-    if (value === undefined) {
-      return <span className="text-red-400">{renderValue(oldValue, level)}</span>;
+    if (formattedNewValue === undefined) {
+      return <span className="text-red-400">{renderValue(formattedOldValue, level)}</span>;
     }
 
     return (
       <div className="pl-4">
-        <div className="text-red-400">- {renderValue(oldValue, level)}</div>
-        <div className="text-green-400">+ {renderValue(value, level)}</div>
+        <div className="text-red-400">- {renderValue(formattedOldValue, level)}</div>
+        <div className="text-green-400">+ {renderValue(formattedNewValue, level)}</div>
       </div>
     );
   };
 
   const renderValue = (value: any, level: number = 0): React.ReactNode => {
-    if (value === null) return <span className="text-gray-500">null</span>;
-    if (value === undefined) return <span className="text-gray-500">undefined</span>;
+    const { formattedData: formatted } = formatData(value);
 
-    switch (typeof value) {
+    if (formatted === null) return <span className="text-gray-500">null</span>;
+    if (formatted === undefined) return <span className="text-gray-500">undefined</span>;
+
+    switch (typeof formatted) {
       case 'string':
-        if (value.length > 60 || value.startsWith('http')) {
+        if (formatted.length > 60 || formatted.startsWith('http')) {
           return (
             <span className="text-green-400 break-all whitespace-pre-wrap inline-block max-w-full">
-              "{value}"
+              "{formatted}"
             </span>
           );
         }
-        return <span className="text-green-400">"{value}"</span>;
+        return <span className="text-green-400">"{formatted}"</span>;
       case 'number':
-        return <span className="text-yellow-400">{value}</span>;
+        return <span className="text-yellow-400">{formatted}</span>;
       case 'boolean':
-        return <span className="text-purple-400">{value.toString()}</span>;
+        return <span className="text-purple-400">{formatted.toString()}</span>;
       case 'object':
-        if (Array.isArray(value)) {
+        if (Array.isArray(formatted)) {
           return (
             <div style={{ marginLeft: level * 20 }} className="whitespace-pre-wrap break-all">
               [
-              {value.map((item, index) => (
+              {formatted.map((item, index) => (
                 <div key={index} style={{ marginLeft: 20 }}>
                   {renderValue(item, level + 1)}
-                  {index < value.length - 1 && ','}
+                  {index < formatted.length - 1 && ','}
                 </div>
               ))}
               ]
@@ -103,7 +179,7 @@ export function JSONViewer({
         return (
           <div style={{ marginLeft: level * 20 }} className="whitespace-pre-wrap break-all">
             {'{'}
-            {Object.entries(value).map(([key, val], index, arr) => (
+            {Object.entries(formatted).map(([key, val], index, arr) => (
               <div key={key} style={{ marginLeft: 20 }}>
                 <span className="text-blue-400">"{key}"</span>:{' '}
                 {renderDiffValue(key, val, level + 1)}
@@ -114,12 +190,12 @@ export function JSONViewer({
           </div>
         );
       default:
-        return <span>{String(value)}</span>;
+        return <span>{String(formatted)}</span>;
     }
   };
 
   if (!isCollapsible) {
-    const formattedValue = dataType === 'string' ? `"${data}"` : String(data);
+    const formattedValue = dataType === 'string' ? `"${formattedData}"` : String(formattedData);
     return (
       <span
         className={cn(
@@ -139,8 +215,8 @@ export function JSONViewer({
     );
   }
 
-  const entries = Object.entries(data);
-  const isArray = Array.isArray(data);
+  const entries = Object.entries(formattedData);
+  const isArray = Array.isArray(formattedData);
   const isEmpty = entries.length === 0;
 
   if (isEmpty) {
@@ -152,16 +228,42 @@ export function JSONViewer({
     );
   }
 
-  const renderCollapsed = () => (
-    <div className="inline-flex items-center">
-      <span className="text-zinc-600">{`${entries.length} ${isArray ? 'items' : 'keys'}...`}</span>
-      <span className="text-zinc-400">{isArray ? ']' : '}'}</span>
-      {!isLast && <span className="text-zinc-400">,</span>}
-    </div>
-  );
+  const renderCollapsed = () => {
+    const preview = isArray
+      ? `[${entries
+          .slice(0, 2)
+          .map(([_, v]) => {
+            const type = getDataType(v);
+            if (type === 'string')
+              return `"${String(v).slice(0, 15)}${String(v).length > 15 ? '...' : ''}"`;
+            if (type === 'object' && v !== null) return Array.isArray(v) ? '[...]' : '{...}';
+            return String(v);
+          })
+          .join(', ')}${entries.length > 2 ? ', ...' : ''}]`
+      : `{${entries
+          .slice(0, 2)
+          .map(([k, v]) => {
+            const type = getDataType(v);
+            let preview = '';
+            if (type === 'string')
+              preview = `"${String(v).slice(0, 15)}${String(v).length > 15 ? '...' : ''}"`;
+            else if (type === 'object' && v !== null)
+              preview = Array.isArray(v) ? '[...]' : '{...}';
+            else preview = String(v);
+            return `"${k}": ${preview}`;
+          })
+          .join(', ')}${entries.length > 2 ? ', ...' : ''}}`;
+
+    return (
+      <div className="inline-flex items-center">
+        <span className="text-zinc-600">{preview}</span>
+        {!isLast && <span className="text-zinc-400">,</span>}
+      </div>
+    );
+  };
 
   return (
-    <div className="whitespace-pre break-words">
+    <div className="whitespace-pre break-words p-4">
       <div style={{ paddingLeft: level ? indent : 0 }} className="flex items-baseline gap-1">
         {objectKey ? (
           <>

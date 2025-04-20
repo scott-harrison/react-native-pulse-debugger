@@ -13,4 +13,7 @@ export enum LibToDebuggerEventType {
  */
 export enum DebuggerToLibEventType {
   REDUX_STATE_REQUEST = 'REDUX_STATE_REQUEST', // Request the current state from the debugger
+  APP_INFO = 'APP_INFO', // Send app info to the debugger
 }
+
+export const CONNECTION_STATUS = 'CONNECTION_STATUS';

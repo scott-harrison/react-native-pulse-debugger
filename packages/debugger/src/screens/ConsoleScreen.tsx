@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { JSONViewer } from '../components/common/JSONViewer';
 import { useConsoleStore } from '../store/consoleStore';
@@ -15,35 +14,44 @@ interface ConsoleLog {
   timestamp: number;
 }
 
+declare global {
+  interface Window {
+    electron: {
+      ipcRenderer: {
+        on: (channel: string, func: (...args: any[]) => void) => void;
+        removeListener: (channel: string, func: (...args: any[]) => void) => void;
+        send: (channel: string, ...args: any[]) => void;
+      };
+    };
+  }
+}
+
 export function ConsoleScreen() {
-  const { logs, selectedLogId, selectLog, addLog, clear } = useConsoleStore();
+  const { logs, selectedLogId, addLog, clear, selectLog } = useConsoleStore();
 
   useEffect(() => {
-    const handleConsoleLog = (event: CustomEvent<ConsoleLog>) => {
-      console.log('[Pulse Debugger] ConsoleScreen received console_log event:', event.detail);
-
-      // Add more detailed debugging
-      console.log('[Pulse Debugger] Log details:', {
-        id: event.detail.id,
-        level: event.detail.level,
-        message: event.detail.message,
-        hasData: !!event.detail.data,
-        hasStack: !!event.detail.stack,
-        timestamp: event.detail.timestamp,
-      });
-
-      // Check if the log is valid
-      if (!event.detail.id || !event.detail.level || !event.detail.message) {
-        console.error('[Pulse Debugger] Invalid log format:', event.detail);
-        return;
+    const handleWSMessage = (_: any, data: any) => {
+      try {
+        if (data?.type === 'CONSOLE') {
+          addLog({
+            id: data.timestamp?.toString() || Date.now().toString(),
+            level: (data.level as LogLevel) || 'log',
+            message: data.message || '',
+            data: Array.isArray(data.data) ? data.data : [],
+            timestamp: data.timestamp || Date.now(),
+          });
+        }
+      } catch (error) {
+        console.error('Error handling WebSocket message:', error);
       }
-
-      addLog(event.detail);
     };
 
-    window.addEventListener('console_log', handleConsoleLog as EventListener);
+    // Clean up any existing listeners before adding a new one
+    window.electron.ipcRenderer.removeListener('ws-message', handleWSMessage);
+    window.electron.ipcRenderer.on('ws-message', handleWSMessage);
+
     return () => {
-      window.removeEventListener('console_log', handleConsoleLog as EventListener);
+      window.electron.ipcRenderer.removeListener('ws-message', handleWSMessage);
     };
   }, [addLog]);
 
@@ -77,19 +85,50 @@ export function ConsoleScreen() {
     }
   };
 
-  const getDataPreview = (data: any) => {
-    if (!data) return null;
+  const renderLogMessage = (log: ConsoleLog) => {
+    const timestamp = new Date(log.timestamp).toLocaleTimeString();
 
-    if (Array.isArray(data)) {
-      return `[${data.length} items]`;
-    }
-    if (typeof data === 'object' && data !== null) {
-      if (data instanceof Error || 'message' in data) {
-        return data.message;
-      }
-      return `{${Object.keys(data).length} keys}`;
-    }
-    return String(data);
+    return (
+      <div
+        key={log.id}
+        className={cn(
+          'w-full text-left px-4 py-3 border-b border-zinc-800/50 transition-colors cursor-pointer hover:bg-zinc-900',
+          selectedLogId === log.id && 'bg-zinc-800'
+        )}
+        onClick={() => selectLog(log.id)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            selectLog(log.id);
+          }
+        }}
+      >
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                'text-[10px] font-medium px-1 py-0.5 rounded',
+                getLogLevelBg(log.level)
+              )}
+            >
+              {log.level.toUpperCase()}
+            </span>
+            <span className="text-[10px] text-zinc-500 tabular-nums">{timestamp}</span>
+          </div>
+        </div>
+        <div className={cn('mt-0.5 text-xs font-mono line-clamp-2', getLogLevelColor(log.level))}>
+          {log.message}
+        </div>
+        {log.data && (
+          <div className="mt-1.5 text-[10px] text-zinc-500 font-mono">
+            <pre className="mt-1">
+              {typeof log.data === 'object' ? JSON.stringify(log.data, null, 2) : String(log.data)}
+            </pre>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -108,51 +147,7 @@ export function ConsoleScreen() {
             Clear Logs
           </button>
         </div>
-        <div className="flex-1 overflow-auto">
-          {logs.map(log => (
-            <div
-              key={log.id}
-              onClick={() => selectLog(log.id)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  selectLog(log.id);
-                }
-              }}
-              className={cn(
-                'w-full text-left px-4 py-3 border-b border-zinc-800/50 transition-colors cursor-pointer',
-                selectedLogId === log.id ? 'bg-zinc-800' : 'hover:bg-zinc-900'
-              )}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      'text-[10px] font-medium px-1 py-0.5 rounded',
-                      getLogLevelBg(log.level)
-                    )}
-                  >
-                    {log.level.toUpperCase()}
-                  </span>
-                  <span className="text-[10px] text-zinc-500 tabular-nums">
-                    {new Date(log.timestamp).toLocaleTimeString()}
-                  </span>
-                </div>
-              </div>
-              <div
-                className={cn('mt-0.5 text-xs font-mono line-clamp-2', getLogLevelColor(log.level))}
-              >
-                {log.message}
-              </div>
-              {log.data && (
-                <div className="mt-1.5 text-[10px] text-zinc-500 font-mono">
-                  {getDataPreview(log.data)}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        <div className="flex-1 overflow-auto">{logs.map(renderLogMessage)}</div>
       </div>
 
       {/* Log Details */}

@@ -44,10 +44,6 @@ export const router = createBrowserRouter([
         path: 'network',
         element: <NetworkScreen />,
       },
-      {
-        path: 'storage',
-        element: <StorageScreen />,
-      },
     ],
   },
 ]);

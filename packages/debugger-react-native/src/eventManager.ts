@@ -24,20 +24,21 @@ export class EventManager {
    * Sets up the connection handlers for incoming messages.
    */
   private setupConnectionHandlers(): void {
-    // Listen for messages from the debugger
+    // Listen for messages from the debugger - expect parsed objects now, not strings
     this.connectionManager.on(ConnectionManager.EVENTS.MESSAGE, (data) => {
-      this.handleIncomingMessage(data as string);
+      this.handleIncomingMessage(data as any);
     });
   }
 
   /**
    * Handles incoming messages from the debugger.
    * Validates the message payload and triggers the appropriate handlers.
-   * @param message - The incoming message from the debugger
+   * @param message - The already parsed message object
    */
-  private handleIncomingMessage(message: string): void {
+  private handleIncomingMessage(message: any): void {
     try {
-      const { type, payload } = JSON.parse(message);
+      // Expect already parsed object with type and payload
+      const { type, payload } = message;
 
       const validation = this.validateMessage(type, payload);
       if (!validation.isValid) {
@@ -47,7 +48,9 @@ export class EventManager {
 
       // Process valid message
       const handlers = this.incomingHandlers.get(type);
-      handlers?.forEach((handler) => handler(payload));
+      if (handlers && handlers.size > 0) {
+        handlers.forEach((handler) => handler(payload));
+      }
     } catch (error) {
       console.error('Error handling message:', error);
     }
@@ -129,12 +132,14 @@ export class EventManager {
    * @returns A ValidationResult indicating whether the payload is valid and any associated error message
    */
   private validateMessage(
-    type: LibToDebuggerEventType | DebuggerToLibEventType,
+    type: LibToDebuggerEventType | DebuggerToLibEventType | string,
     payload: unknown
   ): ValidationResult {
-    const validator = validators[type];
+    const validator =
+      validators[type as LibToDebuggerEventType | DebuggerToLibEventType];
     if (!validator) {
-      return { isValid: false, error: `Missing a valid event type: ${type}` };
+      // Return valid for unknown event types for now
+      return { isValid: true, error: undefined };
     }
 
     return validator(payload);

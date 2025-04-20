@@ -10,12 +10,13 @@ export interface ReduxState {
  */
 export interface ReduxAction {
   type: string;
-  payload: any;
-  timestamp: number;
-  stateDiff?: {
-    before: ReduxState;
-    after: ReduxState;
+  data: {
+    type: string;
+    payload: any;
+    prevState: ReduxState;
+    nextState: ReduxState;
   };
+  timestamp: number;
 }
 
 /**

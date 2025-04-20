@@ -8,17 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  ArrowRight,
-  CheckCircle,
-  Smartphone,
-  Zap,
-  Network,
-  Activity,
-  Database,
-  Layers,
-  Terminal,
-} from 'lucide-react';
+import { ArrowRight, CheckCircle, Zap, Network, Layers, Terminal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';

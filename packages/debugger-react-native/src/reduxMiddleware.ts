@@ -2,6 +2,7 @@ import type { Middleware } from 'redux';
 import { getPulse } from './connectionManager';
 import { setReduxStore } from './utils/reduxStore';
 import { LibToDebuggerEventType } from '@pulse/shared-types';
+import { sendToDebugger } from './utils/debuggerUtils';
 
 /**
  * Redux middleware that sends state updates to the Pulse debugger.
@@ -42,13 +43,17 @@ export const pulseReduxMiddleware: Middleware =
       action !== null &&
       'type' in action
     ) {
-      eventManager.emit(LibToDebuggerEventType.REDUX_STATE_UPDATE, {
-        action: {
+      sendToDebugger(LibToDebuggerEventType.REDUX_ACTION, {
+        data: {
           type: String(action.type),
           payload: 'payload' in action ? action.payload : undefined,
+          prevState,
+          nextState,
+          stateDiff: {
+            before: prevState,
+            after: nextState,
+          },
         },
-        prevState,
-        nextState,
         timestamp: Date.now(),
       });
     }

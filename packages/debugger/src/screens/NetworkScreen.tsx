@@ -1,32 +1,26 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { JSONViewer } from '../components/common/JSONViewer';
-import { useConnection } from '@/lib/connection';
 import { useNetworkStore } from '../store/networkStore';
+import { LibToDebuggerEventType } from '@pulse/shared-types';
 
 interface NetworkRequest {
   id: string;
-  method: string;
+  status: 'pending' | 'fulfilled' | 'rejected';
+  startTime: number;
   url: string;
+  method: string;
   headers: Record<string, string>;
-  body?: any;
-  timestamp: number;
-  status?: 'pending' | 'completed' | 'error';
-}
-
-interface NetworkResponse {
-  id: string;
-  status: number;
-  headers: Record<string, string>;
-  body?: any;
-  timestamp: number;
-  duration?: number;
-}
-
-interface BatchEvent {
-  type: string;
-  payload: any;
-  timestamp: number;
+  body: unknown | null;
+  response?: {
+    status: number;
+    headers: Record<string, string>;
+    body: string;
+    error?: Error;
+    duration: number;
+    startTime: number;
+    endTime: number;
+  };
 }
 
 function generateCurlCommand(request: NetworkRequest): string {
@@ -39,18 +33,42 @@ function generateCurlCommand(request: NetworkRequest): string {
 
   // Add headers
   Object.entries(request.headers).forEach(([key, value]) => {
-    // Escape single quotes in header values
-    const escapedValue = value.replace(/'/g, "'\\''");
+    // Skip empty headers
+    if (!value) return;
+    // Escape single quotes and special characters in header values
+    const escapedValue = value.replace(/'/g, "'\\''").replace(/\n/g, '\\n');
     curl += ` \\\n  -H '${key}: ${escapedValue}'`;
   });
 
   // Add body if present
   if (request.body) {
-    let bodyStr = typeof request.body === 'string' ? request.body : JSON.stringify(request.body);
-    // Escape single quotes in body
-    bodyStr = bodyStr.replace(/'/g, "'\\''");
-    curl += ` \\\n  -d '${bodyStr}'`;
+    let bodyStr = '';
+    const contentType = request.headers['content-type'] || request.headers['Content-Type'];
+
+    // Handle different content types
+    if (typeof request.body === 'string') {
+      bodyStr = request.body;
+    } else if (contentType?.includes('application/x-www-form-urlencoded')) {
+      // Handle form data
+      bodyStr = new URLSearchParams(request.body as Record<string, string>).toString();
+    } else {
+      // Default to JSON
+      bodyStr = JSON.stringify(request.body);
+    }
+
+    // Escape single quotes and special characters in body
+    bodyStr = bodyStr.replace(/'/g, "'\\''").replace(/\n/g, '\\n');
+
+    if (contentType?.includes('application/x-www-form-urlencoded')) {
+      curl += ` \\\n  --data-urlencode '${bodyStr}'`;
+    } else {
+      curl += ` \\\n  -d '${bodyStr}'`;
+    }
   }
+
+  // Add common curl options for better compatibility
+  curl += ' \\\n  --compressed'; // Add compression support
+  curl += ' \\\n  --location'; // Follow redirects
 
   return curl;
 }
@@ -64,35 +82,40 @@ async function copyToClipboard(text: string) {
   }
 }
 
+function RequestBody({ body }: { body: unknown }) {
+  if (!body) return null;
+
+  return (
+    <div>
+      <span className="text-[10px] text-zinc-500">Body</span>
+      <div className="bg-zinc-900 p-2 rounded-md mt-1">
+        {(() => {
+          try {
+            const data = typeof body === 'string' ? JSON.parse(body) : body;
+            return <JSONViewer data={data as Record<string, unknown>} className="text-xs" />;
+          } catch (error) {
+            const bodyString = String(
+              typeof body === 'string' ? body : JSON.stringify(body, null, 2)
+            );
+            return <pre className="text-xs text-red-500">{bodyString}</pre>;
+          }
+        })()}
+      </div>
+    </div>
+  );
+}
+
+function Spinner() {
+  return (
+    <div className="animate-spin h-3 w-3 border-2 border-zinc-500 border-t-zinc-200 rounded-full" />
+  );
+}
+
 export function NetworkScreen() {
-  const { connectionState, sendMessage } = useConnection();
-  const {
-    requests,
-    responses,
-    selectedRequestId,
-    selectedResponseId,
-    addRequest,
-    addResponse,
-    updateRequestStatus,
-    selectRequest,
-    getResponseForRequest,
-    clear,
-  } = useNetworkStore();
+  const { requests, selectedRequestId, addRequest, selectRequest, clear } = useNetworkStore();
   const [copiedTimeout, setCopiedTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isCopied, setIsCopied] = useState(false);
-
   const selectedRequest = selectedRequestId ? requests.find(r => r.id === selectedRequestId) : null;
-  const selectedResponse = selectedResponseId
-    ? responses.find(r => r.id === selectedResponseId)
-    : null;
-
-  // Use a ref to persist the processed events set between renders
-  const processedEventsRef = useRef<Set<string>>(new Set());
-
-  // Clear the processed events set when the component mounts
-  useEffect(() => {
-    processedEventsRef.current.clear();
-  }, []);
 
   // Clear the copied timeout on unmount
   useEffect(() => {
@@ -104,75 +127,26 @@ export function NetworkScreen() {
   }, [copiedTimeout]);
 
   useEffect(() => {
-    if (connectionState.status === 'connected') {
-      // Request initial network data
-      sendMessage('get_network_data');
-    }
-  }, [connectionState.status, sendMessage]);
-
-  useEffect(() => {
-    const handleBatchEvents = (data: { events: BatchEvent[] }) => {
-      // Process each event in the batch, filtering duplicates by timestamp and id
-      data.events.forEach(event => {
-        const eventKey = `${event.type}_${event.timestamp}_${event.payload?.id}`;
-        if (processedEventsRef.current.has(eventKey)) {
-          console.log('Skipping duplicate event:', eventKey);
-          return;
-        }
-        processedEventsRef.current.add(eventKey);
-
-        switch (event.type) {
-          case 'network_request':
-            addRequest(event.payload);
-            break;
-          case 'network_response':
-            addResponse(event.payload);
-            break;
-          case 'network_error':
-            updateRequestStatus(event.payload.id, 'error');
-            break;
-        }
-      });
+    const handleNetworkRequest = (event: CustomEvent<NetworkRequest>) => {
+      addRequest(event.detail);
     };
 
-    const handleMessage = (_event: any, data: any) => {
-      console.log('Network message received:', data);
-      if (data.type === 'batch' && Array.isArray(data.events)) {
-        handleBatchEvents(data);
-      } else {
-        // For single events, check if we've already processed this exact event
-        const eventKey = `${data.type}_${data.timestamp}_${data.payload?.id}`;
-        if (processedEventsRef.current.has(eventKey)) {
-          console.log('Skipping duplicate single event:', eventKey);
-          return;
-        }
-        processedEventsRef.current.add(eventKey);
-
-        switch (data.type) {
-          case 'network_request':
-            addRequest(data.payload);
-            break;
-          case 'network_response':
-            addResponse(data.payload);
-            break;
-          case 'network_error':
-            updateRequestStatus(data.payload.id, 'error');
-            break;
-        }
-      }
-    };
-
-    // Subscribe to WebSocket messages through Electron IPC
-    window.electron.ipcRenderer.on('ws-message', handleMessage);
+    // Listen for network request events
+    window.addEventListener(
+      LibToDebuggerEventType.NETWORK_REQUEST,
+      handleNetworkRequest as EventListener
+    );
 
     return () => {
-      window.electron.ipcRenderer.removeListener('ws-message', handleMessage);
+      window.removeEventListener(
+        LibToDebuggerEventType.NETWORK_REQUEST,
+        handleNetworkRequest as EventListener
+      );
     };
-  }, [addRequest, addResponse, updateRequestStatus]);
+  }, [addRequest]);
 
   const handleClear = () => {
     clear();
-    processedEventsRef.current.clear();
   };
 
   const getMethodColor = (method: string) => {
@@ -223,178 +197,178 @@ export function NetworkScreen() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleClear}
-              className="text-xs text-zinc-400 hover:text-zinc-200 px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors"
+              className="text-xs text-zinc-400 hover:text-zinc-200 px-3 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 transition-colors border border-zinc-700/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-zinc-800 disabled:hover:text-zinc-400 flex items-center gap-1.5"
             >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
               Clear
             </button>
           </div>
         </div>
         <div className="flex-1 overflow-auto">
-          {requests.map(request => {
-            const response = getResponseForRequest(request.id);
-            const uniqueKey = `${request.id}_${request.timestamp}`;
-            return (
-              <div
-                key={uniqueKey}
-                onClick={() => selectRequest(request.id)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    selectRequest(request.id);
-                  }
-                }}
-                className={cn(
-                  'w-full text-left px-4 py-3 border-b border-zinc-800/50 transition-colors cursor-pointer',
-                  selectedRequestId === request.id ? 'bg-zinc-800' : 'hover:bg-zinc-900'
-                )}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span
-                      className={cn(
-                        'text-xs font-medium px-1.5 py-0.5 rounded shrink-0',
-                        getMethodColor(request.method)
-                      )}
-                    >
-                      {request.method}
-                    </span>
-                    <span className="text-xs text-zinc-300 truncate flex-1">{request.url}</span>
-                  </div>
-                  <div className="text-[10px] tabular-nums text-zinc-500 shrink-0 ml-2">
-                    {new Date(request.timestamp).toLocaleTimeString()}
-                  </div>
-                </div>
-                {response && (
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <span
-                      className={cn(
-                        'text-xs font-medium px-1.5 py-0.5 rounded',
-                        getStatusColor(response.status)
-                      )}
-                    >
-                      {response.status}
-                    </span>
-                    <span className="text-[10px] text-zinc-500">
-                      {new Date(response.timestamp).toLocaleTimeString()}
-                    </span>
-                    {response.duration && (
-                      <span className="text-[10px] text-zinc-500">({response.duration}ms)</span>
+          {requests.map(request => (
+            <div
+              key={request.id}
+              onClick={() => selectRequest(request.id)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  selectRequest(request.id);
+                }
+              }}
+              className={cn(
+                'w-full text-left px-4 py-3 border-b border-zinc-800/50 transition-colors cursor-pointer',
+                selectedRequestId === request.id ? 'bg-zinc-800' : 'hover:bg-zinc-900'
+              )}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span
+                    className={cn(
+                      'text-xs font-medium px-1.5 py-0.5 rounded shrink-0',
+                      getMethodColor(request.method)
                     )}
-                  </div>
-                )}
-                {request.status === 'error' && (
-                  <div className="mt-1.5">
-                    <span className="text-xs text-red-400">Request failed</span>
-                  </div>
-                )}
-                {request.status === 'pending' && (
-                  <div className="mt-1.5">
-                    <span className="text-xs text-yellow-400">Pending...</span>
-                  </div>
-                )}
+                  >
+                    {request.method}
+                  </span>
+                  <span className="text-xs text-zinc-300 truncate flex-1">{request.url}</span>
+                </div>
+                <div className="text-[10px] tabular-nums text-zinc-500 shrink-0 ml-2">
+                  {new Date(request.startTime).toLocaleTimeString()}
+                </div>
               </div>
-            );
-          })}
+              {request.response && (
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span
+                    className={cn(
+                      'text-xs font-medium px-1.5 py-0.5 rounded',
+                      getStatusColor(request.response.status)
+                    )}
+                  >
+                    {request.response.status}
+                  </span>
+                  <span className="text-[10px] text-zinc-500">
+                    {new Date(request.response.startTime).toLocaleTimeString()}
+                  </span>
+                  {request.response.duration && (
+                    <span className="text-[10px] text-zinc-500">
+                      ({request.response.duration}ms)
+                    </span>
+                  )}
+                </div>
+              )}
+              {request.status === 'rejected' && (
+                <div className="mt-1.5">
+                  <span className="text-xs text-red-400">Request failed</span>
+                </div>
+              )}
+              {request.status === 'pending' && (
+                <div className="mt-1.5 flex items-center gap-2">
+                  <Spinner />
+                  <span className="text-xs text-yellow-400">Pending...</span>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Request/Response Details */}
-      {(selectedRequest || selectedResponse) && (
+      {selectedRequest && (
         <div className="w-1/2 border-l border-zinc-800 flex flex-col">
           <div className="px-3 py-2 border-b border-zinc-800">
             <h2 className="text-sm font-semibold text-zinc-100">Details</h2>
-            <p className="text-[10px] text-zinc-500 mt-0.5">
-              {selectedRequest ? 'Request' : 'Response'} information
-            </p>
+            <p className="text-[10px] text-zinc-500 mt-0.5">Request information</p>
           </div>
           <div className="flex-1 p-4 overflow-auto">
             <div className="space-y-4">
-              {selectedRequest && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xs font-medium text-zinc-400">Request</h3>
-                    <button
-                      onClick={() => handleCopyCurl(selectedRequest)}
-                      className={cn(
-                        'text-xs px-2 py-1 rounded transition-colors',
-                        isCopied
-                          ? 'bg-emerald-900/50 text-emerald-400'
-                          : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
-                      )}
-                    >
-                      {isCopied ? 'Copied!' : 'Copy as cURL'}
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-[10px] text-zinc-500">Method</span>
-                      <p className="text-xs font-mono text-zinc-200">{selectedRequest.method}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-zinc-500">URL</span>
-                      <p className="text-xs font-mono text-zinc-200 break-all">
-                        {selectedRequest.url}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-zinc-500">Headers</span>
-                      <div className="bg-zinc-900 p-2 rounded-md mt-1">
-                        <JSONViewer data={selectedRequest.headers} className="text-xs" />
-                      </div>
-                    </div>
-                    {selectedRequest.body && (
-                      <div>
-                        <span className="text-[10px] text-zinc-500">Body</span>
-                        <div className="bg-zinc-900 p-2 rounded-md mt-1">
-                          <JSONViewer
-                            data={
-                              typeof selectedRequest.body === 'string'
-                                ? JSON.parse(selectedRequest.body)
-                                : selectedRequest.body
-                            }
-                            className="text-xs"
-                          />
-                        </div>
-                      </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-medium text-zinc-400">Request</h3>
+                  <button
+                    onClick={() => handleCopyCurl(selectedRequest)}
+                    className={cn(
+                      'text-xs px-2 py-1 rounded transition-colors',
+                      isCopied
+                        ? 'bg-emerald-900/50 text-emerald-400'
+                        : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
                     )}
-                  </div>
+                  >
+                    {isCopied ? 'Copied!' : 'Copy as cURL'}
+                  </button>
                 </div>
-              )}
-              {selectedResponse && (
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-[10px] text-zinc-500">Method</span>
+                    <p className="text-xs font-mono text-zinc-200">{selectedRequest.method}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-500">URL</span>
+                    <p className="text-xs font-mono text-zinc-200 break-all">
+                      {selectedRequest.url}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-500">Headers</span>
+                    <div className="bg-zinc-900 p-2 rounded-md mt-1">
+                      <JSONViewer data={selectedRequest.headers} className="text-xs" />
+                    </div>
+                  </div>
+                  <RequestBody body={selectedRequest.body} />
+                </div>
+              </div>
+
+              {selectedRequest.response && (
                 <div>
                   <h3 className="text-xs font-medium text-zinc-400 mb-1">Response</h3>
                   <div className="space-y-2">
                     <div>
                       <span className="text-[10px] text-zinc-500">Status</span>
-                      <p className="text-xs font-mono text-zinc-200">{selectedResponse.status}</p>
+                      <p className="text-xs font-mono text-zinc-200">
+                        {selectedRequest.response.status}
+                      </p>
                     </div>
                     <div>
                       <span className="text-[10px] text-zinc-500">Headers</span>
                       <div className="bg-zinc-900 p-2 rounded-md mt-1">
-                        <JSONViewer data={selectedResponse.headers} className="text-xs" />
+                        <JSONViewer
+                          data={selectedRequest.response.headers}
+                          initialExpanded={true}
+                          level={0}
+                          className="text-xs"
+                        />
                       </div>
                     </div>
-                    {selectedResponse.body && (
+                    {selectedRequest.response.body && (
                       <div>
                         <span className="text-[10px] text-zinc-500">Body</span>
                         <div className="bg-zinc-900 p-2 rounded-md mt-1">
                           <JSONViewer
-                            data={
-                              typeof selectedResponse.body === 'string'
-                                ? JSON.parse(selectedResponse.body)
-                                : selectedResponse.body
-                            }
+                            data={selectedRequest.response.body}
+                            initialExpanded={true}
+                            level={0}
                             className="text-xs"
                           />
                         </div>
                       </div>
                     )}
-                    {selectedResponse.duration && (
+                    {selectedRequest.response.duration && (
                       <div>
                         <span className="text-[10px] text-zinc-500">Duration</span>
                         <p className="text-xs font-mono text-zinc-200">
-                          {selectedResponse.duration}ms
+                          {selectedRequest.response.duration}ms
                         </p>
                       </div>
                     )}
