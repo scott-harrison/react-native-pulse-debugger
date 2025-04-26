@@ -1,11 +1,10 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { WelcomeScreen } from './screens/WelcomeScreen';
-import { DebuggerLayout } from './components/layout/DebuggerLayout';
-import { ConsoleScreen } from './screens/ConsoleScreen';
-import { ReduxScreen } from './screens/ReduxScreen';
-import { NetworkScreen } from './screens/NetworkScreen';
-import { StorageScreen } from './screens/StorageScreen';
-import { AppLayout } from './components/layout/AppLayout';
+// import { DebuggerLayout } from '@/ui/components/layout/DebuggerLayout';
+// import { ConsoleScreen } from '@/ui/screens/ConsoleScreen';
+// import { ReduxScreen } from '@/ui/screens/ReduxScreen';
+// import { NetworkScreen } from '@/ui/screens/NetworkScreen';
+// import { StorageScreen } from '@/ui/screens/StorageScreen';
+import ConnectionGateScreen from '@/ui/screens/ConnectionGateScreen';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return children;
@@ -14,17 +13,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: (
-      <AppLayout>
-        <WelcomeScreen />
-      </AppLayout>
-    ),
+    element: <ConnectionGateScreen />,
   },
   {
     path: '/debugger',
     element: (
       <ProtectedRoute>
-        <DebuggerLayout />
+        <></>
       </ProtectedRoute>
     ),
     children: [
@@ -34,15 +29,27 @@ export const router = createBrowserRouter([
       },
       {
         path: 'console',
-        element: <ConsoleScreen />,
+        element: (
+          <>
+            <h1>Console Screen</h1>
+          </>
+        ),
       },
       {
         path: 'redux',
-        element: <ReduxScreen />,
+        element: (
+          <>
+            <h1>Redux Screen</h1>
+          </>
+        ),
       },
       {
         path: 'network',
-        element: <NetworkScreen />,
+        element: (
+          <>
+            <h1>Network Screen</h1>
+          </>
+        ),
       },
     ],
   },

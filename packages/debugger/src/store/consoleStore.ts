@@ -1,16 +1,16 @@
 import { create } from 'zustand';
-import { LogLevel, ConsoleLog } from '@pulse/shared-types';
-
-interface ConsoleState {
-  logs: ConsoleLog[];
-  selectedLogId: string | null;
-  addLog: (log: ConsoleLog) => void;
-  selectLog: (logId: string | null) => void;
-  clear: () => void;
-}
+import { ConsoleMessage } from '@pulse/shared-types';
 
 // Keep track of processed logs to prevent duplicates
 const processedLogs = new Set<string>();
+
+interface ConsoleState {
+  logs: ConsoleMessage[];
+  selectedLogId: string | null;
+  addLog: (log: ConsoleMessage) => void;
+  selectLog: (logId: string | null) => void;
+  clear: () => void;
+}
 
 export const useConsoleStore = create<ConsoleState>((set, get) => ({
   logs: [],
@@ -23,13 +23,13 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
       return;
     }
 
-    if (!log.id || !log.level || !log.message) {
+    if (!log.level || !log.message || !log.timestamp) {
       console.error('[Pulse Debugger] Missing required log fields:', log);
       return;
     }
 
-    // Create a unique key for this log
-    const logKey = `${log.id}_${log.timestamp}`;
+    // Create a unique key for this log (using timestamp since ConsoleLogMessage doesn't have an id)
+    const logKey = `${log.timestamp}_${log.level}_${log.message}`;
 
     // Check if we've already processed this log
     if (processedLogs.has(logKey)) {
@@ -47,20 +47,10 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
       }
     }
 
-    // Ensure the log object has all required fields and proper types
-    const sanitizedLog: ConsoleLog = {
-      id: String(log.id),
-      level: log.level as LogLevel,
-      message: String(log.message),
-      data: log.data,
-      stack: log.stack ? String(log.stack) : undefined,
-      timestamp: typeof log.timestamp === 'number' ? log.timestamp : Date.now(),
-    };
-
     set(state => {
       console.log('[Pulse Debugger] Adding log to state, current count:', state.logs.length);
       return {
-        logs: [sanitizedLog, ...state.logs],
+        logs: [log, ...state.logs],
       };
     });
   },
@@ -74,7 +64,9 @@ export const useConsoleStore = create<ConsoleState>((set, get) => ({
       logs: [],
       selectedLogId: null,
     });
-    // Also clear the processed set
     processedLogs.clear();
   },
 }));
+
+// Export processedLogs for testing purposes
+export const getProcessedLogs = () => processedLogs;

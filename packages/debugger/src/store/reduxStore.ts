@@ -1,30 +1,54 @@
 import { create } from 'zustand';
-import { ReduxState, ReduxAction } from '@pulse/shared-types';
+import { ReduxEventMessage } from '@pulse/shared-types';
 
-interface ReduxStore {
-  state: ReduxState | null;
-  actions: ReduxAction[];
-  setState: (state: ReduxState) => void;
-  addAction: (action: ReduxAction) => void;
+/**
+ * Interface for the Redux store state.
+ */
+export interface ReduxState {
+  state: any; // Current Redux state (mirrors the app's Redux state)
+  actions: ReduxEventMessage[];
+  setState: (state: any) => void;
+  addAction: (action: ReduxEventMessage) => void;
   clearActions: () => void;
 }
 
-export const useReduxStore = create<ReduxStore>(set => ({
+export const useReduxStore = create<ReduxState>((set, get) => ({
   state: null,
   actions: [],
+
   setState: state => set({ state }),
-  addAction: action =>
+
+  addAction: action => {
+    // Validate the action object
+    if (!action || typeof action !== 'object') {
+      console.error('[Pulse Debugger] Invalid Redux event:', action);
+      return;
+    }
+
+    // Validate required fields
+    if (!action.action) {
+      console.error('[Pulse Debugger] Invalid Redux event: missing action field', action);
+      return;
+    }
+
+    if (!action.action.type) {
+      console.error('[Pulse Debugger] Invalid Redux event: missing action.type', action);
+      return;
+    }
+
     set(store => {
-      // Create a state diff if we have a previous state
-      const stateDiff = store.state
-        ? {
-            before: store.state,
-            after: action.stateDiff?.after || store.state,
-          }
-        : undefined;
+      // Use the stateDiff from the action if provided, otherwise calculate it
+      const stateDiff =
+        action.stateDiff ||
+        (store.state
+          ? {
+              before: store.state,
+              after: action.action.payload || store.state, // Fallback to current state if no new state
+            }
+          : undefined);
 
       // Add the state diff to the action
-      const actionWithDiff = {
+      const actionWithDiff: ReduxEventMessage = {
         ...action,
         stateDiff,
       };
@@ -32,8 +56,16 @@ export const useReduxStore = create<ReduxStore>(set => ({
       // Keep only the last 100 actions
       const actions = [...store.actions, actionWithDiff].slice(-100);
 
-      // Return the updated state
-      return { actions };
+      // Update the current state with the 'after' state from the diff (if available)
+      const newState = stateDiff?.after || store.state;
+
+      return { actions, state: newState };
+    });
+  },
+
+  clearActions: () =>
+    set({
+      actions: [],
+      state: null, // Reset state as well
     }),
-  clearActions: () => set({ actions: [] }),
 }));
