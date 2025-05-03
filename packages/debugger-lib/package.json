@@ -1,5 +1,5 @@
 {
-  "name": "@pulse/debugger-react-native",
+  "name": "@pulse/debugger-lib",
   "version": "0.1.0",
   "description": "A debugging tool for React Native applications that provides real-time monitoring of Redux state, network requests, console logs, through an intuitive desktop interface.",
   "source": "./src/index.ts",
