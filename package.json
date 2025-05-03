@@ -10,11 +10,11 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "debugger:dev": "yarn workspace @pulse/debugger dev",
-    "debugger:build": "yarn workspace @pulse/debugger build",
+    "debugger:dev": "yarn workspace @pulse/debugger-tool dev",
+    "debugger:build": "yarn workspace @pulse/debugger-tool build",
     "shared-types:watch": "yarn workspace @pulse/shared-types watch",
-    "dev": "yarn shared-types:watch & yarn debugger:dev",
-    "app-example:start": "cd packages/debugger-react-native/example && yarn start",
+    "dev": "yarn debugger:dev",
+    "app-example:start": "cd packages/debugger-lib/example && yarn start",
     "test": "yarn workspaces foreach -A -pt run test"
   },
   "devDependencies": {

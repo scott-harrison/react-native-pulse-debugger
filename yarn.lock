@@ -3093,9 +3093,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pulse/debugger-react-native@workspace:packages/debugger-react-native":
+"@pulse/debugger-lib@workspace:packages/debugger-lib":
   version: 0.0.0-use.local
-  resolution: "@pulse/debugger-react-native@workspace:packages/debugger-react-native"
+  resolution: "@pulse/debugger-lib@workspace:packages/debugger-lib"
   dependencies:
     "@babel/core": "npm:^7.20.0"
     "@babel/plugin-transform-runtime": "npm:^7.24.0"
@@ -3135,9 +3135,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@pulse/debugger@workspace:packages/debugger":
+"@pulse/debugger-tool@workspace:packages/debugger-tool":
   version: 0.0.0-use.local
-  resolution: "@pulse/debugger@workspace:packages/debugger"
+  resolution: "@pulse/debugger-tool@workspace:packages/debugger-tool"
   dependencies:
     "@pulse/shared-types": "workspace:*"
     "@tailwindcss/postcss": "npm:^4.0.17"
@@ -3150,6 +3150,7 @@ __metadata:
     "@types/node": "npm:^22.13.14"
     "@types/react": "npm:^19.0.12"
     "@types/react-dom": "npm:^19.0.4"
+    "@types/source-map-support": "npm:^0"
     "@types/ws": "npm:^8.18.1"
     "@vitejs/plugin-react": "npm:^4.3.4"
     autoprefixer: "npm:^10.4.21"
@@ -3157,6 +3158,8 @@ __metadata:
     clsx: "npm:^2.1.1"
     electron: "npm:^35.1.2"
     electron-builder: "npm:^26.0.12"
+    electron-debug: "npm:^4.1.0"
+    electron-devtools-installer: "npm:^4.0.0"
     identity-obj-proxy: "npm:^3.0.0"
     jest: "npm:^29.7.0"
     jest-environment-jsdom: "npm:^29.7.0"
@@ -3166,6 +3169,7 @@ __metadata:
     react: "npm:^19.1.0"
     react-dom: "npm:^19.1.0"
     react-router-dom: "npm:^7.4.1"
+    source-map-support: "npm:^0.5.21"
     tailwind-merge: "npm:^3.1.0"
     tailwindcss: "npm:^4.0.17"
     ts-jest: "npm:^29.3.2"
@@ -4147,6 +4151,15 @@ __metadata:
   version: 7.7.0
   resolution: "@types/semver@npm:7.7.0"
   checksum: 10/ee4514c6c852b1c38f951239db02f9edeea39f5310fad9396a00b51efa2a2d96b3dfca1ae84c88181ea5b7157c57d32d7ef94edacee36fbf975546396b85ba5b
+  languageName: node
+  linkType: hard
+
+"@types/source-map-support@npm:^0":
+  version: 0.5.10
+  resolution: "@types/source-map-support@npm:0.5.10"
+  dependencies:
+    source-map: "npm:^0.6.0"
+  checksum: 10/72486b93c3340ed89537bc4f75cfcaa7ed8d4384c916b5fea919a1e39592696ab868ff73aae9e4a7d0099921aa1c35941be1ec02cd5fc7e045110a9f4707d4c8
   languageName: node
   linkType: hard
 
@@ -6449,7 +6462,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4, debug@npm:^4.3.5":
+"debug@npm:4, debug@npm:^4.0.1, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4, debug@npm:^4.3.5":
   version: 4.4.0
   resolution: "debug@npm:4.4.0"
   dependencies:
@@ -6913,6 +6926,51 @@ __metadata:
     electron-builder: cli.js
     install-app-deps: install-app-deps.js
   checksum: 10/c7f16d2a04b65b2507921fad61597023ff9eb0c6dbb25d5c49d54de4925e67d4b9e3ddec70a86966df9830f0051cbde4449ae0f32fea265807ffdeaca162d78c
+  languageName: node
+  linkType: hard
+
+"electron-debug@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "electron-debug@npm:4.1.0"
+  dependencies:
+    electron-is-dev: "npm:^3.0.1"
+    electron-localshortcut: "npm:^3.2.1"
+  checksum: 10/fc93350587ea924805130a11ff9eed738af3f13af377b2718197b16b692fc367ec4e95e6b108a07fcfbb3512d1493c21a4b8dbbcd72586ff1e96b7bfd3b0fbf4
+  languageName: node
+  linkType: hard
+
+"electron-devtools-installer@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "electron-devtools-installer@npm:4.0.0"
+  dependencies:
+    unzip-crx-3: "npm:^0.2.0"
+  checksum: 10/3f9a69645a15bb7925d12ef1fce803d9320fa2a9d50a0e49de7786c23dd9954ea8c5c4914a81a54966e33436bf40bd61828b6844529cb1042a31a70989771397
+  languageName: node
+  linkType: hard
+
+"electron-is-accelerator@npm:^0.1.0":
+  version: 0.1.2
+  resolution: "electron-is-accelerator@npm:0.1.2"
+  checksum: 10/2bc05a0acf9c252d636b48c716ad0a8c2f29875559b87c666852575310c17fc8350907a6f09412d6cbcc71da42f0228a0869fb68c3ead15e8211d5f13fcdbd17
+  languageName: node
+  linkType: hard
+
+"electron-is-dev@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "electron-is-dev@npm:3.0.1"
+  checksum: 10/0f3bb1ebac00ab25d541a5e6b2ba9c6cdbcb0875782bffd1b0a7e8d303f837669580febfc696f1ce2b0f79cc4bc529dd71f0bf4da5d934492003c9a9b833ec22
+  languageName: node
+  linkType: hard
+
+"electron-localshortcut@npm:^3.2.1":
+  version: 3.2.1
+  resolution: "electron-localshortcut@npm:3.2.1"
+  dependencies:
+    debug: "npm:^4.0.1"
+    electron-is-accelerator: "npm:^0.1.0"
+    keyboardevent-from-electron-accelerator: "npm:^2.0.0"
+    keyboardevents-areequal: "npm:^0.2.1"
+  checksum: 10/c3e9d160f8af45dbeb72917b6d30cb6220b6ba55c94ab578d81e236b054db23ef64abc3ab51d226f693cccf8b6a0d79170331e4fc26dc3c1dfec53e2091013f2
   languageName: node
   linkType: hard
 
@@ -9028,6 +9086,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"immediate@npm:~3.0.5":
+  version: 3.0.6
+  resolution: "immediate@npm:3.0.6"
+  checksum: 10/f9b3486477555997657f70318cc8d3416159f208bec4cca3ff3442fd266bc23f50f0c9bd8547e1371a6b5e82b821ec9a7044a4f7b944798b25aa3cc6d5e63e62
+  languageName: node
+  linkType: hard
+
 "import-fresh@npm:^2.0.0":
   version: 2.0.0
   resolution: "import-fresh@npm:2.0.0"
@@ -10612,6 +10677,32 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jszip@npm:^3.1.0":
+  version: 3.10.1
+  resolution: "jszip@npm:3.10.1"
+  dependencies:
+    lie: "npm:~3.3.0"
+    pako: "npm:~1.0.2"
+    readable-stream: "npm:~2.3.6"
+    setimmediate: "npm:^1.0.5"
+  checksum: 10/bfbfbb9b0a27121330ac46ab9cdb3b4812433faa9ba4a54742c87ca441e31a6194ff70ae12acefa5fe25406c432290e68003900541d948a169b23d30c34dd984
+  languageName: node
+  linkType: hard
+
+"keyboardevent-from-electron-accelerator@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "keyboardevent-from-electron-accelerator@npm:2.0.0"
+  checksum: 10/fbeaac6c54e438ed55a5e26dda639bae450f4483d79561737ed38f36a8b937af05cac958530cef8211125a72293b68f3c3a84f041b8f50480330c71e2217e6eb
+  languageName: node
+  linkType: hard
+
+"keyboardevents-areequal@npm:^0.2.1":
+  version: 0.2.2
+  resolution: "keyboardevents-areequal@npm:0.2.2"
+  checksum: 10/05d846f75170238bbb9ed45d13ca9c6cd3e68ea8ba6b7727971790fa55b44c3386ec8b9c321ae72dae0d0944678d0dc2b922148fe67d3f9720bf30a23999dd65
+  languageName: node
+  linkType: hard
+
 "keyv@npm:^4.0.0, keyv@npm:^4.5.3, keyv@npm:^4.5.4":
   version: 4.5.4
   resolution: "keyv@npm:4.5.4"
@@ -10679,6 +10770,15 @@ __metadata:
     prelude-ls: "npm:^1.2.1"
     type-check: "npm:~0.4.0"
   checksum: 10/2e4720ff79f21ae08d42374b0a5c2f664c5be8b6c8f565bb4e1315c96ed3a8acaa9de788ffed82d7f2378cf36958573de07ef92336cb5255ed74d08b8318c9ee
+  languageName: node
+  linkType: hard
+
+"lie@npm:~3.3.0":
+  version: 3.3.0
+  resolution: "lie@npm:3.3.0"
+  dependencies:
+    immediate: "npm:~3.0.5"
+  checksum: 10/f335ce67fe221af496185d7ce39c8321304adb701e122942c495f4f72dcee8803f9315ee572f5f8e8b08b9e8d7195da91b9fad776e8864746ba8b5e910adf76e
   languageName: node
   linkType: hard
 
@@ -12664,6 +12764,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pako@npm:~1.0.2":
+  version: 1.0.11
+  resolution: "pako@npm:1.0.11"
+  checksum: 10/1ad07210e894472685564c4d39a08717e84c2a68a70d3c1d9e657d32394ef1670e22972a433cbfe48976cb98b154ba06855dcd3fcfba77f60f1777634bec48c0
+  languageName: node
+  linkType: hard
+
 "parent-module@npm:^1.0.0":
   version: 1.0.1
   resolution: "parent-module@npm:1.0.1"
@@ -14285,6 +14392,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"setimmediate@npm:^1.0.5":
+  version: 1.0.5
+  resolution: "setimmediate@npm:1.0.5"
+  checksum: 10/76e3f5d7f4b581b6100ff819761f04a984fa3f3990e72a6554b57188ded53efce2d3d6c0932c10f810b7c59414f85e2ab3c11521877d1dea1ce0b56dc906f485
+  languageName: node
+  linkType: hard
+
 "setprototypeof@npm:1.2.0":
   version: 1.2.0
   resolution: "setprototypeof@npm:1.2.0"
@@ -14521,7 +14635,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"source-map-support@npm:^0.5.16, source-map-support@npm:^0.5.19, source-map-support@npm:~0.5.20":
+"source-map-support@npm:^0.5.16, source-map-support@npm:^0.5.19, source-map-support@npm:^0.5.21, source-map-support@npm:~0.5.20":
   version: 0.5.21
   resolution: "source-map-support@npm:0.5.21"
   dependencies:
@@ -15643,6 +15757,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"unzip-crx-3@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "unzip-crx-3@npm:0.2.0"
+  dependencies:
+    jszip: "npm:^3.1.0"
+    mkdirp: "npm:^0.5.1"
+    yaku: "npm:^0.16.6"
+  checksum: 10/fcc381e9dda6fa7c3e99d285bcc87baffd9010b0dd0927027799c2a17fab9873417323d164d93ff6babe6bb757a8d5d266e891040f4364b9989e2608465545fe
+  languageName: node
+  linkType: hard
+
 "update-browserslist-db@npm:^1.1.1":
   version: 1.1.3
   resolution: "update-browserslist-db@npm:1.1.3"
@@ -16253,6 +16378,13 @@ __metadata:
   version: 5.0.8
   resolution: "y18n@npm:5.0.8"
   checksum: 10/5f1b5f95e3775de4514edbb142398a2c37849ccfaf04a015be5d75521e9629d3be29bd4432d23c57f37e5b61ade592fb0197022e9993f81a06a5afbdcda9346d
+  languageName: node
+  linkType: hard
+
+"yaku@npm:^0.16.6":
+  version: 0.16.7
+  resolution: "yaku@npm:0.16.7"
+  checksum: 10/13de5e1249e1299f67fef0c39153fcf1be8ddc89ce4b8c99951bbf4fe67d7803cd0c2001fbfec35af9338a894e0bf58db8ee4bf33d06752b5d66090c32a6fd3e
   languageName: node
   linkType: hard
 

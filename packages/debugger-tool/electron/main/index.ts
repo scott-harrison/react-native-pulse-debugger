@@ -9,19 +9,12 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
-import log from 'electron-log';
-import MenuBuilder from './menu';
-import { resolveHtmlPath } from './util';
+import { app, BrowserWindow, shell, ipcMain, screen } from 'electron';
+import Store from 'electron-store';
+import { resolveHtmlPath } from '../utils';
 
-class AppUpdater {
-  constructor() {
-    log.transports.file.level = 'info';
-    autoUpdater.logger = log;
-    autoUpdater.checkForUpdatesAndNotify();
-  }
-}
+// Initialize electron-store to persist window bounds
+const store = new Store();
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -68,10 +61,30 @@ const createWindow = async () => {
     return path.join(RESOURCES_PATH, ...paths);
   };
 
+  // Get saved window bounds or use default values
+  const savedBounds = store.get('windowBounds') as
+    | { x: number; y: number; width: number; height: number }
+    | undefined;
+  const defaultBounds = { width: 1024, height: 728 };
+
+  // Validate saved bounds to ensure the window is visible on at least one screen
+  let bounds = savedBounds;
+  if (savedBounds) {
+    const area = screen.getDisplayMatching(savedBounds).workArea;
+    const isVisible =
+      savedBounds.x >= area.x &&
+      savedBounds.y >= area.y &&
+      savedBounds.x + savedBounds.width <= area.x + area.width &&
+      savedBounds.y + savedBounds.height <= area.y + area.height;
+    if (!isVisible) {
+      bounds = undefined; // Reset to default if window is off-screen
+    }
+  }
+
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1024,
-    height: 728,
+    ...defaultBounds,
+    ...(bounds && { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height }),
     icon: getAssetPath('icon.png'),
     webPreferences: {
       preload: app.isPackaged
@@ -97,18 +110,24 @@ const createWindow = async () => {
     mainWindow = null;
   });
 
-  const menuBuilder = new MenuBuilder(mainWindow);
-  menuBuilder.buildMenu();
+  // Save window bounds when resized or moved
+  mainWindow.on('resize', () => {
+    if (mainWindow) {
+      store.set('windowBounds', mainWindow.getBounds());
+    }
+  });
+
+  mainWindow.on('move', () => {
+    if (mainWindow) {
+      store.set('windowBounds', mainWindow.getBounds());
+    }
+  });
 
   // Open urls in the user's browser
   mainWindow.webContents.setWindowOpenHandler(edata => {
     shell.openExternal(edata.url);
     return { action: 'deny' };
   });
-
-  // Remove this if your app does not use auto updates
-  // eslint-disable-next-line
-  new AppUpdater();
 };
 
 /**
