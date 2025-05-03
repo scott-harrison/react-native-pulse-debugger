@@ -9,8 +9,8 @@ import {
   View,
 } from 'react-native';
 import { Provider } from 'react-redux';
-import { store } from './app/store';
-import { useAppDispatch, useAppSelector } from './app/hooks';
+import { createStore } from './store';
+import { useAppDispatch, useAppSelector } from './hooks';
 import {
   increment,
   decrement,
@@ -19,29 +19,20 @@ import {
   incrementAsyncSuccess,
 } from './features/counter/counterSlice';
 import {
-  initializePulse,
-  getPulse,
-  pulseNetworkMiddleware,
-  pulseConsoleMiddleware,
+  getPulseState,
   type ConnectionState,
+  pulseDebugger,
 } from '@pulse/debugger-react-native';
 
-// Initialize Pulse Debugger
-initializePulse({
-  url: 'ws://localhost:8973',
+// Configure the debugger
+pulseDebugger.configure({
+  port: 8973,
+  enableConsole: true,
+  enableNetwork: true,
 });
 
-// Get the debugger client
-const debuggerClient = getPulse();
-if (debuggerClient) {
-  // Connect to the debugger
-  debuggerClient.connect();
-}
-// Apply network middleware
-global.fetch = pulseNetworkMiddleware(fetch) as typeof fetch;
-
-// Apply console middleware
-global.console = pulseConsoleMiddleware(console) as Console;
+// Create the store after configuring the debugger
+const store = createStore();
 
 function Counter() {
   const count = useAppSelector((state) => state.counter.value);
@@ -52,10 +43,8 @@ function Counter() {
   const [logs, setLogs] = useState<string[]>([]);
 
   useEffect(() => {
-    if (debuggerClient) {
-      setConnectionStatus(debuggerClient.getState());
-    }
-  }, [debuggerClient]);
+    setConnectionStatus(getPulseState());
+  }, []);
 
   const addLog = (message: string) => {
     setLogs((prev) => [message, ...prev].slice(0, 5));
@@ -87,12 +76,15 @@ function Counter() {
     }, 2000); // 2 second delay to show loading state
   };
 
-  const handleTestNetwork = async () => {
+  const handleTestNetwork = async (isSlow = false) => {
     try {
       addLog('Sending network request...');
-      const response = await fetch(
-        'https://jsonplaceholder.typicode.com/posts/1'
-      );
+
+      const url = isSlow
+        ? 'http://slowwly.robertomurray.co.uk/delay/2500/url/https://jsonplaceholder.typicode.com/posts/1'
+        : 'https://jsonplaceholder.typicode.com/posts/1';
+
+      const response = await fetch(url);
       const data = await response.json();
       addLog(`Network request successful: ${data.title.substring(0, 20)}...`);
     } catch (error) {
@@ -213,9 +205,15 @@ function Counter() {
           <Text style={styles.actionGroupTitle}>Network</Text>
           <TouchableOpacity
             style={[styles.actionButton, styles.networkButton]}
-            onPress={handleTestNetwork}
+            onPress={() => handleTestNetwork(false)}
           >
             <Text style={styles.actionButtonText}>Test Network</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.networkButton]}
+            onPress={() => handleTestNetwork(true)}
+          >
+            <Text style={styles.actionButtonText}>Test Slow Network</Text>
           </TouchableOpacity>
         </View>
 

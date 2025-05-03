@@ -1,11 +1,9 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { WelcomeScreen } from './screens/WelcomeScreen';
-import { DebuggerLayout } from './components/layout/DebuggerLayout';
-import { ConsoleScreen } from './screens/ConsoleScreen';
-import { ReduxScreen } from './screens/ReduxScreen';
+import { ConsoleScreen } from '@/screens/ConsoleScreen';
+import ConnectionGateScreen from '@/screens/ConnectionGateScreen';
+import { DebuggerLayout } from './layout/DebuggerLayout';
 import { NetworkScreen } from './screens/NetworkScreen';
-import { StorageScreen } from './screens/StorageScreen';
-import { AppLayout } from './components/layout/AppLayout';
+import { ReduxScreen } from './screens/ReduxScreen/ReduxScreen';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return children;
@@ -14,11 +12,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: (
-      <AppLayout>
-        <WelcomeScreen />
-      </AppLayout>
-    ),
+    element: <ConnectionGateScreen />,
   },
   {
     path: '/debugger',

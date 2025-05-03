@@ -3,8 +3,6 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
-import { networkInterfaces } from 'os';
-import { createServer } from 'net';
 import { WebSocketServer, WebSocket } from 'ws';
 import Store from 'electron-store';
 
@@ -68,7 +66,7 @@ function saveWindowState(win: BrowserWindow) {
 // │ ├─┬ main
 // │ │ └── index.js    > Electron-Main
 // │ └─┬ preload
-// │   └── index.mjs   > Preload-Scripts
+// │   └── index.js    > Preload-Scripts
 // ├─┬ dist
 // │ └── index.html    > Electron-Renderer
 //
@@ -99,74 +97,70 @@ const indexHtml = path.join(RENDERER_DIST, 'index.html');
 
 // WebSocket server
 let wsServer: WebSocketServer | null = null;
-let wsClient: WebSocket | null = null;
+let wsClients: WebSocket[] = [];
 const WS_PORT = 8973;
 
 function startWebSocketServer() {
   if (wsServer) {
-    console.log('WebSocket server already running');
+    console.log('WebSocket server already running on port', WS_PORT);
     return;
   }
 
   try {
     wsServer = new WebSocketServer({ port: WS_PORT });
-    console.log(`WebSocket server started on port ${WS_PORT}`);
+    console.log(`WebSocket server successfully started on ws://localhost:${WS_PORT}`);
 
     wsServer.on('connection', socket => {
-      console.log('Client connected to WebSocket server');
+      wsClients.push(socket);
 
-      // Close existing connection if any
-      if (wsClient && wsClient !== socket) {
-        console.log('Closing existing connection for new client');
-        wsClient.close();
+      // Immediately notify renderer of connection
+      if (win) {
+        console.log('Notifying renderer of WebSocket connection');
+        win.webContents.send('connection-status', 'connected');
       }
-
-      wsClient = socket;
 
       socket.on('message', data => {
         try {
-          // Try to parse the message
           const message = JSON.parse(data.toString());
-
-          // Validate message structure
           if (!message || typeof message !== 'object') {
             console.warn('Received invalid message format:', data.toString());
             return;
           }
 
-          // Handle handshake message
           if (message.type === 'handshake') {
-            // Notify renderer process
             if (win) {
-              console.log('Sending connected status to renderer');
-              win.webContents.send('CONNECTION_STATUS', 'connected');
+              console.log('Received handshake, sending connected status to renderer');
+              win.webContents.send('connection-status', 'connected');
             }
             return;
           }
 
-          // Forward all other messages to the renderer process
+          // Forward the WebSocket message to the renderer
           if (win) {
+            console.log('Sending WebSocket message to renderer:', message);
             win.webContents.send('ws-message', message);
+          } else {
+            console.warn('Cannot send WebSocket message: No renderer window available');
           }
         } catch (error) {
           console.error('Error processing WebSocket message:', error);
         }
       });
 
-      socket.on('close', () => {
-        console.log('Client disconnected from WebSocket server');
-        if (wsClient === socket) {
-          wsClient = null;
-          // Notify renderer process
-          if (win) {
-            win.webContents.send('connection-status', 'disconnected');
-          }
+      socket.on('close', (code, reason) => {
+        console.log('Client disconnected from WebSocket server:', {
+          code,
+          reason: reason.toString(),
+        });
+        wsClients = wsClients.filter(client => client !== socket);
+        if (wsClients.length === 0 && win) {
+          console.log('No WebSocket clients connected, notifying renderer');
+          win.webContents.send('connection-status', 'disconnected');
         }
       });
 
       socket.on('error', error => {
-        console.error('WebSocket error:', error);
-        // Notify renderer process
+        console.error('WebSocket client error:', error);
         if (win) {
           win.webContents.send('connection-error', error.message || 'Connection error');
           win.webContents.send('connection-status', 'error');
@@ -176,15 +170,46 @@ function startWebSocketServer() {
 
     wsServer.on('error', error => {
       console.error('WebSocket server error:', error);
-
-      // Notify renderer process
       if (win) {
         win.webContents.send('connection-error', error.message || 'Server error');
         win.webContents.send('connection-status', 'error');
       }
     });
+
+    wsServer.on('listening', () => {
+      console.log(`WebSocket server is listening on ws://localhost:${WS_PORT}`);
+    });
   } catch (error) {
     console.error('Failed to start WebSocket server:', error);
+    if (win) {
+      win.webContents.send('connection-error', error.message || 'Failed to start server');
+      win.webContents.send('connection-status', 'error');
+    }
+  }
+}
+
+function stopWebSocketServer() {
+  if (wsServer) {
+    console.log('Stopping WebSocket server');
+    wsServer.close(error => {
+      if (error) {
+        console.error('Error closing WebSocket server:', error);
+        if (win) {
+          win.webContents.send('connection-error', error.message || 'Failed to close server');
+          win.webContents.send('connection-status', 'error');
+        }
+      }
+    });
+    wsClients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.close(1000, 'Server shutdown');
+      }
+    });
+    wsServer = null;
+    wsClients = [];
+    if (win) {
+      win.webContents.send('connection-status', 'disconnected');
+    }
   }
 }
 
@@ -196,7 +221,7 @@ async function createWindow() {
     };
 
     win = new BrowserWindow({
-      title: 'React Native Debugger',
+      title: 'Pulse Debugger',
       width: windowState.width,
       height: windowState.height,
       transparent: true,
@@ -235,8 +260,15 @@ async function createWindow() {
       win.loadFile(indexHtml);
       win.webContents.openDevTools();
     }
+
     // Start WebSocket server after window is created
     startWebSocketServer();
+
+    // Log when the window is ready to receive messages
+    win!.on('ready-to-show', () => {
+      console.log('Window is ready to show');
+      win!.show();
+    });
   } catch (error) {
     console.error('Error creating window:', error);
   }
@@ -258,18 +290,27 @@ app.on('activate', () => {
 
 // Handle messages from renderer process
 ipcMain.on('send-message', (_, message) => {
-  if (wsClient) {
-    wsClient.send(JSON.stringify(message));
-  }
+  wsClients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(message));
+    }
+  });
 });
 
 // Handle WebSocket messages from renderer
 ipcMain.on('ws-message', (_, message) => {
-  if (wsClient) {
-    wsClient.send(JSON.stringify(message));
-  } else {
-    console.warn('Cannot send WebSocket message: No client connected');
-  }
+  wsClients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(message));
+    }
+  });
+});
+
+// Handle WebSocket reconnect
+ipcMain.on('reconnect-websocket', () => {
+  console.log('Received reconnect-websocket request');
+  stopWebSocketServer();
+  startWebSocketServer();
 });
 
 // New window example arg: new windows url

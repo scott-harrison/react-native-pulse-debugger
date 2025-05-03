@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { cn } from '@/lib/utils';
-import { JSONViewer } from '../components/common/JSONViewer';
-import { useNetworkStore } from '../store/networkStore';
-import { LibToDebuggerEventType } from '@pulse/shared-types';
+import { cn } from '@/utils/styling';
+import { JSONViewer } from '@/components/JSONViewer';
+import { useNetworkStore } from '@/store/networkStore';
 
 interface NetworkRequest {
   id: string;
@@ -112,7 +111,7 @@ function Spinner() {
 }
 
 export function NetworkScreen() {
-  const { requests, selectedRequestId, addRequest, selectRequest, clear } = useNetworkStore();
+  const { requests, selectedRequestId, selectRequest, clear } = useNetworkStore();
   const [copiedTimeout, setCopiedTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const selectedRequest = selectedRequestId ? requests.find(r => r.id === selectedRequestId) : null;
@@ -125,25 +124,6 @@ export function NetworkScreen() {
       }
     };
   }, [copiedTimeout]);
-
-  useEffect(() => {
-    const handleNetworkRequest = (event: CustomEvent<NetworkRequest>) => {
-      addRequest(event.detail);
-    };
-
-    // Listen for network request events
-    window.addEventListener(
-      LibToDebuggerEventType.NETWORK_REQUEST,
-      handleNetworkRequest as EventListener
-    );
-
-    return () => {
-      window.removeEventListener(
-        LibToDebuggerEventType.NETWORK_REQUEST,
-        handleNetworkRequest as EventListener
-      );
-    };
-  }, [addRequest]);
 
   const handleClear = () => {
     clear();

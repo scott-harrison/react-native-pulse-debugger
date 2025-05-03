@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { ReduxState } from '../store/reduxStore';
-import { JSONViewer } from './common/JSONViewer';
+import type { ReduxState } from '@/store/reduxStore';
+import { JSONViewer } from './JSONViewer';
 
 type ViewMode = 'diff' | 'before' | 'after';
 

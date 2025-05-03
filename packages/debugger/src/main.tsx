@@ -2,20 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
-import './styles.css';
-import { ConnectionProvider } from './lib/connection';
+import { WebSocketProvider } from '@/context/WebSocketContext';
+import { consoleStore } from './store/consoleStore';
+import '@/styles.css';
 
-// Create root element if it doesn't exist
-const rootElement = document.getElementById('root') || document.createElement('div');
-if (!rootElement.id) {
-  rootElement.id = 'root';
-  document.body.appendChild(rootElement);
-}
-
-ReactDOM.createRoot(rootElement).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ConnectionProvider>
+    <WebSocketProvider consoleStore={consoleStore}>
       <RouterProvider router={router} />
-    </ConnectionProvider>
+    </WebSocketProvider>
   </React.StrictMode>
 );

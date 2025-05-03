@@ -1,59 +1,20 @@
-import { useEffect } from 'react';
-import { cn } from '@/lib/utils';
-import { JSONViewer } from '../components/common/JSONViewer';
-import { useConsoleStore } from '../store/consoleStore';
+import { cn } from '@/utils/styling';
+import { JSONViewer } from '@/components/JSONViewer';
+import { useConsoleStore } from '@/store/consoleStore';
 
-type LogLevel = 'log' | 'info' | 'warn' | 'error' | 'debug';
+type LogLevel = 'log' | 'info' | 'warn' | 'error' | 'debug' | 'assert';
 
 interface ConsoleLog {
   id: string;
   level: LogLevel;
   message: string;
-  data?: any;
+  data?: any[];
   stack?: string;
   timestamp: number;
 }
 
-declare global {
-  interface Window {
-    electron: {
-      ipcRenderer: {
-        on: (channel: string, func: (...args: any[]) => void) => void;
-        removeListener: (channel: string, func: (...args: any[]) => void) => void;
-        send: (channel: string, ...args: any[]) => void;
-      };
-    };
-  }
-}
-
 export function ConsoleScreen() {
-  const { logs, selectedLogId, addLog, clear, selectLog } = useConsoleStore();
-
-  useEffect(() => {
-    const handleWSMessage = (_: any, data: any) => {
-      try {
-        if (data?.type === 'CONSOLE') {
-          addLog({
-            id: data.timestamp?.toString() || Date.now().toString(),
-            level: (data.level as LogLevel) || 'log',
-            message: data.message || '',
-            data: Array.isArray(data.data) ? data.data : [],
-            timestamp: data.timestamp || Date.now(),
-          });
-        }
-      } catch (error) {
-        console.error('Error handling WebSocket message:', error);
-      }
-    };
-
-    // Clean up any existing listeners before adding a new one
-    window.electron.ipcRenderer.removeListener('ws-message', handleWSMessage);
-    window.electron.ipcRenderer.on('ws-message', handleWSMessage);
-
-    return () => {
-      window.electron.ipcRenderer.removeListener('ws-message', handleWSMessage);
-    };
-  }, [addLog]);
+  const { logs, selectedLogId, clear, selectLog } = useConsoleStore();
 
   const getLogLevelColor = (level: LogLevel) => {
     switch (level) {
@@ -65,6 +26,8 @@ export function ConsoleScreen() {
         return 'text-blue-400';
       case 'debug':
         return 'text-purple-400';
+      case 'assert':
+        return 'text-orange-400';
       default:
         return 'text-zinc-200';
     }
@@ -80,6 +43,8 @@ export function ConsoleScreen() {
         return 'bg-blue-500/20';
       case 'debug':
         return 'bg-purple-500/20';
+      case 'assert':
+        return 'bg-orange-500/20';
       default:
         return 'bg-zinc-500/20';
     }
@@ -120,7 +85,7 @@ export function ConsoleScreen() {
         <div className={cn('mt-0.5 text-xs font-mono line-clamp-2', getLogLevelColor(log.level))}>
           {log.message}
         </div>
-        {log.data && (
+        {log.data && log.data.length > 0 && (
           <div className="mt-1.5 text-[10px] text-zinc-500 font-mono">
             <pre className="mt-1">
               {typeof log.data === 'object' ? JSON.stringify(log.data, null, 2) : String(log.data)}
@@ -165,17 +130,18 @@ export function ConsoleScreen() {
                   {logs.find(log => log.id === selectedLogId)?.message}
                 </p>
               </div>
-              {logs.find(log => log.id === selectedLogId)?.data && (
-                <div>
-                  <h3 className="text-xs font-medium text-zinc-400 mb-1">Data</h3>
-                  <JSONViewer
-                    data={logs.find(log => log.id === selectedLogId)?.data}
-                    className="text-xs"
-                    initialExpanded={true}
-                    level={0}
-                  />
-                </div>
-              )}
+              {logs.find(log => log.id === selectedLogId)?.data &&
+                logs.find(log => log.id === selectedLogId)!.data!.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-medium text-zinc-400 mb-1">Data</h3>
+                    <JSONViewer
+                      data={logs.find(log => log.id === selectedLogId)?.data}
+                      className="text-xs"
+                      initialExpanded={true}
+                      level={0}
+                    />
+                  </div>
+                )}
               {logs.find(log => log.id === selectedLogId)?.stack && (
                 <div>
                   <h3 className="text-xs font-medium text-zinc-400 mb-1">Stack Trace</h3>

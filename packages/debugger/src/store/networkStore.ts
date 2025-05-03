@@ -1,4 +1,5 @@
-import { create } from 'zustand';
+import { create, StoreApi } from 'zustand';
+import { MessageType, NetworkEventMessage } from '@pulse/shared-types';
 
 interface NetworkRequest {
   id: string;
@@ -19,39 +20,68 @@ interface NetworkRequest {
   };
 }
 
-interface NetworkState {
+export interface NetworkState {
   requests: NetworkRequest[];
   selectedRequestId: string | null;
   addRequest: (request: NetworkRequest) => void;
-  selectRequest: (requestId: string | null) => void;
+  updateRequest: (id: string, request: NetworkRequest) => void;
   clear: () => void;
+  selectRequest: (id: string) => void;
 }
 
-export const useNetworkStore = create<NetworkState>(set => ({
+// Create a single store instance
+export const networkStore = create<NetworkState>(set => ({
   requests: [],
   selectedRequestId: null,
-
   addRequest: request => {
+    console.log('Adding network request to store:', request);
+    set(state => ({
+      requests: [...state.requests, request],
+      selectedRequestId: state.selectedRequestId || request.id,
+    }));
+  },
+  updateRequest: (id, request) => {
+    console.log('Updating network request in store:', { id, request });
     set(state => {
-      // Update existing request if it exists, otherwise add new one
-      const existingIndex = state.requests.findIndex(r => r.id === request.id);
-      if (existingIndex !== -1) {
-        const newRequests = [...state.requests];
-        newRequests[existingIndex] = request;
-        return { requests: newRequests };
+      const existingRequestIndex = state.requests.findIndex(req => req.id === id);
+      if (existingRequestIndex === -1) {
+        console.warn(`Network request with id ${id} not found for update`);
+        return state;
       }
-      return { requests: [request, ...state.requests] };
+      const updatedRequests = [...state.requests];
+      updatedRequests[existingRequestIndex] = request;
+      return {
+        requests: updatedRequests,
+        selectedRequestId: state.selectedRequestId,
+      };
     });
   },
-
-  selectRequest: requestId => {
-    set({ selectedRequestId: requestId });
-  },
-
   clear: () => {
-    set({
-      requests: [],
-      selectedRequestId: null,
-    });
+    console.log('Clearing network requests in store');
+    set({ requests: [], selectedRequestId: null });
+  },
+  selectRequest: id => {
+    console.log('Selecting network request in store:', id);
+    set({ selectedRequestId: id });
   },
 }));
+
+export const registerNetworkDispatch = (
+  addRequest: (request: NetworkRequest) => void,
+  updateRequest: (id: string, request: NetworkRequest) => void
+) => {
+  return (payload: NetworkEventMessage) => {
+    console.log('registerNetworkDispatch received action:', payload);
+
+    // Check if this is an update to an existing request (e.g., pending -> fulfilled)
+    const existingRequest = networkStore.getState().requests.find(req => req.id === payload.id);
+    if (existingRequest) {
+      updateRequest(payload.id, payload);
+    } else {
+      addRequest(payload);
+    }
+  };
+};
+
+// Export the store instance for use in components
+export const useNetworkStore = networkStore;

@@ -1,6 +1,9 @@
 module.exports = {
   preset: 'react-native',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  moduleNameMapper: {
+    '^WebSocket$': '<rootDir>/__mocks__/WebSocket.ts',
+  },
   transformIgnorePatterns: [
     'node_modules/(?!(react-native|@react-native|react-native-.*)/)',
   ],
@@ -13,5 +16,5 @@ module.exports = {
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
   },
-  testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
+  testMatch: ['**/*.test.ts', '**/*.test.tsx'],
 };
