@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import counterReducer from './features/counter/counterSlice';
-import { pulseDebugger } from '@pulse/debugger-react-native';
+import { pulseDebugger } from '@pulse/debugger-lib';
 
 export function createStore() {
   return configureStore({

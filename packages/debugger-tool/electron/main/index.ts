@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
 import Store from 'electron-store';
+import { startWebSocketServer } from '../websocket-server';
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -59,16 +60,6 @@ function saveWindowState(win: BrowserWindow) {
   }
 }
 
-// The built directory structure
-//
-// ├─┬ dist-electron
-// │ ├─┬ main
-// │ │ └── index.js    > Electron-Main
-// │ └─┬ preload
-// │   └── index.js    > Preload-Scripts
-// ├─┬ dist
-// │ └── index.html    > Electron-Renderer
-//
 process.env.APP_ROOT = path.join(__dirname, '../..');
 
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron');
@@ -154,7 +145,12 @@ async function createWindow() {
 
 app
   .whenReady()
-  .then(createWindow)
+  .then(() => {
+    createWindow();
+    if (win) {
+      startWebSocketServer(win);
+    }
+  })
   .catch(error => {
     console.error('Error in app startup:', error);
     app.quit();

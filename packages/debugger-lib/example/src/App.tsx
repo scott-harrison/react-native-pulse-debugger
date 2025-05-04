@@ -22,7 +22,7 @@ import {
   getPulseState,
   type ConnectionState,
   pulseDebugger,
-} from '@pulse/debugger-react-native';
+} from '@pulse/debugger-lib';
 
 // Configure the debugger
 pulseDebugger.configure({
