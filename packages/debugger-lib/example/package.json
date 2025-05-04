@@ -11,7 +11,7 @@
   "dependencies": {
     "@babel/runtime": "^7.24.0",
     "@expo/metro-runtime": "~4.0.1",
-    "@pulse/debugger-react-native": "link:../",
+    "@pulse/debugger-lib": "link:../",
     "@reduxjs/toolkit": "^2.6.1",
     "expo": "~52.0.43",
     "expo-constants": "~15.0.0",

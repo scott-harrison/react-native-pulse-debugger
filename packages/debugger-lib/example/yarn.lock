@@ -2416,9 +2416,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pulse/debugger-react-native@link:../::locator=pulse-debugger-example%40workspace%3A.":
+"@pulse/debugger-lib@link:../::locator=pulse-debugger-example%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@pulse/debugger-react-native@link:../::locator=pulse-debugger-example%40workspace%3A."
+  resolution: "@pulse/debugger-lib@link:../::locator=pulse-debugger-example%40workspace%3A."
   languageName: node
   linkType: soft
 
@@ -7515,7 +7515,7 @@ __metadata:
     "@babel/core": "npm:^7.20.0"
     "@babel/runtime": "npm:^7.24.0"
     "@expo/metro-runtime": "npm:~4.0.1"
-    "@pulse/debugger-react-native": "link:../"
+    "@pulse/debugger-lib": "link:../"
     "@reduxjs/toolkit": "npm:^2.6.1"
     expo: "npm:~52.0.43"
     expo-constants: "npm:~15.0.0"
