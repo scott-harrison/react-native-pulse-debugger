@@ -22,11 +22,15 @@ export class WebSocketClient {
   ) {
     this.url = url;
     this.createWebSocket = createWebSocket;
-    this.initializeSession();
     this.connect();
   }
 
   private async initializeSession(): Promise<void> {
+    // If session already exists, skip initialization
+    if (this.session) {
+      return;
+    }
+
     // Fetch device details
     this.deviceDetails = await getDeviceInfo();
 
