@@ -119,7 +119,7 @@ const NetworkScreen: React.FC = () => {
 	};
 
 	return (
-		<div className="h-full flex bg-gray-900">
+		<div className="h-full flex overflow-y-auto bg-gray-900/80">
 			<div className="w-1/2 border-r border-zinc-800 flex flex-col">
 				<div className="p-4 border-b h-15 border-zinc-800 flex items-center justify-between">
 					<div>
