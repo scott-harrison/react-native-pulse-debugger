@@ -40,9 +40,23 @@ const ConsoleScreen: React.FC = () => {
 					<button
 						onClick={handleClearLogs}
 						disabled={logs.length < 1}
-						className="px-2 py-1 text-xs font-medium text-zinc-400 hover:text-zinc-200 bg-zinc-800 hover:bg-zinc-700 rounded disabled:cursor-not-allowed transition-colors"
+						className="text-xs text-zinc-400 hover:text-zinc-200 px-3 py-1.5 rounded-md cursor-pointer bg-zinc-800 hover:bg-zinc-700 transition-colors border border-zinc-700/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-zinc-800 disabled:hover:text-zinc-400 flex items-center gap-1.5"
 					>
-						Clear Logs
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							className="h-3.5 w-3.5"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+							/>
+						</svg>
+						Clear
 					</button>
 				</div>
 				<div className="flex-1 overflow-y-auto p-4">
@@ -52,11 +66,10 @@ const ConsoleScreen: React.FC = () => {
 						</div>
 					) : (
 						logs.map((log: IEvent<'console_event'>) => (
-							<div className="py-2 border-b border-zinc-800">
+							<div key={log.id} className="py-2 border-b border-zinc-800">
 								<div
-									key={log.id}
 									onClick={() => handleSelectLog(log)}
-									className={`px-4 py-4 text-sm font-mono text-zinc-200 cursor-pointer rounded ${
+									className={`px-4 py-3 text-sm font-mono text-zinc-200 cursor-pointer rounded ${
 										selectedLog?.id === log.id ? 'bg-gray-700' : 'hover:bg-gray-700/20'
 									}`}
 								>

@@ -28,7 +28,7 @@ export interface INetworkPayload {
 	url: string;
 	method: string;
 	headers: object;
-	body: unknown | null;
+	body: object | string | null;
 	response?: {
 		status: number;
 		headers: Record<string, string>;

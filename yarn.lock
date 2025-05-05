@@ -3156,7 +3156,7 @@ __metadata:
     "@testing-library/user-event": "npm:^14.6.1"
     "@types/identity-obj-proxy": "npm:^3"
     "@types/jest": "npm:^29.5.14"
-    "@types/node": "npm:^22.13.14"
+    "@types/node": "npm:^22.15.5"
     "@types/react": "npm:^19.0.12"
     "@types/react-dom": "npm:^19.0.4"
     "@types/source-map-support": "npm:^0"
@@ -4094,12 +4094,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^22.13.14, @types/node@npm:^22.7.7":
+"@types/node@npm:*, @types/node@npm:^22.7.7":
   version: 22.14.0
   resolution: "@types/node@npm:22.14.0"
   dependencies:
     undici-types: "npm:~6.21.0"
   checksum: 10/d0669a8a37a18532c886ccfa51eb3fe1e46088deb4d3d27ebcd5d7d68bd6343ad1c7a3fcb85164780a57629359c33a6c917ecff748ea232bceac7692acc96537
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^22.15.5":
+  version: 22.15.5
+  resolution: "@types/node@npm:22.15.5"
+  dependencies:
+    undici-types: "npm:~6.21.0"
+  checksum: 10/258bc42be3b4646eab00613aca13dce30b90642d747a66f2df109899a294651efca2e7bf2a13d252ad389bf8b60ad27d7d153064f785a2c1ce7f10de9e95e391
   languageName: node
   linkType: hard
 
