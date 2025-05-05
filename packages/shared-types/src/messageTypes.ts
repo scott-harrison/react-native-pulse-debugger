@@ -54,6 +54,7 @@ export interface IEventMap {
 
 export interface IEvent<T extends keyof IEventMap = keyof IEventMap> {
 	id: string;
+	sessionId?: string;
 	type: T | string;
 	payload: IEventMap[T] | unknown;
 	timestamp: string;

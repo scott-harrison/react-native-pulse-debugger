@@ -4,6 +4,7 @@ import { create } from 'zustand';
 interface NetworkState {
 	requests: IEvent<'network_event'>[];
 	addNetworkRequest: (event: IEvent<'network_event'>) => void;
+	clearNetworkRequestsBySessionId: (sessionId: string) => void;
 }
 
 export const useNetworkStore = create<NetworkState>(set => ({
@@ -18,4 +19,9 @@ export const useNetworkStore = create<NetworkState>(set => ({
 			}
 			return { requests: [...state.requests, event] };
 		}),
+	clearNetworkRequestsBySessionId: (sessionId: string) => {
+		set(state => ({
+			requests: state.requests.filter(request => request.sessionId !== sessionId),
+		}));
+	},
 }));

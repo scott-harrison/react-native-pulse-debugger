@@ -1,14 +1,15 @@
 import { useEffect } from 'react';
-import { IEvent } from '@pulse/shared-types';
+import { ISession, IEvent } from '@pulse/shared-types';
 import { useConsoleStore } from '@/store/consoleStore';
 import { useNetworkStore } from '@/store/networkStore';
 import { useReduxStore } from '@/store/reduxStore';
+import useSessionStore from '@/store/sessionStore';
 
 export const useWebSocketListener = () => {
-	const addConsole = useConsoleStore(state => state.addConsole);
-	const addNetworkRequest = useNetworkStore(state => state.addNetworkRequest);
-	const addReduxAction = useReduxStore(state => state.addReduxAction);
-	const addReduxState = useReduxStore(state => state.addReduxState);
+	const { addConsole } = useConsoleStore(state => state);
+	const { addNetworkRequest } = useNetworkStore(state => state);
+	const { addReduxAction, addReduxState } = useReduxStore(state => state);
+	const { addSession, clearSessionById } = useSessionStore(state => state);
 
 	const eventHandler = (event: IEvent) => {
 		try {
@@ -53,6 +54,26 @@ export const useWebSocketListener = () => {
 	useEffect(() => {
 		const { ipcRenderer } = window.electron;
 
+		const handlePulseConnection = (sessionData: ISession) => {
+			// Check if session id already exists in sessionStore
+			const existingSession = useSessionStore
+				.getState()
+				.sessions.find(session => session.id === sessionData.id);
+
+			if (existingSession) {
+				console.warn(`Session with id ${sessionData.id} already exists. Updating session.`);
+			}
+
+			// Create new session or update existing session
+			addSession(sessionData);
+		};
+
+		const handlePulseDisconnection = (sessionId: string) => {
+			// Clear session
+			clearSessionById(sessionId);
+			// Clear all events that contain sessionId
+		};
+
 		const handlePulseEvent = (event: IEvent) => {
 			try {
 				const eventParsed = typeof event === 'string' ? JSON.parse(event) : event;
@@ -68,9 +89,13 @@ export const useWebSocketListener = () => {
 			}
 		};
 
+		ipcRenderer.on('pulse-connection', handlePulseConnection);
+		ipcRenderer.on('pulse-disconnection', handlePulseDisconnection);
 		ipcRenderer.on('pulse-event', handlePulseEvent);
 
 		return () => {
+			ipcRenderer.removeAllListeners('pulse-connection');
+			ipcRenderer.removeAllListeners('pulse-disconnection');
 			ipcRenderer.removeAllListeners('pulse-event');
 		};
 	}, []);

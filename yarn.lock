@@ -3116,7 +3116,9 @@ __metadata:
     eslint: "npm:^9.22.0"
     eslint-config-prettier: "npm:^10.1.1"
     eslint-plugin-prettier: "npm:^5.2.3"
+    expo-application: "npm:^6.1.4"
     expo-constants: "npm:17.0.8"
+    expo-device: "npm:^7.1.4"
     jest: "npm:^29.7.0"
     prettier: "npm:^3.0.3"
     react: "npm:18.3.1"
@@ -7851,6 +7853,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-application@npm:^6.1.4":
+  version: 6.1.4
+  resolution: "expo-application@npm:6.1.4"
+  peerDependencies:
+    expo: "*"
+  checksum: 10/9f25eceea43cc93c7f1add49c2d9d510b4fe682b7c5669f976bb8061de66090c45fad049a84f5ae098ddcd428222631984c80387e58df2d5fab674d010f96c4c
+  languageName: node
+  linkType: hard
+
 "expo-constants@npm:17.0.8":
   version: 17.0.8
   resolution: "expo-constants@npm:17.0.8"
@@ -7861,6 +7872,17 @@ __metadata:
     expo: "*"
     react-native: "*"
   checksum: 10/a1b0eec1a9c5cff7680409ac8fca643e185f79f57175bd2398bb8df53beaa80c970318d3c66e2390ff63db133f5a9110b514d81248399f932f48290c8871e774
+  languageName: node
+  linkType: hard
+
+"expo-device@npm:^7.1.4":
+  version: 7.1.4
+  resolution: "expo-device@npm:7.1.4"
+  dependencies:
+    ua-parser-js: "npm:^0.7.33"
+  peerDependencies:
+    expo: "*"
+  checksum: 10/7ac5d0af134c2dff036de55e412d89e2158a31fad76ff751c8de8a08c9411e448498b50e5c92c13bb2a9866f0508b2bc072e8f7fc7d974cdd769940744af8a67
   languageName: node
   linkType: hard
 
@@ -15499,6 +15521,15 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 10/b9b1e73dabac5dc730c041325dbd9c99467c1b0d239f1b74ec3b90d831384af3e2ba973946232df670519147eb51a2c20f6f96163cea2b359f03de1e2091cc4f
+  languageName: node
+  linkType: hard
+
+"ua-parser-js@npm:^0.7.33":
+  version: 0.7.40
+  resolution: "ua-parser-js@npm:0.7.40"
+  bin:
+    ua-parser-js: script/cli.js
+  checksum: 10/914b8134894e0060a695e519c4b25625613572911466fdcd60f995babc2a61e75a318d98f5e777961ab428069b6ee2f7c5e3a4595eee858a1e86de694579baac
   languageName: node
   linkType: hard
 

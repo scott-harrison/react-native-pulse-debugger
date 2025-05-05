@@ -1,4 +1,5 @@
 import type { IEvent } from '@pulse/shared-types';
+import { getDeviceInfo } from '../utils/deviceInfo';
 
 type WebSocketFactory = (url: string) => WebSocket;
 
@@ -11,6 +12,9 @@ export class WebSocketClient {
   private shouldReconnect: boolean = true;
   private messageHandler: ((data: any) => void) | null = null;
   private isConnecting: boolean = false;
+  private deviceDetails: Record<string, string> = {};
+  private session: { id: string; deviceInfo: Record<string, string> } | null =
+    null;
 
   constructor(
     url: string = 'ws://localhost:8379',
@@ -18,7 +22,25 @@ export class WebSocketClient {
   ) {
     this.url = url;
     this.createWebSocket = createWebSocket;
+    this.initializeSession();
     this.connect();
+  }
+
+  private async initializeSession(): Promise<void> {
+    // Fetch device details
+    this.deviceDetails = await getDeviceInfo();
+
+    // Create a unique session ID using deviceId and appName
+    const { deviceId, appName } = this.deviceDetails;
+    const sessionId = `${deviceId}-${appName}`;
+
+    // Create the session object
+    this.session = {
+      id: sessionId,
+      deviceInfo: this.deviceDetails,
+    };
+
+    console.log('[WebSocketClient] Session initialized:', this.session);
   }
 
   public isConnected(): boolean {
@@ -51,11 +73,24 @@ export class WebSocketClient {
     }
   }
 
-  private connect(): void {
+  private async connect(): Promise<void> {
     if (this.isConnecting || !this.shouldReconnect) return;
     this.isConnecting = true;
 
-    this.ws = this.createWebSocket(this.url);
+    if (!this.session) {
+      await this.initializeSession();
+    }
+
+    // Add device details as query parameters
+    const queryParams = this.session
+      ? new URLSearchParams({
+          id: this.session.id,
+          ...this.session.deviceInfo,
+        }).toString()
+      : '';
+    const wsUrlWithParams = `${this.url}?${queryParams}`;
+
+    this.ws = this.createWebSocket(wsUrlWithParams);
 
     this.ws.onopen = () => {
       this.isConnecting = false;
@@ -86,6 +121,7 @@ export class WebSocketClient {
     this.ws.onclose = () => {
       this.isConnecting = false;
       this.ws = null;
+      this.session = null;
       if (this.shouldReconnect) {
         this.scheduleReconnect();
       }
