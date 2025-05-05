@@ -114,6 +114,11 @@ function Counter() {
     addLog('Sent test console debug message');
   };
 
+  const handleTestConsoleInfo = () => {
+    console.info('This is a info message', { nested: { data: true } });
+    addLog('Sent test console info message');
+  };
+
   const handleTestError = () => {
     try {
       // Simulate an error
@@ -232,6 +237,13 @@ function Counter() {
               onPress={handleTestConsoleWarn}
             >
               <Text style={styles.actionButtonText}>Warn</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionButton, styles.consoleInfoButton]}
+              onPress={handleTestConsoleInfo}
+            >
+              <Text style={styles.actionButtonText}>Info</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -444,19 +456,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8F5E9',
   },
   consoleLogButton: {
-    backgroundColor: '#EDE7F6',
+    backgroundColor: '#f1f1f1',
   },
   consoleWarnButton: {
     backgroundColor: '#FFF3E0',
+  },
+  consoleInfoButton: {
+    backgroundColor: '#E0F7FA',
   },
   consoleErrorButton: {
     backgroundColor: '#FFEBEE',
   },
   consoleDebugButton: {
-    backgroundColor: '#E0F7FA',
+    backgroundColor: '#EDE7F6',
   },
   errorButton: {
-    backgroundColor: '#FFEBEE',
+    backgroundColor: '',
   },
   actionButtonText: {
     fontWeight: '600',

@@ -17,7 +17,7 @@ const WindowLayout: React.FC<WindowLayoutProps> = ({ children }) => {
 
 			{/* App content, starting at top */}
 			<div
-				className="flex-1 text-white"
+				className="flex-1 overflow-hidden text-white"
 				style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
 			>
 				{children}

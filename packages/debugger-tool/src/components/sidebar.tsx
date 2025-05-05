@@ -13,7 +13,7 @@ const Sidebar: React.FC = () => {
 	const [isModalOpen, setModalOpen] = useState(false);
 
 	return (
-		<aside className="w-64 bg-gray-800 text-white flex flex-col">
+		<aside className="w-64 bg-gray-800 text-white flex flex-col rounded-tr-2xl">
 			<div className="p-4 border-b border-zinc-800">
 				<div className="flex items-center gap-2">
 					<div className="p-1.5 bg-blue-500/10 rounded-lg">

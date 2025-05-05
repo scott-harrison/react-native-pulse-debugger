@@ -53,7 +53,9 @@ export class WebSocketClient {
 
   public sendMessage(message: IEvent): void {
     if (this.isConnected()) {
-      this.ws!.send(JSON.stringify(message));
+      this.ws!.send(
+        JSON.stringify({ sessionId: this.session?.id, ...message })
+      );
     } else {
       this.messageQueue.push(message);
     }

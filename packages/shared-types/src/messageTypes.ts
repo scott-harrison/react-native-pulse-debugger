@@ -1,4 +1,4 @@
-export type TLogLevel = 'log' | 'warn' | 'error' | 'debug' | 'table' | 'assert';
+export type TLogLevel = 'log' | 'info' | 'warn' | 'error' | 'debug' | 'table' | 'assert';
 
 export type TReduxAction = {
 	type: string;
@@ -18,7 +18,8 @@ export interface IReduxStatePayload {
 export interface IConsolePayload {
 	level: TLogLevel;
 	message: string;
-	data?: unknown;
+	data?: object | [];
+	stack?: Error;
 }
 
 export interface INetworkPayload {
@@ -56,6 +57,6 @@ export interface IEvent<T extends keyof IEventMap = keyof IEventMap> {
 	id: string;
 	sessionId?: string;
 	type: T | string;
-	payload: IEventMap[T] | unknown;
+	payload: IEventMap[T];
 	timestamp: string;
 }

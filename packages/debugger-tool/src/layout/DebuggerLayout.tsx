@@ -1,6 +1,4 @@
-import { Activity } from 'lucide-react';
-import { Outlet, NavLink } from 'react-router-dom';
-import pkg from '../../package.json';
+import { Outlet } from 'react-router-dom';
 import Sidebar from '@/components/sidebar';
 
 const DebuggerLayout = () => {
@@ -8,7 +6,7 @@ const DebuggerLayout = () => {
 		<div className="flex h-full">
 			<Sidebar />
 			{/* Main Content */}
-			<main className="flex-1 bg-gray-900 text-white p-6">
+			<main className="flex-1">
 				<Outlet />
 			</main>
 		</div>
