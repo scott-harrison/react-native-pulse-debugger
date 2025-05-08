@@ -16,7 +16,7 @@ const useSessionStore = create<SessionState>(set => ({
 	setCurrentSession: id => set({ currentSessionId: id }),
 	addSession: session => set(state => ({ sessions: [...state.sessions, session] })),
 	clearSessionById: sessionId =>
-		set(state => ({ sessions: state.sessions.filter(session => session.id !== sessionId) })),
+		set(state => ({ sessions: state.sessions.filter(session => session.sessionId !== sessionId) })),
 	clearSession: () => set({ sessions: [], currentSessionId: null }),
 }));
 

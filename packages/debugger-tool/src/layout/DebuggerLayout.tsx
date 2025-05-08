@@ -6,7 +6,7 @@ const DebuggerLayout = () => {
 		<div className="flex h-full">
 			<Sidebar />
 			{/* Main Content */}
-			<main className="flex-1">
+			<main className="flex-grow overflow-y-hidden">
 				<Outlet />
 			</main>
 		</div>

@@ -35,7 +35,7 @@ const WelcomeScreen = () => {
 					<div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl">
 						{sessions.map(session => (
 							<div
-								key={session.id}
+								key={session.sessionId}
 								className="bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 w-full sm:w-96"
 							>
 								<h3 className="text-lg font-semibold text-purple-400 mb-2">
@@ -45,10 +45,12 @@ const WelcomeScreen = () => {
 									<strong>Device:</strong> {session.deviceInfo.model}
 								</p>
 								<p className="text-sm text-gray-400 mb-4">
-									<strong>Session ID:</strong> {session.id}
+									<strong>Session ID:</strong>
+									<br />
+									{session.sessionId}
 								</p>
 								<button
-									onClick={() => handleDebugSession(session.id)}
+									onClick={() => handleDebugSession(session.sessionId)}
 									className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white text-sm font-medium py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105"
 								>
 									Debug

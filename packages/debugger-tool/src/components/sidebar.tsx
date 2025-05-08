@@ -6,14 +6,13 @@ import { NavLink } from 'react-router-dom';
 import pkg from '../../package.json';
 
 const Sidebar: React.FC = () => {
-	const session = useSessionStore(state =>
-		state.sessions.find(s => s.id === state.currentSessionId)
-	);
+	const sessionId = useSessionStore(state => state.currentSessionId);
+	const session = useSessionStore(state => state.sessions.find(s => s.sessionId === sessionId));
 	const setCurrentSession = useSessionStore(state => state.setCurrentSession);
 	const [isModalOpen, setModalOpen] = useState(false);
 
 	return (
-		<aside className="w-64 bg-gray-800 text-white flex flex-col rounded-tr-2xl">
+		<aside className="min-w-64 bg-gray-800 text-white flex flex-col rounded-tr-2xl">
 			<div className="p-4 border-b border-zinc-800">
 				<div className="flex items-center gap-2">
 					<div className="p-1.5 bg-blue-500/10 rounded-lg">

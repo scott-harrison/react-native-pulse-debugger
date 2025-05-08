@@ -9,7 +9,7 @@ export function startWebSocketServer(win: BrowserWindow) {
 	wss.on('connection', (ws: WebSocket, req) => {
 		const { id: sessionId, ...deviceInfo } = parse(req.url || '', true).query;
 		console.log(`WebSocket client connected - ${sessionId} - ${deviceInfo}`);
-		win.webContents.send('pulse-connection', { id: sessionId, deviceInfo });
+		win.webContents.send('pulse-connection', { sessionId: sessionId, deviceInfo });
 
 		// Handle incoming messages
 		ws.on('message', (message: Buffer) => {

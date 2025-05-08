@@ -119,8 +119,8 @@ const NetworkScreen: React.FC = () => {
 	};
 
 	return (
-		<div className="h-full flex overflow-y-auto bg-gray-900/80">
-			<div className="w-1/2 border-r border-zinc-800 flex flex-col">
+		<div className="flex flex-1 h-full overflow-y-auto bg-gray-900/80">
+			<div className="flex flex-col flex-1">
 				<div className="p-4 border-b h-15 border-zinc-800 flex items-center justify-between">
 					<div>
 						<h2 className="text-sm font-semibold text-zinc-100">Network Requests</h2>
@@ -221,8 +221,8 @@ const NetworkScreen: React.FC = () => {
 				</div>
 			</div>
 			{selectedRequest && (
-				<div className="w-1/2 border-l border-zinc-800 flex flex-col">
-					<div className="px-3 py-2 border-b border-zinc-800">
+				<div className="border-l border-zinc-800 flex flex-col flex-1  overflow-y-auto shrink">
+					<div className="px-3 py-2 h-15 border-b border-zinc-800">
 						<h2 className="text-sm font-semibold text-zinc-100">Details</h2>
 						<p className="text-[10px] text-zinc-500 mt-0.5">Request information</p>
 					</div>

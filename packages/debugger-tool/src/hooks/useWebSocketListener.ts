@@ -8,7 +8,7 @@ import useSessionStore from '@/store/sessionStore';
 export const useWebSocketListener = () => {
 	const { addConsole } = useConsoleStore(state => state);
 	const { addNetworkRequest } = useNetworkStore(state => state);
-	const { addReduxAction, addReduxState } = useReduxStore(state => state);
+	const { addReduxAction, setReduxState } = useReduxStore(state => state);
 	const { addSession, clearSessionById } = useSessionStore(state => state);
 
 	const eventHandler = (event: IEvent) => {
@@ -38,9 +38,10 @@ export const useWebSocketListener = () => {
 					break;
 				case 'redux_action_event':
 					addReduxAction(event as IEvent<'redux_action_event'>);
+					// setReduxState(event.sessionId, event.payload.nextState);
 					break;
 				case 'redux_state_event':
-					addReduxState(event as IEvent<'redux_state_event'>);
+					// addReduxState(event as IEvent<'redux_state_event'>);
 					break;
 
 				default:
@@ -58,10 +59,10 @@ export const useWebSocketListener = () => {
 			// Check if session id already exists in sessionStore
 			const existingSession = useSessionStore
 				.getState()
-				.sessions.find(session => session.id === sessionData.id);
+				.sessions.find(session => session.sessionId === sessionData.sessionId);
 
 			if (existingSession) {
-				console.warn(`Session with id ${sessionData.id} already exists. Updating session.`);
+				console.warn(`Session with id ${sessionData.sessionId} already exists. Updating session.`);
 			}
 
 			// Create new session or update existing session
@@ -81,6 +82,7 @@ export const useWebSocketListener = () => {
 					type: eventParsed.type,
 					payload: eventParsed.payload,
 					id: eventParsed.id,
+					sessionId: eventParsed.sessionId,
 					timestamp: eventParsed.timestamp,
 				});
 				eventHandler(eventParsed);
