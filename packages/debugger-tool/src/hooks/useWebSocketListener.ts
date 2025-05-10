@@ -8,7 +8,7 @@ import useSessionStore from '@/store/sessionStore';
 export const useWebSocketListener = () => {
 	const { addConsole } = useConsoleStore(state => state);
 	const { addNetworkRequest } = useNetworkStore(state => state);
-	const { addReduxAction, setReduxState } = useReduxStore(state => state);
+	const { addReduxAction } = useReduxStore(state => state);
 	const { addSession, clearSessionById } = useSessionStore(state => state);
 
 	const eventHandler = (event: IEvent) => {
@@ -59,10 +59,11 @@ export const useWebSocketListener = () => {
 			// Check if session id already exists in sessionStore
 			const existingSession = useSessionStore
 				.getState()
-				.sessions.find(session => session.sessionId === sessionData.sessionId);
+				.sessions.some(session => session.sessionId === sessionData.sessionId);
 
 			if (existingSession) {
 				console.warn(`Session with id ${sessionData.sessionId} already exists. Updating session.`);
+				return;
 			}
 
 			// Create new session or update existing session

@@ -106,6 +106,11 @@ export class WebSocketClient {
     this.ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+
+        if (data.type === 'reconnect') {
+          this.connect();
+        }
+
         if (this.messageHandler) {
           this.messageHandler(data);
         }
