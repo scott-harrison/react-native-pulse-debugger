@@ -1,8 +1,8 @@
+import JSONViewer from '@/components/JSONViewer/JSONViewer';
 import { useReduxStore } from '@/store/reduxStore';
 import useSessionStore from '@/store/sessionStore';
 import { IEvent } from '@pulse/shared-types';
 import React, { useMemo, useState } from 'react';
-import ReactJson from 'react-json-view';
 
 const ReduxScreen: React.FC = () => {
 	const sessionId = useSessionStore(state => state.currentSessionId);
@@ -50,9 +50,9 @@ const ReduxScreen: React.FC = () => {
 	}, [reduxActions]);
 
 	return (
-		<div className="h-full flex overflow-y-auto bg-gray-900/80">
-			<div className="w-1/2 border-r border-zinc-800 flex flex-col">
-				<div className="p-4 border-b border-zinc-800 flex items-center justify-between">
+		<div className="flex flex-1 h-full overflow-y-auto bg-gray-900/80">
+			<div className="flex flex-col flex-1">
+				<div className="p-4 border-b border-zinc-800 items-center justify-between h-20">
 					<div>
 						<h2 className="text-sm font-semibold text-zinc-100">Redux State Tree</h2>
 						<p className="text-xs text-zinc-500 mt-0.5">
@@ -62,26 +62,20 @@ const ReduxScreen: React.FC = () => {
 					</div>
 					<div className="flex gap-2">{/* Buttons */}</div>
 				</div>
-				<div className="flex-1 overflow-auto">
+				<div className="flex-1 h-full bg-gray-950 overflow-auto">
 					{!reduxState ? (
 						<div className="text-center text-xs font-mono text-gray-500 mt-4">
 							No Redux state available. Click "Refresh State" to request the current state.
 						</div>
 					) : (
-						<div className="font-mono text-sm">
-							<ReactJson
-								src={reduxState}
-								theme="ocean"
-								collapsed={false}
-								enableClipboard
-								style={{ backgroundColor: '#101828', padding: 20 }}
-							/>
+						<div className="font-mono text-sm ">
+							<JSONViewer data={reduxState.state} />
 						</div>
 					)}
 				</div>
 			</div>
 			<div className="w-1/2 flex flex-col overflow-hidden">
-				<div className="p-4 border-b border-zinc-800">
+				<div className="p-4 border-b border-zinc-800 h-20">
 					<div className="flex justify-between items-center">
 						<div>
 							<h2 className="text-sm font-semibold text-zinc-100">Action History</h2>
@@ -192,11 +186,6 @@ const ReduxScreen: React.FC = () => {
 													<div className="font-medium text-gray-200 flex-1">
 														{actionEvent.payload.action.type}
 													</div>
-													{/* {hasStateDiff && (
-														<div className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded-full">
-															State Changed
-														</div>
-													)} */}
 												</div>
 												<div className="flex items-center space-x-4 mt-1">
 													<div className="text-xs text-zinc-500">
@@ -236,30 +225,35 @@ const ReduxScreen: React.FC = () => {
 												<div className="p-4 bg-zinc-800/50">
 													{/* Action Details */}
 													<div className="space-y-4">
-														{/* {actionEvent.payload.action.payload !== undefined && (
+														{actionEvent.payload.action.payload !== undefined ? (
 															<div>
 																<div className="text-sm text-zinc-400 mb-2">Payload</div>
 																<div className="bg-zinc-900/50 rounded-md overflow-hidden border border-zinc-800">
-																	<ReactJson
-																		src={actionEvent.payload.action.payload || {}}
-																		theme="ocean"
-																		collapsed={false}
-																		enableClipboard
-																	/>
+																	{typeof actionEvent.payload.action.payload === 'object' ||
+																	Array.isArray(actionEvent.payload.action.payload) ? (
+																		<JSONViewer data={actionEvent.payload.action.payload || {}} />
+																	) : (
+																		<p className="px-2 py-1">
+																			{String(actionEvent.payload.action.payload)}
+																		</p>
+																	)}
 																</div>
 															</div>
-														)} */}
+														) : null}
 
-														{actionEvent.payload.nextState && actionEvent.payload.prevState && (
+														{actionEvent.payload.nextState && actionEvent.payload.prevState ? (
 															<div className="pt-4 border-t border-zinc-700/50">
 																<div className="flex items-center justify-between mb-4">
 																	<h3 className="font-semibold text-white">State Changes</h3>
 																</div>
 																<div className="bg-zinc-900/50 rounded-md overflow-hidden border border-zinc-800">
-																	{/* compare diff of nextState and prevState */}
+																	<JSONViewer
+																		data={actionEvent.payload.prevState}
+																		compareData={actionEvent.payload.nextState}
+																	/>
 																</div>
 															</div>
-														)}
+														) : null}
 													</div>
 												</div>
 											</div>

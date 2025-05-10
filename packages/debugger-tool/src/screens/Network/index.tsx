@@ -1,9 +1,9 @@
+import JSONViewer from '@/components/JSONViewer/JSONViewer';
 import { useNetworkStore } from '@/store/networkStore';
 import useSessionStore from '@/store/sessionStore';
 import { cn } from '@/utils/styling';
 import { IEvent, INetworkPayload } from '@pulse/shared-types';
 import React, { useState } from 'react';
-import ReactJson from 'react-json-view';
 
 const getMethodColor = (method: string) => {
 	switch (method) {
@@ -150,74 +150,80 @@ const NetworkScreen: React.FC = () => {
 					</div>
 				</div>
 				<div className="flex-1 overflow-auto p-4">
-					{requests.map(request => (
-						<div key={request.id} className="py-2 border-b border-zinc-800">
-							<div
-								onClick={() => setSelectedRequest(request)}
-								role="button"
-								tabIndex={0}
-								onKeyDown={e => {
-									if (e.key === 'Enter' || e.key === ' ') {
-										setSelectedRequest(request);
-									}
-								}}
-								className={cn(
-									'w-full text-left px-4 py-3 rounded transition-colors cursor-pointer',
-									selectedRequest?.id === request.id ? 'bg-gray-700' : 'hover:bg-gray-700/20'
-								)}
-							>
-								<div className="flex items-start justify-between">
-									<div className="flex items-center gap-2 flex-1 min-w-0">
-										<span
-											className={cn(
-												'text-xs font-medium px-1.5 py-0.5 rounded shrink-0',
-												getMethodColor(request.payload.method)
-											)}
-										>
-											{request.payload.method}
-										</span>
-										<span className="text-xs text-zinc-300 truncate flex-1">
-											{request.payload.url}
-										</span>
-									</div>
-									<div className="text-[10px] tabular-nums text-zinc-500 shrink-0 ml-2">
-										{new Date(request.payload.startTime).toLocaleTimeString()}
-									</div>
-								</div>
-								{request.payload.response && (
-									<div className="mt-1.5 flex items-center gap-2">
-										<span
-											className={cn(
-												'text-xs font-medium px-1.5 py-0.5 rounded',
-												getStatusColor(request.payload.response.status)
-											)}
-										>
-											{request.payload.response.status}
-										</span>
-										<span className="text-[10px] text-zinc-500">
-											{new Date(request.payload.response.startTime).toLocaleTimeString()}
-										</span>
-										{request.payload.response.duration && (
-											<span className="text-[10px] text-zinc-500">
-												({request.payload.response.duration}ms)
+					{requests.length > 0 ? (
+						requests.map(request => (
+							<div key={request.id} className="py-2 border-b border-zinc-800">
+								<div
+									onClick={() => setSelectedRequest(request)}
+									role="button"
+									tabIndex={0}
+									onKeyDown={e => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											setSelectedRequest(request);
+										}
+									}}
+									className={cn(
+										'w-full text-left px-4 py-3 rounded transition-colors cursor-pointer',
+										selectedRequest?.id === request.id ? 'bg-gray-700' : 'hover:bg-gray-700/20'
+									)}
+								>
+									<div className="flex items-start justify-between">
+										<div className="flex items-center gap-2 flex-1 min-w-0">
+											<span
+												className={cn(
+													'text-xs font-medium px-1.5 py-0.5 rounded shrink-0',
+													getMethodColor(request.payload.method)
+												)}
+											>
+												{request.payload.method}
 											</span>
-										)}
+											<span className="text-xs text-zinc-300 truncate flex-1">
+												{request.payload.url}
+											</span>
+										</div>
+										<div className="text-[10px] tabular-nums text-zinc-500 shrink-0 ml-2">
+											{new Date(request.payload.startTime).toLocaleTimeString()}
+										</div>
 									</div>
-								)}
-								{request.payload.status === 'rejected' && (
-									<div className="mt-1.5">
-										<span className="text-xs text-red-400">Request failed</span>
-									</div>
-								)}
-								{request.payload.status === 'pending' && (
-									<div className="mt-1.5 flex items-center gap-2">
-										<div className="animate-spin h-3 w-3 border-2 border-zinc-500 border-t-zinc-200 rounded-full" />
-										<span className="text-xs text-yellow-400">Pending...</span>
-									</div>
-								)}
+									{request.payload.response && (
+										<div className="mt-1.5 flex items-center gap-2">
+											<span
+												className={cn(
+													'text-xs font-medium px-1.5 py-0.5 rounded',
+													getStatusColor(request.payload.response.status)
+												)}
+											>
+												{request.payload.response.status}
+											</span>
+											<span className="text-[10px] text-zinc-500">
+												{new Date(request.payload.response.startTime).toLocaleTimeString()}
+											</span>
+											{request.payload.response.duration && (
+												<span className="text-[10px] text-zinc-500">
+													({request.payload.response.duration}ms)
+												</span>
+											)}
+										</div>
+									)}
+									{request.payload.status === 'rejected' && (
+										<div className="mt-1.5">
+											<span className="text-xs text-red-400">Request failed</span>
+										</div>
+									)}
+									{request.payload.status === 'pending' && (
+										<div className="mt-1.5 flex items-center gap-2">
+											<div className="animate-spin h-3 w-3 border-2 border-zinc-500 border-t-zinc-200 rounded-full" />
+											<span className="text-xs text-yellow-400">Pending...</span>
+										</div>
+									)}
+								</div>
 							</div>
+						))
+					) : (
+						<div className="text-center text-zinc-500 text-sm mt-4">
+							Waiting for network requests...
 						</div>
-					))}
+					)}
 				</div>
 			</div>
 			{selectedRequest && (
@@ -261,14 +267,7 @@ const NetworkScreen: React.FC = () => {
 											<div>
 												<span className="text-[10px] text-zinc-500">Headers</span>
 												<div className="bg-zinc-900 p-2 rounded-md mt-1">
-													<ReactJson
-														src={selectedRequest.payload.headers}
-														theme="ocean"
-														collapsed={false}
-														enableClipboard={true}
-														displayDataTypes={false}
-														name={null}
-													/>
+													<JSONViewer data={selectedRequest.payload.headers} />
 												</div>
 											</div>
 										)}
@@ -283,16 +282,7 @@ const NetworkScreen: React.FC = () => {
 															typeof selectedRequest.payload.body === 'string'
 																? JSON.parse(selectedRequest.payload.body)
 																: selectedRequest.payload.body;
-														return (
-															<ReactJson
-																src={data as Record<string, unknown>}
-																theme="ocean"
-																collapsed={false}
-																enableClipboard={true}
-																displayDataTypes={false}
-																name={null}
-															/>
-														);
+														return <JSONViewer data={data} />;
 													} catch (error) {
 														const bodyString = String(
 															typeof selectedRequest.payload.body === 'string'
@@ -321,32 +311,23 @@ const NetworkScreen: React.FC = () => {
 										<div>
 											<span className="text-[10px] text-zinc-500">Headers</span>
 											<div className="bg-zinc-900 p-2 rounded-md mt-1">
-												<ReactJson
-													src={selectedRequest.payload.response.headers}
-													theme="ocean"
-													collapsed={false}
-													enableClipboard={true}
-													displayDataTypes={false}
-													name={null}
-												/>
+												<JSONViewer data={selectedRequest.payload.response.headers} />
 											</div>
 										</div>
-										{selectedRequest.payload.response.body &&
-											typeof selectedRequest.payload.response.body === 'object' && (
-												<div>
-													<span className="text-[10px] text-zinc-500">Body</span>
-													<div className="bg-zinc-900 p-2 rounded-md mt-1">
-														<ReactJson
-															src={selectedRequest.payload.response.body}
-															theme="ocean"
-															collapsed={false}
-															enableClipboard={true}
-															displayDataTypes={false}
-															name={null}
-														/>
-													</div>
+										{selectedRequest?.payload?.response?.body && (
+											<div>
+												<span className="text-[10px] text-zinc-500">Body</span>
+												<div className="bg-zinc-900 p-2 rounded-md mt-1">
+													<JSONViewer
+														data={
+															typeof selectedRequest.payload.response.body === 'string'
+																? JSON.parse(selectedRequest.payload.response.body)
+																: selectedRequest.payload.response.body
+														}
+													/>
 												</div>
-											)}
+											</div>
+										)}
 										{selectedRequest.payload.response.duration && (
 											<div>
 												<span className="text-[10px] text-zinc-500">Duration</span>

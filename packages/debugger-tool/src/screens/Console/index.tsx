@@ -3,7 +3,7 @@ import { useConsoleStore } from '@/store/consoleStore';
 import useSessionStore from '@/store/sessionStore';
 import { IEvent } from '@pulse/shared-types';
 import { cn } from '@/utils/styling';
-import ReactJson from 'react-json-view';
+import JSONViewer from '@/components/JSONViewer/JSONViewer';
 
 const ConsoleScreen: React.FC = () => {
 	const { currentSessionId: sessionId } = useSessionStore(state => state);
@@ -29,9 +29,8 @@ const ConsoleScreen: React.FC = () => {
 	};
 
 	return (
-		<div className="h-full flex overflow-y-auto bg-gray-900/80">
-			{/* Log List */}
-			<div className="w-1/2 border-r border-zinc-800 flex flex-col">
+		<div className="flex flex-1 h-full overflow-y-auto bg-gray-900/80">
+			<div className="flex flex-col flex-1">
 				<div className="p-4 border-b h-15 border-zinc-800 flex items-center justify-between">
 					<div>
 						<h2 className="text-sm font-semibold text-zinc-100">Console</h2>
@@ -106,56 +105,49 @@ const ConsoleScreen: React.FC = () => {
 			</div>
 
 			{/* Log Details */}
-			<div className="w-1/2 flex flex-col">
-				{selectedLog && (
+			{selectedLog && (
+				<div className="border-l border-zinc-800 flex flex-col flex-1 overflow-y-auto shrink">
 					<div className="px-3 py-2 h-15 border-b border-zinc-800">
 						<h2 className="text-sm font-semibold text-zinc-100">Log details</h2>
 						<p className="text-[10px] text-zinc-500 mt-0.5">Additional log information</p>
 					</div>
-				)}
-				<div className="flex-1 p-4 overflow-auto">
-					{isPending ? (
-						<p className="text-sm text-zinc-500">Loading log details...</p>
-					) : selectedLog ? (
-						<div className="space-y-4">
-							<div>
-								<h3 className="text-xs font-medium text-zinc-400 mb-1">Message</h3>
-								<p className="text-sm font-mono text-zinc-200">{selectedLog.payload.message}</p>
-							</div>
-							<div>
-								{selectedLog.payload?.data &&
-									typeof selectedLog.payload.data === 'object' &&
-									(!Array.isArray(selectedLog.payload.data) ||
-										selectedLog.payload.data.length > 0) && (
+					<div className="flex-1 p-4 overflow-auto">
+						{isPending ? (
+							<p className="text-sm text-zinc-500">Loading log details...</p>
+						) : selectedLog ? (
+							<div className="space-y-4">
+								<div>
+									<h3 className="text-xs font-medium text-zinc-400 mb-1">Message</h3>
+									<p className="text-sm font-mono text-zinc-200">{selectedLog.payload.message}</p>
+								</div>
+								<div>
+									{selectedLog.payload?.data &&
+										typeof selectedLog.payload.data === 'object' &&
+										(!Array.isArray(selectedLog.payload.data) ||
+											selectedLog.payload.data.length > 0) && (
+											<>
+												<h3 className="text-xs font-medium text-zinc-400 mb-1">Data</h3>
+												<JSONViewer data={selectedLog.payload.data} />
+											</>
+										)}
+								</div>
+								<div>
+									{selectedLog.payload?.stack && (
 										<>
-											<h3 className="text-xs font-medium text-zinc-400 mb-1">Data</h3>
-											<ReactJson
-												src={selectedLog.payload.data}
-												theme="ocean"
-												collapsed={2}
-												enableClipboard={false}
-												displayDataTypes={false}
-												name={false}
-											/>
+											<h3 className="text-xs font-medium text-zinc-400 mb-1">Error Stack</h3>
+											<p className="text-xs font-mono wrap-break-word">
+												{selectedLog.payload.stack.toString()}
+											</p>
 										</>
 									)}
+								</div>
 							</div>
-							<div>
-								{selectedLog.payload?.stack && (
-									<>
-										<h3 className="text-xs font-medium text-zinc-400 mb-1">Error Stack</h3>
-										<p className="text-xs font-mono wrap-break-word">
-											{selectedLog.payload.stack.toString()}
-										</p>
-									</>
-								)}
-							</div>
-						</div>
-					) : (
-						<p className="text-xs text-zinc-500">Select a log to view details</p>
-					)}
+						) : (
+							<p className="text-xs text-zinc-500">Select a log to view details</p>
+						)}
+					</div>
 				</div>
-			</div>
+			)}
 		</div>
 	);
 };
