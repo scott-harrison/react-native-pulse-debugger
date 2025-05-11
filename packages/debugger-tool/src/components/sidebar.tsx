@@ -73,12 +73,15 @@ const Sidebar: React.FC = () => {
 							<div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-blue-500/10 rounded-full">
 								<Smartphone className="w-4 h-4 text-blue-400" />
 							</div>
-							<div className="ml-3">
+							<div className="ml-3 space-y-1">
 								<p className="text-xs font-medium text-zinc-800">
 									Device: {session.deviceInfo.model || 'Unknown'}
 								</p>
 								<p className="text-xs text-zinc-500">
 									OS: {session.deviceInfo.systemVersion || 'Unknown'}
+								</p>
+								<p className="text-xs text-zinc-500">
+									App Name: {session.deviceInfo.appName || 'Unknown'}
 								</p>
 								<p className="text-xs text-zinc-500">
 									App Version: {session.deviceInfo.appVersion || 'Unknown'}
@@ -98,11 +101,11 @@ const Sidebar: React.FC = () => {
 						<Modal visible={isModalOpen} title="Change Session" onClose={() => setModalOpen(false)}>
 							<ul className="mt-6 space-y-4">
 								{useSessionStore.getState().sessions.map(session => (
-									<li key={session.id}>
+									<li key={session.sessionId}>
 										<button
 											className="w-full bg-zinc-100 px-4 py-4 rounded-lg shadow-md flex items-center justify-between"
 											onClick={() => {
-												setCurrentSession(session.id);
+												setCurrentSession(session.sessionId);
 												setModalOpen(false);
 											}}
 										>
@@ -116,6 +119,9 @@ const Sidebar: React.FC = () => {
 													</p>
 													<p className="text-xs text-zinc-500">
 														OS: {session.deviceInfo.systemVersion || 'Unknown'}
+													</p>
+													<p className="text-xs text-zinc-500">
+														App nAME: {session.deviceInfo.appName || 'Unknown'}
 													</p>
 													<p className="text-xs text-zinc-500">
 														App Version: {session.deviceInfo.appVersion || 'Unknown'}

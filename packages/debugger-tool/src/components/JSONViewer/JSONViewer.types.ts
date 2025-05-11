@@ -4,7 +4,9 @@ export type JSONValue =
 	| number
 	| boolean
 	| { [key: string]: JSONValue }
-	| JSONValue[];
+	| JSONValue[]
+	| undefined
+	| {};
 
 export interface JSONViewerProps {
 	data: JSONValue;

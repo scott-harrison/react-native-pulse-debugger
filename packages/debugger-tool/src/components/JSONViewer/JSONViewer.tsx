@@ -116,7 +116,7 @@ const JSONViewer: React.FC<JSONViewerProps> = ({ data, compareData }) => {
 				</div>
 				{(isObject || isArray) && !isCollapsed && value && Object.keys(value).length > 0 && (
 					<>
-						<div>
+						<div className="px-4">
 							{isArray
 								? renderArray(value as JSONValue[], path, indent + 1, isDiff, diffType)
 								: renderObject(
@@ -223,7 +223,7 @@ const JSONViewer: React.FC<JSONViewerProps> = ({ data, compareData }) => {
 					</span>
 					<span className="text-purple-300">{Array.isArray(value) ? key : `"${key}"`}</span>
 					<span className="text-gray-400">: </span>
-					<span className="text-gray-400">{brackets[0]}</span>
+					<span className="text-gray-400 pl-2">{brackets[0]}</span>
 				</div>
 			);
 
@@ -292,7 +292,10 @@ const JSONViewer: React.FC<JSONViewerProps> = ({ data, compareData }) => {
 		}
 
 		return [
-			<div key={`${path}-${type}`} className={`flex items-start ${bgColor} py-0.5 ${indentClass}`}>
+			<div
+				key={`${path}-${type}`}
+				className={`flex items-start ${bgColor} py-0.5 ${indentClass} px-4`}
+			>
 				<span className="text-center text-gray-400">{prefix}</span>
 				<span className="text-purple-300">{Array.isArray(value) ? key : `"${key}"`}</span>
 				<span className="text-gray-400 mx-1">: </span>
