@@ -3,7 +3,7 @@ import JSONViewer from '@/components/JSONViewer/JSONViewer';
 import { JSONValue } from '@/components/JSONViewer/JSONViewer.types';
 
 interface ReduxStatePanelProps {
-	reduxState: {
+	reduxState?: {
 		state: JSONValue;
 		sessionId: string;
 	};

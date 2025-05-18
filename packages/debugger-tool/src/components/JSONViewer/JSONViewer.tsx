@@ -80,9 +80,9 @@ const JSONViewer: React.FC<JSONViewerProps> = ({ data, compareData }) => {
 		const isCollapsed = collapsed[path];
 		const bgColor = isDiff
 			? diffType === 'added'
-				? 'bg-green-800'
+				? 'bg-green-500'
 				: diffType === 'removed'
-					? 'bg-red-800'
+					? 'bg-red-500'
 					: ''
 			: '';
 		const prefix = isDiff
@@ -202,7 +202,8 @@ const JSONViewer: React.FC<JSONViewerProps> = ({ data, compareData }) => {
 		const indentClass = `ml-${indentLevel * 8}`;
 		const isCollapsed = collapsed[path];
 		const prefix = type === 'added' ? '+' : type === 'removed' ? '-' : ' ';
-		const bgColor = type === 'added' ? 'bg-green-800' : type === 'removed' ? 'bg-red-800' : '';
+		const bgColor =
+			type === 'added' ? 'bg-green-500/40' : type === 'removed' ? 'bg-red-500/40' : '';
 
 		if (isObjectOrArray) {
 			const lines: JSX.Element[] = [];
@@ -212,7 +213,7 @@ const JSONViewer: React.FC<JSONViewerProps> = ({ data, compareData }) => {
 			lines.push(
 				<div
 					key={`${path}-open-${type}`}
-					className={`flex items-start ${bgColor} py-0.5 ${indentClass}`}
+					className={`flex items-start ${bgColor} py-0.5 ${indentClass} rounded-md`}
 				>
 					<span className="text-center text-gray-400">{prefix}</span>
 					<span
@@ -268,7 +269,7 @@ const JSONViewer: React.FC<JSONViewerProps> = ({ data, compareData }) => {
 				lines.push(
 					<div
 						key={`${path}-close-${type}`}
-						className={`flex items-start ${bgColor} py-0.5 ${indentClass}`}
+						className={`flex items-start ${bgColor} py-0.5 ${indentClass} rounded-md`}
 					>
 						<span className="text-center text-gray-400">{prefix}</span>
 						<span className="text-gray-400 inline-block" />
@@ -279,7 +280,7 @@ const JSONViewer: React.FC<JSONViewerProps> = ({ data, compareData }) => {
 				lines.push(
 					<div
 						key={`${path}-close-${type}`}
-						className={`flex items-start ${bgColor} py-0.5 ${indentClass}`}
+						className={`flex items-start ${bgColor} py-0.5 ${indentClass} rounded-md`}
 					>
 						<span className="text-center text-gray-400">{prefix}</span>
 						<span className="text-gray-400 inline-block" />
@@ -294,7 +295,7 @@ const JSONViewer: React.FC<JSONViewerProps> = ({ data, compareData }) => {
 		return [
 			<div
 				key={`${path}-${type}`}
-				className={`flex items-start ${bgColor} py-0.5 ${indentClass} px-4`}
+				className={`flex items-start ${bgColor} py-0.5 ${indentClass} px-4 rounded-md`}
 			>
 				<span className="text-center text-gray-400">{prefix}</span>
 				<span className="text-purple-300">{Array.isArray(value) ? key : `"${key}"`}</span>

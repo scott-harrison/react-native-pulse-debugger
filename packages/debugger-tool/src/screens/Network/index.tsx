@@ -47,7 +47,8 @@ function generateCurlCommand(requestPayload: INetworkPayload): string {
 	if (requestPayload.body) {
 		let bodyStr = '';
 		const contentType =
-			requestPayload.headers['content-type'] || requestPayload.headers['Content-Type'];
+			(requestPayload.headers as Record<string, string>)['content-type'] ||
+			(requestPayload.headers as Record<string, string>)['Content-Type'];
 
 		// Handle different content types
 		if (typeof requestPayload.body === 'string') {
@@ -91,7 +92,7 @@ const NetworkScreen: React.FC = () => {
 	const { requests: allRequests, clearNetworkRequestsBySessionId } = useNetworkStore(
 		state => state
 	);
-	const [copiedTimeout, setCopiedTimeout] = useState<NodeJS.Timeout | null>(null);
+	const [copiedTimeout, setCopiedTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 	const [isCopied, setIsCopied] = useState(false);
 	const [selectedRequest, setSelectedRequest] = useState<IEvent<'network_event'> | null>(null);
 	const requests = allRequests.filter(request => request.sessionId === sessionId);
@@ -308,26 +309,59 @@ const NetworkScreen: React.FC = () => {
 												{selectedRequest.payload.response.status}
 											</p>
 										</div>
-										<div>
-											<span className="text-[10px] text-zinc-500">Headers</span>
-											<div className="bg-zinc-900 p-2 rounded-md mt-1">
-												<JSONViewer data={selectedRequest.payload.response.headers} />
-											</div>
-										</div>
-										{selectedRequest?.payload?.response?.body && (
-											<div>
-												<span className="text-[10px] text-zinc-500">Body</span>
-												<div className="bg-zinc-900 p-2 rounded-md mt-1">
-													<JSONViewer
-														data={
-															typeof selectedRequest.payload.response.body === 'string'
-																? JSON.parse(selectedRequest.payload.response.body)
-																: selectedRequest.payload.response.body
-														}
-													/>
+										{(() => {
+											const headers = selectedRequest?.payload?.response?.headers;
+											if (
+												!headers ||
+												(typeof headers === 'object' && Object.keys(headers).length === 0)
+											) {
+												return null;
+											}
+											return (
+												<div>
+													<span className="text-[10px] text-zinc-500">Headers</span>
+													<div className="bg-zinc-900 p-2 rounded-md mt-1">
+														<JSONViewer data={headers} />
+													</div>
 												</div>
-											</div>
-										)}
+											);
+										})()}
+										{(() => {
+											const body = selectedRequest?.payload?.response?.body;
+											if (!body) return null;
+
+											let data;
+											if (typeof body === 'string') {
+												try {
+													data = JSON.parse(body);
+												} catch {
+													return (
+														<div>
+															<span className="text-[10px] text-zinc-500">Body</span>
+															<div className="bg-zinc-900 p-2 rounded-md mt-1 overflow-x-auto">
+																<pre className="text-xs text-zinc-200">{body}</pre>
+															</div>
+														</div>
+													);
+												}
+											} else {
+												data = body;
+											}
+
+											// Don't render if empty object
+											if (data && typeof data === 'object' && Object.keys(data).length === 0) {
+												return null;
+											}
+
+											return (
+												<div>
+													<span className="text-[10px] text-zinc-500">Body</span>
+													<div className="bg-zinc-900 p-2 rounded-md mt-1">
+														<JSONViewer data={data} />
+													</div>
+												</div>
+											);
+										})()}
 										{selectedRequest.payload.response.duration && (
 											<div>
 												<span className="text-[10px] text-zinc-500">Duration</span>

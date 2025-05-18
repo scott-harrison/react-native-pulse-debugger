@@ -2,24 +2,39 @@
 
 Thank you for your interest in contributing to Pulse! This document provides guidelines and instructions for contributing to the project.
 
+## 🏗️ Project Structure
+
+Pulse is a monorepo containing three main packages:
+
+- `@pulse/debugger-lib`: The core library for React Native applications
+- `@pulse/debugger-tool`: The desktop debugger application
+- `@pulse/shared-types`: Shared TypeScript types and interfaces
+
 ## 🎯 Development Setup
 
 1. Fork and clone the repository:
+
    ```bash
    git clone https://github.com/your-username/react-native-pulse-debugger.git
    cd react-native-pulse-debugger
    ```
 
 2. Install dependencies:
+
    ```bash
    yarn install
    ```
 
 3. Start the development environment:
+
    ```bash
-   # Start the debugger app
-   cd packages/debugger
+   # Start the debugger tool
+   cd packages/debugger-tool
    yarn dev
+
+   # In another terminal, start the example app
+   cd packages/debugger-lib
+   yarn example
    ```
 
 ## 📝 Code Style
@@ -34,6 +49,7 @@ Thank you for your interest in contributing to Pulse! This document provides gui
 ## 🔄 Development Workflow
 
 1. Create a new branch for your feature/fix:
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -41,6 +57,7 @@ Thank you for your interest in contributing to Pulse! This document provides gui
    ```
 
 2. Make your changes and commit them:
+
    ```bash
    git add .
    git commit -m "feat: your feature description"
@@ -49,6 +66,7 @@ Thank you for your interest in contributing to Pulse! This document provides gui
    ```
 
 3. Push your changes:
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -62,6 +80,7 @@ Thank you for your interest in contributing to Pulse! This document provides gui
 - Reference any related issues
 - Ensure all tests pass
 - Update documentation if needed
+- If your changes affect multiple packages, test all affected packages
 
 ## 🧪 Testing
 
@@ -69,6 +88,7 @@ Thank you for your interest in contributing to Pulse! This document provides gui
 - Ensure existing tests pass
 - Test your changes on both iOS and Android
 - Test with different React Native versions
+- Test the debugger tool on all supported platforms (macOS, Windows, Linux)
 
 ## 📚 Documentation
 
@@ -76,6 +96,7 @@ Thank you for your interest in contributing to Pulse! This document provides gui
 - Add JSDoc comments for new functions
 - Update API documentation
 - Include examples for new features
+- Document any changes to the shared types
 
 ## 🐛 Bug Reports
 
@@ -86,6 +107,7 @@ When filing a bug report, please include:
 - Actual behavior
 - Environment details (OS, React Native version, etc.)
 - Screenshots or videos if applicable
+- Which package(s) are affected (lib, tool, or both)
 
 ## 💡 Feature Requests
 
@@ -95,22 +117,39 @@ When suggesting new features:
 - Describe your proposed solution
 - Include any relevant examples
 - Consider edge cases and potential impacts
+- Specify which package(s) would be affected
 
-## 📦 Package Updates
+## 📦 Versioning and Releases
 
-When updating dependencies:
+We use Changesets for version management. When making changes that require a version bump:
 
-- Update both packages (client and debugger)
-- Test thoroughly after updates
-- Document breaking changes
-- Update version numbers appropriately
+1. Create a changeset:
 
-## 🤝 Community Guidelines
+   ```bash
+   yarn changeset
+   ```
 
-- Be respectful and inclusive
-- Help others when possible
-- Follow the project's code of conduct
-- Provide constructive feedback
+2. Select the affected packages and version bump type:
+
+   - `patch`: For backwards-compatible bug fixes
+   - `minor`: For new backwards-compatible features
+   - `major`: For breaking changes
+
+3. Write a description of your changes
+
+4. Commit the changeset:
+   ```bash
+   git add .changeset
+   git commit -m "chore: add changeset"
+   ```
+
+The CI will automatically create a version PR when changesets are present.
+
+## 🔗 Package Dependencies
+
+- `debugger-lib` and `debugger-tool` both depend on `shared-types`
+- When modifying `shared-types`, ensure changes are compatible with both packages
+- Test changes in both packages before submitting a PR
 
 ## 📄 License
 
@@ -123,4 +162,23 @@ By contributing, you agree that your contributions will be licensed under the pr
 - Check existing documentation
 - Ask questions in issues or discussions
 
-Thank you for contributing to Pulse! Your help makes this project better for everyone. 
+## 🔧 Common Issues and Solutions
+
+### Building Issues
+
+- Ensure you have the correct Node.js version installed
+- Clear yarn cache if you encounter dependency issues: `yarn cache clean`
+- Rebuild all packages: `yarn build`
+
+### Testing Issues
+
+- Run tests for specific package: `cd packages/package-name && yarn test`
+- Run tests with coverage: `yarn test --coverage`
+
+### Development Environment
+
+- Use VS Code with recommended extensions
+- Enable TypeScript strict mode
+- Use the provided ESLint and Prettier configurations
+
+Thank you for contributing to Pulse! Your help makes this project better for everyone.

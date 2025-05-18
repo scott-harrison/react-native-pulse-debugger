@@ -1,7 +1,9 @@
 {
 	"name": "@pulse/debugger-tool",
 	"main": "dist-electron/main/index.js",
-	"version": "0.1.0",
+	"version": "1.0.0",
+	"description": "Pulse Debugger Tool",
+	"author": "Scott Harrison",
 	"scripts": {
 		"dev": "vite",
 		"test": "jest",
@@ -40,8 +42,8 @@
 		"@types/source-map-support": "^0",
 		"@vitejs/plugin-react": "^4.3.4",
 		"autoprefixer": "^10.4.21",
-		"electron": "^35.1.2",
-		"electron-builder": "^26.0.12",
+		"electron": "35.1.2",
+		"electron-builder": "26.0.12",
 		"identity-obj-proxy": "^3.0.0",
 		"jest": "^29.7.0",
 		"jest-environment-jsdom": "^29.7.0",

@@ -2,7 +2,7 @@ import { IEvent } from '@pulse/shared-types';
 import { create } from 'zustand';
 
 interface IState {
-	state: object;
+	state: unknown;
 	sessionId: string;
 }
 
@@ -11,7 +11,7 @@ interface ReduxState {
 	states: IState[];
 	addReduxAction: (event: IEvent<'redux_action_event'>) => void;
 	// addReduxState: (event: IEvent<'redux_state_event'>) => void;
-	setReduxState: (sessionId: string, nextState: object) => void;
+	setReduxState: (sessionId: string, nextState: unknown) => void;
 	clearReduxBySessionId: (sessionId: string) => void;
 }
 
@@ -35,7 +35,7 @@ export const useReduxStore = create<ReduxState>(set => ({
 				);
 				state.states = updatedStates;
 			} else {
-				state.states.push({ sessionId: event.sessionId, state: event.payload.nextState });
+				state.states.push({ sessionId: event.sessionId!, state: event.payload.nextState });
 			}
 
 			console.log(state.states);

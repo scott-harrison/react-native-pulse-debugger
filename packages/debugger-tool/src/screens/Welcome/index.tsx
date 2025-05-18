@@ -2,15 +2,35 @@ import Fireflies from '@/components/fireflies';
 import Loader from '@/components/loader';
 import useSessionStore from '@/store/sessionStore';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 const WelcomeScreen = () => {
 	const { sessions, setCurrentSession } = useSessionStore(state => state);
 	const navigate = useNavigate();
+	const [showReconnect, setShowReconnect] = useState(false);
+
+	useEffect(() => {
+		if (sessions.length === 0) {
+			const timer = setTimeout(() => {
+				setShowReconnect(true);
+			}, 10000);
+
+			return () => clearTimeout(timer);
+		} else {
+			setShowReconnect(false);
+		}
+	}, [sessions.length]);
 
 	const handleDebugSession = (sessionId: string) => {
 		setCurrentSession(sessionId);
 		// Navigate to the debugger console for the selected session
 		navigate(`/debugger/console`);
+	};
+
+	const handleReconnect = () => {
+		// Send reconnect message through electron
+		window.electron.ipcRenderer.sendMessage('pulse-event', JSON.stringify({ type: 'reconnect' }));
+		setShowReconnect(false);
 	};
 
 	return (
@@ -30,6 +50,14 @@ const WelcomeScreen = () => {
 							Waiting for connection...
 						</p>
 						<Loader />
+						{showReconnect && (
+							<button
+								onClick={handleReconnect}
+								className="mt-4 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white text-sm font-medium py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105"
+							>
+								Reconnect
+							</button>
+						)}
 					</>
 				) : (
 					<div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl">

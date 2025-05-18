@@ -42,7 +42,7 @@ export function networkMiddleware(client: WebSocketClient): typeof fetch {
             : input.url,
       method: options?.method ?? 'GET',
       headers: options?.headers ?? {},
-      body: options?.body,
+      body: options?.body ?? null,
     };
 
     // Send the Pending Request
@@ -92,7 +92,7 @@ export function networkMiddleware(client: WebSocketClient): typeof fetch {
       // Update with error details
       networkRequest.status = 'rejected';
       networkRequest.response = {
-        status: error instanceof Response ? error.status : 0,
+        status: error instanceof Response ? error.status : 500,
         headers:
           error instanceof Response
             ? Object.fromEntries(error.headers.entries())

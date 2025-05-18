@@ -1,5 +1,5 @@
+import type { IEvent } from '@pulse/shared-types';
 import { WebSocketClient } from './WebSocketClient';
-import type { Message } from './types';
 
 describe('WebSocketClient', () => {
   let client: WebSocketClient;
@@ -48,7 +48,16 @@ describe('WebSocketClient', () => {
   });
 
   it('should send a message when connected', () => {
-    const message: Message = { type: 'TEST', payload: 'data' };
+    const message: IEvent<'console_event'> = {
+      sessionId: 'mock-ios-id-mock-app-name',
+      id: 'test-id',
+      type: 'console_event',
+      payload: {
+        level: 'log',
+        message: 'data',
+      },
+      timestamp: new Date().toISOString(),
+    };
     client.sendMessage(message);
     expect(mockWebSocket.send).toHaveBeenCalledWith(JSON.stringify(message));
   });

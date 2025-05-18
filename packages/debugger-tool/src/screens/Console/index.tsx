@@ -135,9 +135,16 @@ const ConsoleScreen: React.FC = () => {
 									{selectedLog.payload?.stack && (
 										<>
 											<h3 className="text-xs font-medium text-zinc-400 mb-1">Error Stack</h3>
-											<p className="text-xs font-mono wrap-break-word">
-												{selectedLog.payload.stack.toString()}
-											</p>
+											<pre
+												className="text-xs font-mono bg-zinc-900 text-red-300 rounded-md p-3 overflow-x-auto whitespace-nowrap"
+												style={{
+													overflowY: 'auto',
+													whiteSpace: 'pre-wrap',
+													wordBreak: 'break-all',
+												}}
+											>
+												{String(selectedLog.payload.stack)}
+											</pre>
 										</>
 									)}
 								</div>
