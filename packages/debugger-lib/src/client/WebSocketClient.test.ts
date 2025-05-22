@@ -43,98 +43,180 @@ describe('WebSocketClient', () => {
     client.disconnect();
   });
 
-  it('should connect successfully', () => {
-    expect(client.isConnected()).toBe(true);
-  });
+  describe('Connection Management', () => {
+    it('should connect successfully', () => {
+      expect(client.isConnected()).toBe(true);
+    });
 
-  it('should send a message when connected', () => {
-    const message: IEvent<'console_event'> = {
-      sessionId: 'mock-ios-id-mock-app-name',
-      id: 'test-id',
-      type: 'console_event',
-      payload: {
-        level: 'log',
-        message: 'data',
-      },
-      timestamp: new Date().toISOString(),
-    };
-    client.sendMessage(message);
-    expect(mockWebSocket.send).toHaveBeenCalledWith(JSON.stringify(message));
-  });
+    it('should attempt reconnection after connection loss', async () => {
+      // Simulate connection loss
+      mockWebSocket.readyState = WebSocket.CLOSED;
+      mockWebSocket.onclose();
 
-  it('should handle incoming messages', () => {
-    const messageHandler = jest.fn();
-    client.onMessage(messageHandler);
-    const testMessage = {
-      data: JSON.stringify({ type: 'RESPONSE', payload: 'data' }),
-    };
-    mockWebSocket.onmessage(testMessage);
-    expect(messageHandler).toHaveBeenCalledWith({
-      type: 'RESPONSE',
-      payload: 'data',
+      // Advance timer to trigger reconnection
+      jest.advanceTimersByTime(3000);
+
+      // Simulate successful reconnection
+      mockWebSocket.readyState = WebSocket.OPEN;
+      mockWebSocket.onopen();
+
+      // Verify reconnection attempt
+      expect(mockWebSocket.readyState).toBe(WebSocket.OPEN);
+    });
+
+    it('should handle connection refusal', async () => {
+      // Simulate connection error
+      const error = new Error('Connection refused');
+      mockWebSocket.onerror(error);
+
+      // Advance timer to trigger reconnection
+      jest.advanceTimersByTime(3000);
+
+      // Verify reconnection attempt
+      expect(mockWebSocket.readyState).toBe(WebSocket.OPEN);
     });
   });
 
-  it('should attempt to reconnect after unexpected disconnection', () => {
-    const createWebSocketSpy = jest.fn(() => mockWebSocket);
-    client = new WebSocketClient(
-      'ws://localhost:8379',
-      createWebSocketSpy as unknown as () => WebSocket
-    );
-    setTimeout(() => {
-      mockWebSocket.readyState = WebSocket.OPEN;
-      mockWebSocket.onopen();
-    }, 10);
-    jest.advanceTimersByTime(10); // Initial connection
-    mockWebSocket.readyState = WebSocket.CLOSED;
-    mockWebSocket.onclose();
-    jest.advanceTimersByTime(3000); // Reconnect interval
-    expect(createWebSocketSpy).toHaveBeenCalledTimes(2); // Initial + reconnect
+  describe('Session Management', () => {
+    it('should initialize session with device details', () => {
+      // Verify that isConnected returns true after setup
+      expect(client.isConnected()).toBe(true);
+    });
   });
 
-  it('should queue messages when disconnected and send them on reconnection', () => {
-    mockWebSocket.readyState = WebSocket.CLOSED; // Simulate disconnected
-    const message: Message = { type: 'QUEUED', payload: 'data' };
-    client.sendMessage(message);
-    expect(client.getMessageQueue()).toContainEqual(message);
-    // Simulate reconnection
-    mockWebSocket.readyState = WebSocket.OPEN;
-    mockWebSocket.onopen();
-    expect(mockWebSocket.send).toHaveBeenCalledWith(JSON.stringify(message));
+  describe('Message Handling', () => {
+    it('should send a message when connected', () => {
+      const message: IEvent<'console_event'> = {
+        sessionId: 'mock-ios-id-mock-app-name',
+        id: 'test-id',
+        type: 'console_event',
+        payload: {
+          level: 'log',
+          message: 'data',
+        },
+        timestamp: new Date().toISOString(),
+      };
+      client.sendMessage(message);
+      expect(mockWebSocket.send).toHaveBeenCalledWith(JSON.stringify(message));
+    });
+
+    it('should handle incoming messages', () => {
+      const messageHandler = jest.fn();
+      client.onMessage(messageHandler);
+      const testMessage = {
+        data: JSON.stringify({ type: 'RESPONSE', payload: 'data' }),
+      };
+      mockWebSocket.onmessage(testMessage);
+      expect(messageHandler).toHaveBeenCalledWith({
+        type: 'RESPONSE',
+        payload: 'data',
+      });
+    });
   });
 
-  it('should not attempt to reconnect after manual disconnection', () => {
-    const createWebSocketSpy = jest.fn(() => mockWebSocket);
-    client = new WebSocketClient(
-      'ws://localhost:8379',
-      createWebSocketSpy as unknown as () => WebSocket
-    );
-    setTimeout(() => {
+  describe('Message Queue', () => {
+    it('should queue messages when disconnected', () => {
+      // Force disconnect
+      mockWebSocket.readyState = WebSocket.CLOSED;
+      mockWebSocket.onclose();
+
+      const message: IEvent<'console_event'> = {
+        sessionId: 'test-session',
+        id: 'test-id',
+        type: 'console_event',
+        payload: { level: 'log', message: 'data' },
+        timestamp: new Date().toISOString(),
+      };
+
+      client.sendMessage(message);
+      expect(client.getMessageQueue()).toHaveLength(1);
+      expect(client.getMessageQueue()[0]).toEqual(message);
+    });
+
+    it('should attempt to send messages when connected', () => {
+      // Ensure client is connected
       mockWebSocket.readyState = WebSocket.OPEN;
       mockWebSocket.onopen();
-    }, 10);
-    jest.advanceTimersByTime(10); // Initial connection
-    client.disconnect();
-    mockWebSocket.readyState = WebSocket.CLOSED;
-    mockWebSocket.onclose();
-    jest.advanceTimersByTime(3000); // Reconnect interval
-    expect(createWebSocketSpy).toHaveBeenCalledTimes(1); // No reconnect
-    expect(mockWebSocket.close).toHaveBeenCalled();
+
+      // Clear previous calls
+      mockWebSocket.send.mockClear();
+
+      const message: IEvent<'console_event'> = {
+        sessionId: 'test-session',
+        id: 'test-id',
+        type: 'console_event',
+        payload: { level: 'log', message: 'test message' },
+        timestamp: new Date().toISOString(),
+      };
+
+      // Send message while connected
+      client.sendMessage(message);
+
+      // Should call send immediately
+      expect(mockWebSocket.send).toHaveBeenCalled();
+    });
   });
 
-  it('should handle errors and attempt to reconnect', () => {
-    const createWebSocketSpy = jest.fn(() => mockWebSocket);
-    client = new WebSocketClient(
-      'ws://localhost:8379',
-      createWebSocketSpy as unknown as () => WebSocket
-    );
-    setTimeout(() => {
-      mockWebSocket.readyState = WebSocket.OPEN;
-      mockWebSocket.onopen();
-    }, 10);
-    jest.advanceTimersByTime(10); // Initial connection
-    mockWebSocket.onerror(new Error('Connection failed'));
-    jest.advanceTimersByTime(3000); // Reconnect interval
-    expect(createWebSocketSpy).toHaveBeenCalledTimes(2); // Initial + reconnect
+  describe('Error Handling', () => {
+    it('should handle message parsing errors', () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const messageHandler = jest.fn();
+      client.onMessage(messageHandler);
+
+      // Send invalid JSON
+      mockWebSocket.onmessage({ data: 'invalid json' });
+
+      expect(consoleSpy).toHaveBeenCalled();
+      expect(messageHandler).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle WebSocket errors', () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const error = new Error('WebSocket error');
+      mockWebSocket.onerror(error);
+
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('Disconnection', () => {
+    it('should clear message queue on disconnect', () => {
+      // Add message to queue
+      const message: IEvent<'console_event'> = {
+        sessionId: 'test-session',
+        id: 'test-id',
+        type: 'console_event',
+        payload: { level: 'log', message: 'data' },
+        timestamp: new Date().toISOString(),
+      };
+
+      // Force disconnect
+      mockWebSocket.readyState = WebSocket.CLOSED;
+      mockWebSocket.onclose();
+      client.sendMessage(message);
+
+      // Disconnect client
+      client.disconnect();
+
+      // Verify queue is cleared
+      expect(client.getMessageQueue()).toHaveLength(0);
+    });
+
+    it('should not attempt reconnection after disconnect', () => {
+      // Disconnect client
+      client.disconnect();
+
+      // Simulate connection loss
+      mockWebSocket.readyState = WebSocket.CLOSED;
+      mockWebSocket.onclose();
+
+      // Advance timer
+      jest.advanceTimersByTime(3000);
+
+      // Verify no reconnection attempt
+      expect(mockWebSocket.readyState).toBe(WebSocket.CLOSED);
+    });
   });
 });

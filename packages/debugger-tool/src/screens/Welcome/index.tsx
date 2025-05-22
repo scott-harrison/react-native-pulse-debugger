@@ -64,7 +64,7 @@ const WelcomeScreen = () => {
 						{sessions.map(session => (
 							<div
 								key={session.sessionId}
-								className="bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 w-full sm:w-96"
+								className="bg-gray-800/25 backdrop-blur-xs rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-gray-500/5 duration-300 w-full sm:w-96"
 							>
 								<h3 className="text-lg font-semibold text-purple-400 mb-2">
 									{session.deviceInfo.appName}
