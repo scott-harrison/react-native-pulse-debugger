@@ -110,3 +110,5 @@ yarn-error.log*
 # Electron specific
 *.asar
 *.asar.unpacked
+
+backup/
