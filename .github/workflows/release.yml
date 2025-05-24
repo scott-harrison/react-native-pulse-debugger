@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/debugger-lib/**'
+      - 'packages/debugger-tool/**'
+      - 'packages/shared-types/**'
+      - 'package.json'
+      - 'yarn.lock'
+  workflow_dispatch:
+
+jobs:
+  build-shared-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build shared-types
+        run: cd packages/shared-types && yarn build
+
+      - name: Upload shared-types build
+        uses: actions/upload-artifact@v4
+        with:
+          name: shared-types-build
+          path: packages/shared-types/dist
+
+  release-lib:
+    needs: build-shared-types
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'packages/debugger-lib/') || contains(github.event.head_commit.added, 'packages/debugger-lib/')
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Download shared-types build
+        uses: actions/download-artifact@v3
+        with:
+          name: shared-types-build
+          path: packages/shared-types/dist
+
+      - name: Build debugger-lib
+        run: cd packages/debugger-lib && yarn prepare
+
+      - name: Release debugger-lib
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: cd packages/debugger-lib && yarn release
+
+  release-tool:
+    needs: build-shared-types
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'packages/debugger-tool/') || contains(github.event.head_commit.added, 'packages/debugger-tool/')
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Download shared-types build
+        uses: actions/download-artifact@v3
+        with:
+          name: shared-types-build
+          path: packages/shared-types/dist
+
+      - name: Build debugger-tool
+        run: cd packages/debugger-tool && yarn build
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            packages/debugger-tool/dist/**/*.dmg
+            packages/debugger-tool/dist/**/*.exe
+            packages/debugger-tool/dist/**/*.AppImage
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
