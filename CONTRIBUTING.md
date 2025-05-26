@@ -1,43 +1,38 @@
-# Contributing to Pulse
+# Contributing to React Native Pulse Debugger
 
 Thank you for your interest in contributing to Pulse! This document provides guidelines and instructions for contributing to the project.
 
-## 🏗️ Project Structure
+## Project Structure
 
-Pulse is a monorepo containing three main packages:
+The project is organized into three main packages:
 
-- `@pulse/debugger-lib`: The core library for React Native applications
-- `@pulse/debugger-tool`: The desktop debugger application
-- `@pulse/shared-types`: Shared TypeScript types and interfaces
+- `@react-native-pulse-debugger/lib`: The core library for React Native applications
+- `@react-native-pulse-debugger/tool`: The desktop debugger application
+- `@react-native-pulse-debugger/types`: Shared TypeScript types and interfaces
 
-## 🎯 Development Setup
+## Development Setup
 
-1. Fork and clone the repository:
-
-   ```bash
-   git clone https://github.com/your-username/react-native-pulse-debugger.git
-   cd react-native-pulse-debugger
-   ```
-
+1. Clone the repository
 2. Install dependencies:
 
    ```bash
    yarn install
    ```
 
-3. Start the development environment:
+3. Start the development server for the desktop tool:
 
    ```bash
-   # Start the debugger tool
-   cd packages/debugger-tool
+   cd packages/tool
    yarn dev
-
-   # In another terminal, start the example app
-   cd packages/debugger-lib
-   yarn example
    ```
 
-## 📝 Code Style
+4. For library development:
+   ```bash
+   cd packages/lib
+   yarn prepare
+   ```
+
+## Code Style
 
 - We use TypeScript for type safety
 - Follow the existing code style and formatting
@@ -46,7 +41,7 @@ Pulse is a monorepo containing three main packages:
 - Keep functions focused and small
 - Write tests for new features
 
-## 🔄 Development Workflow
+## Development Workflow
 
 1. Create a new branch for your feature/fix:
 
@@ -73,7 +68,7 @@ Pulse is a monorepo containing three main packages:
 
 4. Create a Pull Request (PR) from your branch to the main branch
 
-## 📋 Pull Request Guidelines
+## Pull Request Guidelines
 
 - Provide a clear description of your changes
 - Include screenshots or GIFs for UI changes
@@ -82,7 +77,7 @@ Pulse is a monorepo containing three main packages:
 - Update documentation if needed
 - If your changes affect multiple packages, test all affected packages
 
-## 🧪 Testing
+## Testing
 
 - Write unit tests for new features
 - Ensure existing tests pass
@@ -90,7 +85,7 @@ Pulse is a monorepo containing three main packages:
 - Test with different React Native versions
 - Test the debugger tool on all supported platforms (macOS, Windows, Linux)
 
-## 📚 Documentation
+## Documentation
 
 - Update README.md if needed
 - Add JSDoc comments for new functions
@@ -98,7 +93,7 @@ Pulse is a monorepo containing three main packages:
 - Include examples for new features
 - Document any changes to the shared types
 
-## 🐛 Bug Reports
+## Bug Reports
 
 When filing a bug report, please include:
 
@@ -109,7 +104,7 @@ When filing a bug report, please include:
 - Screenshots or videos if applicable
 - Which package(s) are affected (lib, tool, or both)
 
-## 💡 Feature Requests
+## Feature Requests
 
 When suggesting new features:
 
@@ -119,7 +114,7 @@ When suggesting new features:
 - Consider edge cases and potential impacts
 - Specify which package(s) would be affected
 
-## 📦 Versioning and Releases
+## Versioning and Releases
 
 We use Changesets for version management. When making changes that require a version bump:
 
@@ -145,24 +140,24 @@ We use Changesets for version management. When making changes that require a ver
 
 The CI will automatically create a version PR when changesets are present.
 
-## 🔗 Package Dependencies
+## Package Dependencies
 
-- `debugger-lib` and `debugger-tool` both depend on `shared-types`
-- When modifying `shared-types`, ensure changes are compatible with both packages
+- `lib` and `tool` both depend on `types`
+- When modifying `types`, ensure changes are compatible with both packages
 - Test changes in both packages before submitting a PR
 
-## 📄 License
+## License
 
 By contributing, you agree that your contributions will be licensed under the project's MIT License.
 
-## 🎉 Getting Help
+## Getting Help
 
 - Open an issue for bugs or feature requests
 - Join our community discussions
 - Check existing documentation
 - Ask questions in issues or discussions
 
-## 🔧 Common Issues and Solutions
+## Common Issues and Solutions
 
 ### Building Issues
 

@@ -4,102 +4,114 @@ on:
   push:
     branches:
       - main
+      - release-workflow-test
     paths:
-      - 'packages/debugger-lib/**'
-      - 'packages/debugger-tool/**'
-      - 'packages/shared-types/**'
+      - 'packages/lib/**'
+      - 'packages/tool/**'
+      - 'packages/types/**'
       - 'package.json'
       - 'yarn.lock'
   workflow_dispatch:
 
 jobs:
-  build-shared-types:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.filter.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            lib:
+              - 'packages/lib/**'
+            tool:
+              - 'packages/tool/**'
+            types:
+              - 'packages/types/**'
+
+  build-types:
+    needs: changes
+    if: ${{ needs.changes.outputs.matrix == '{"types":true}' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
-
+          node-version: '20'
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Setup Yarn
+        run: corepack prepare yarn@4.8.1 --activate
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Build shared-types
-        run: cd packages/shared-types && yarn build
-
-      - name: Upload shared-types build
+        run: yarn install
+      - name: Build types
+        run: cd packages/types && yarn build
+      - name: Upload types build
         uses: actions/upload-artifact@v4
         with:
-          name: shared-types-build
-          path: packages/shared-types/dist
+          name: types-build
+          path: packages/types/dist
 
-  release-lib:
-    needs: build-shared-types
+  build-lib:
+    needs: build-types
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.matrix == '{"lib":true}' }}
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'packages/debugger-lib/') || contains(github.event.head_commit.added, 'packages/debugger-lib/')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          registry-url: 'https://registry.npmjs.org'
-
+          node-version: '20'
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Setup Yarn
+        run: corepack prepare yarn@4.8.1 --activate
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Download shared-types build
-        uses: actions/download-artifact@v3
+        run: yarn install
+      - name: Download types build
+        uses: actions/download-artifact@v4
         with:
-          name: shared-types-build
-          path: packages/shared-types/dist
-
-      - name: Build debugger-lib
-        run: cd packages/debugger-lib && yarn prepare
-
-      - name: Release debugger-lib
+          name: types-build
+          path: packages/types/dist
+      - name: Build lib
+        run: cd packages/lib && yarn prepare
+      - name: Release lib
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: cd packages/debugger-lib && yarn release
+        run: cd packages/lib && yarn release
 
-  release-tool:
-    needs: build-shared-types
-    runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'packages/debugger-tool/') || contains(github.event.head_commit.added, 'packages/debugger-tool/')
+  build-tool:
+    needs: build-types
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.matrix == '{"tool":true}' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
-
+          node-version: '20'
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Setup Yarn
+        run: corepack prepare yarn@4.8.1 --activate
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Download shared-types build
-        uses: actions/download-artifact@v3
+        run: yarn install
+      - name: Download types build
+        uses: actions/download-artifact@v4
         with:
-          name: shared-types-build
-          path: packages/shared-types/dist
-
-      - name: Build debugger-tool
-        run: cd packages/debugger-tool && yarn build
-
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
+          name: types-build
+          path: packages/types/dist
+      - name: Build tool
+        run: yarn workspace @react-native-pulse-debugger/tool build
+      - name: Upload tool build
+        uses: actions/upload-artifact@v4
         with:
-          files: |
-            packages/debugger-tool/dist/**/*.dmg
-            packages/debugger-tool/dist/**/*.exe
-            packages/debugger-tool/dist/**/*.AppImage
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: tool-build
+          path: |
+            packages/tool/release/*.dmg
+            packages/tool/release/*.exe
+            packages/tool/release/*.zip
