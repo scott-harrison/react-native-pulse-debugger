@@ -33,7 +33,6 @@ jobs:
 
   build-types:
     needs: changes
-    if: ${{ needs.changes.outputs.matrix == '{"types":true}' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,7 +55,6 @@ jobs:
 
   build-lib:
     needs: build-types
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.matrix == '{"lib":true}' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -84,7 +82,6 @@ jobs:
 
   build-tool:
     needs: build-types
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.matrix == '{"tool":true}' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
