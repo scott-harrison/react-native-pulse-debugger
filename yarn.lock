@@ -1531,16 +1531,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.24.0, @babel/runtime@npm:^7.25.0, @babel/runtime@npm:^7.8.4":
-  version: 7.27.0
-  resolution: "@babel/runtime@npm:7.27.0"
-  dependencies:
-    regenerator-runtime: "npm:^0.14.0"
-  checksum: 10/e6966e03b695feb4c0ac0856a4355231c2580bf9ebd0298f47739f85c0ea658679dd84409daf26378d42c86c1cbe7e33feab709b14e784254b6c441d91606465
-  languageName: node
-  linkType: hard
-
-"@babel/runtime@npm:^7.5.5":
+"@babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.24.0, @babel/runtime@npm:^7.25.0, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.4":
   version: 7.27.1
   resolution: "@babel/runtime@npm:7.27.1"
   checksum: 10/34cefcbf781ea5a4f1b93f8563327b9ac82694bebdae91e8bd9d7f58d084cbe5b9a6e7f94d77076e15b0bcdaa0040a36cb30737584028df6c4673b4c67b2a31d
@@ -3141,7 +3132,7 @@ __metadata:
     "@eslint/eslintrc": "npm:^2.1.4"
     "@eslint/js": "npm:^8.57.1"
     "@evilmartians/lefthook": "npm:^1.5.0"
-    "@react-native-pulse-debugger/types": "file:../types"
+    "@react-native-pulse-debugger/types": "workspace:*"
     "@react-native/eslint-config": "npm:^0.78.0"
     "@release-it/conventional-changelog": "npm:^9.0.2"
     "@types/jest": "npm:^29.5.5"
@@ -3234,13 +3225,6 @@ __metadata:
     zustand: "npm:^5.0.3"
   languageName: unknown
   linkType: soft
-
-"@react-native-pulse-debugger/types@file:../types::locator=%40react-native-pulse-debugger%2Flib%40workspace%3Apackages%2Flib":
-  version: 0.1.0
-  resolution: "@react-native-pulse-debugger/types@file:../types#../types::hash=141060&locator=%40react-native-pulse-debugger%2Flib%40workspace%3Apackages%2Flib"
-  checksum: 10/8528f1448848cb91725d52f9cc5efea0c4d3ba8392031ddb868fd00a38594c841a9d4a66bdbfb8978995b8ad1b24bf49c542d066b30aa488ef24cb607f66d5ac
-  languageName: node
-  linkType: hard
 
 "@react-native-pulse-debugger/types@workspace:*, @react-native-pulse-debugger/types@workspace:packages/types":
   version: 0.0.0-use.local
@@ -4126,12 +4110,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^22.7.7":
-  version: 22.14.0
-  resolution: "@types/node@npm:22.14.0"
+"@types/node@npm:*, @types/node@npm:^22.15.5, @types/node@npm:^22.7.7":
+  version: 22.15.5
+  resolution: "@types/node@npm:22.15.5"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 10/d0669a8a37a18532c886ccfa51eb3fe1e46088deb4d3d27ebcd5d7d68bd6343ad1c7a3fcb85164780a57629359c33a6c917ecff748ea232bceac7692acc96537
+  checksum: 10/258bc42be3b4646eab00613aca13dce30b90642d747a66f2df109899a294651efca2e7bf2a13d252ad389bf8b60ad27d7d153064f785a2c1ce7f10de9e95e391
   languageName: node
   linkType: hard
 
@@ -4139,15 +4123,6 @@ __metadata:
   version: 12.20.55
   resolution: "@types/node@npm:12.20.55"
   checksum: 10/1f916a06fff02faadb09a16ed6e31820ce170798b202ef0b14fc244bfbd721938c54a3a99836e185e4414ca461fe96c5bb5c67c3d248f153555b7e6347f061dd
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^22.15.5":
-  version: 22.15.5
-  resolution: "@types/node@npm:22.15.5"
-  dependencies:
-    undici-types: "npm:~6.21.0"
-  checksum: 10/258bc42be3b4646eab00613aca13dce30b90642d747a66f2df109899a294651efca2e7bf2a13d252ad389bf8b60ad27d7d153064f785a2c1ce7f10de9e95e391
   languageName: node
   linkType: hard
 
@@ -13544,13 +13519,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"regenerator-runtime@npm:^0.14.0":
-  version: 0.14.1
-  resolution: "regenerator-runtime@npm:0.14.1"
-  checksum: 10/5db3161abb311eef8c45bcf6565f4f378f785900ed3945acf740a9888c792f75b98ecb77f0775f3bf95502ff423529d23e94f41d80c8256e8fa05ed4b07cf471
-  languageName: node
-  linkType: hard
-
 "regenerator-transform@npm:^0.15.2":
   version: 0.15.2
   resolution: "regenerator-transform@npm:0.15.2"
@@ -15281,14 +15249,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^4.18.2, type-fest@npm:^4.20.0, type-fest@npm:^4.21.0, type-fest@npm:^4.37.0, type-fest@npm:^4.6.0":
-  version: 4.39.1
-  resolution: "type-fest@npm:4.39.1"
-  checksum: 10/8f3fc947cb072effd9ba240425397b4d3c08901b344409bc12a0aabf43fd309f87fa214d7ee0b600f6e2335b435f40992cd22c0ce4bc7ab8dc5a987200f83bcc
-  languageName: node
-  linkType: hard
-
-"type-fest@npm:^4.39.1":
+"type-fest@npm:^4.18.2, type-fest@npm:^4.20.0, type-fest@npm:^4.21.0, type-fest@npm:^4.37.0, type-fest@npm:^4.39.1, type-fest@npm:^4.6.0":
   version: 4.40.0
   resolution: "type-fest@npm:4.40.0"
   checksum: 10/dbca20979d18c6b8c87ca28cd999d9ae6b34e0c54c3a87ac65530a32f7a178d38d3788044a589f47c9fde3f3c81422e7b021ec1455f7242b724a2d9c642ce8b8

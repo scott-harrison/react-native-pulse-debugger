@@ -53,7 +53,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.24.0",
-    "@react-native-pulse-debugger/types": "file:../types",
+    "@react-native-pulse-debugger/types": "workspace:*",
     "redux": "^5.0.0"
   },
   "devDependencies": {
@@ -97,19 +97,21 @@
   },
   "release-it": {
     "git": {
-      "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}"
+      "commit": false,
+      "tag": false,
+      "push": false
     },
     "npm": {
-      "publish": true
+      "publish": true,
+      "access": "public"
     },
     "github": {
-      "release": true
+      "release": false
     },
     "plugins": {
       "@release-it/conventional-changelog": {
         "preset": {
-          "name": "angular"
+          "name": "eslint"
         }
       }
     }

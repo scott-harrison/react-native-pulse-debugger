@@ -43,10 +43,11 @@ jobs:
         run: corepack enable
       - name: Setup Yarn
         run: corepack prepare yarn@4.8.1 --activate
-      - name: Install dependencies
-        run: yarn install
-      - name: Build types
-        run: cd packages/types && yarn build
+      - name: Install dependencies and build types
+        run: |
+          yarn config set enableGlobalCache false
+          yarn install --immutable
+          yarn workspace @react-native-pulse-debugger/types build
       - name: Upload types build
         uses: actions/upload-artifact@v4
         with:
@@ -58,15 +59,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
       - name: Enable Corepack
         run: corepack enable
       - name: Setup Yarn
         run: corepack prepare yarn@4.8.1 --activate
       - name: Install dependencies
-        run: yarn install
+        run: |
+          yarn config set enableGlobalCache false
+          yarn install --immutable
       - name: Download types build
         uses: actions/download-artifact@v4
         with:
@@ -74,11 +80,24 @@ jobs:
           path: packages/types/dist
       - name: Build lib
         run: cd packages/lib && yarn prepare
+      - name: Update package.json dependencies
+        run: |
+          TYPES_VERSION=$(node -p "require('./packages/types/package.json').version")
+          node -e "\
+            const fs = require('fs');\
+            const pkg = require('./packages/lib/package.json');\
+            pkg.dependencies['@react-native-pulse-debugger/types'] = '${TYPES_VERSION}';\
+            fs.writeFileSync('./packages/lib/package.json', JSON.stringify(pkg, null, 2) + '\n');\
+          "
+      - name: Initialise the NPM config
+        run: npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Release lib
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: cd packages/lib && yarn release
+        run: cd packages/lib && yarn release --ci --config ../../package.json --no-git.requireCleanWorkingDir
 
   build-tool:
     needs: build-types
@@ -96,7 +115,9 @@ jobs:
       - name: Setup Yarn
         run: corepack prepare yarn@4.8.1 --activate
       - name: Install dependencies
-        run: yarn install
+        run: |
+          yarn config set enableGlobalCache false
+          yarn install --immutable
       - name: Download types build
         uses: actions/download-artifact@v4
         with:
@@ -109,6 +130,6 @@ jobs:
         with:
           name: tool-build
           path: |
-            packages/tool/release/*.dmg
-            packages/tool/release/*.exe
-            packages/tool/release/*.zip
+            packages/tool/release/**/*.dmg
+            packages/tool/release/**/*.exe
+            packages/tool/release/**/*.zip
