@@ -1,0 +1,56 @@
+{
+  "name": "@react-native-pulse-debugger/lib",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./lib/commonjs/index.js",
+  "module": "./lib/module/index.js",
+  "types": "./lib/typescript/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/typescript/index.d.ts",
+      "import": "./lib/module/index.js",
+      "require": "./lib/commonjs/index.js"
+    }
+  },
+  "files": [
+    "lib",
+    "src"
+  ],
+  "scripts": {
+    "build": "bob build",
+    "dev": "bob build --watch",
+    "lint": "eslint src/",
+    "clean": "rm -rf lib",
+    "example": "yarn --cwd example"
+  },
+  "dependencies": {
+    "@babel/core": "7.25.2",
+    "@react-native-pulse-debugger/types": "workspace:*",
+    "react": "19.0.0",
+    "react-native": "0.79.3"
+  },
+  "devDependencies": {
+    "@types/react": "19.0.0",
+    "react-native-builder-bob": "^0.20.0",
+    "typescript": "5.0.4"
+  },
+  "peerDependencies": {
+    "@babel/core": "7.25.2",
+    "react": "19.0.0",
+    "react-native": "0.79.3"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      [
+        "module",
+        {
+          "esm": true
+        }
+      ],
+      "commonjs",
+      "typescript"
+    ]
+  }
+}
