@@ -2,18 +2,20 @@
   "name": "@react-native-pulse-debugger/lib",
   "version": "0.0.1",
   "private": true,
-  "main": "lib/typescript/index.js",
-  "types": "lib/typescript/index.d.ts",
+  "source": "./src/index.ts",
+  "main": "lib/index.js",
+  "types": "lib/typescript/src/index.d.ts",
   "scripts": {
     "prepare": "yarn build",
     "build": "tsc",
+    "dev": "tsc --watch",
     "clean": "rm -rf lib",
     "lint": "eslint src/",
     "test": "jest"
   },
   "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-native": ">=0.78.0",
+    "react": ">=19.0.0",
+    "react-native": ">=0.79.3",
     "redux": ">=4.0.0"
   },
   "peerDependenciesMeta": {
@@ -30,6 +32,7 @@
   "devDependencies": {
     "@types/react": "19.0.0",
     "@types/redux": "^3.6.0",
+    "mock-socket": "^9.3.1",
     "typescript": "5.0.4"
   }
 }

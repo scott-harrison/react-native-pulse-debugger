@@ -3,20 +3,18 @@ import { PulseDebugger } from '../index';
 type ConsoleMethod = 'log' | 'info' | 'warn' | 'error' | 'debug';
 
 export class ConsoleInterceptor {
-  private originalConsole: Console;
   private pulse: PulseDebugger;
 
   constructor(pulse: PulseDebugger) {
     this.pulse = pulse;
-    this.originalConsole = global.console;
   }
 
   private createInterceptedMethod(method: ConsoleMethod) {
+    const originalMethod = console[method];
     return (...args: any[]) => {
-      // Call original console method
-      this.originalConsole[method](...args);
+      // Call the original method first
+      originalMethod.apply(console, args);
 
-      // Only send to Pulse if console monitoring is enabled
       if (this.pulse.isConsoleMonitoringEnabled()) {
         this.pulse.sendConsoleEvent({
           type: method,
@@ -42,11 +40,7 @@ export class ConsoleInterceptor {
     const methods: ConsoleMethod[] = ['log', 'info', 'warn', 'error', 'debug'];
 
     methods.forEach(method => {
-      global.console[method] = this.createInterceptedMethod(method);
+      console[method] = this.createInterceptedMethod(method);
     });
-  }
-
-  restore(): void {
-    Object.assign(global.console, this.originalConsole);
   }
 }

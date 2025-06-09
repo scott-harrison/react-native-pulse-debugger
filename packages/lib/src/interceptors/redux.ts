@@ -1,6 +1,5 @@
 import { PulseDebugger } from '../index';
 
-// Define proper types for Redux
 type ReduxState = Record<string, unknown>;
 
 type ReduxAction<T = unknown> = {
@@ -59,13 +58,10 @@ export class ReduxInterceptor {
         const startTime = Date.now();
         const prevState = store.getState();
 
-        // Call the next middleware
         const result = next(action);
 
-        // Only send to Pulse if Redux monitoring is enabled
         if (this.pulse.isReduxMonitoringEnabled()) {
           const nextState = store.getState();
-
           this.pulse.sendReduxEvent({
             type: 'action',
             action: {

@@ -15,7 +15,6 @@ export class NetworkInterceptor {
     const startTime = Date.now();
     const requestId = Math.random().toString(36).substring(7);
 
-    // Create request object
     const request = new Request(input, init);
     const requestData = {
       id: requestId,
@@ -27,7 +26,6 @@ export class NetworkInterceptor {
     };
 
     try {
-      // Send request start event
       if (this.pulse.isNetworkMonitoringEnabled()) {
         this.pulse.sendNetworkRequestEvent({
           type: 'request',
@@ -35,13 +33,10 @@ export class NetworkInterceptor {
         });
       }
 
-      // Make the actual request
       const response = await this.originalFetch(request);
 
-      // Clone the response so we can read it multiple times
       const responseClone = response.clone();
 
-      // Get response data
       const responseData = {
         id: requestId,
         status: response.status,
@@ -51,7 +46,6 @@ export class NetworkInterceptor {
         duration: Date.now() - startTime,
       };
 
-      // Send response event
       if (this.pulse.isNetworkMonitoringEnabled()) {
         this.pulse.sendNetworkResponseEvent({
           type: 'response',
@@ -61,7 +55,6 @@ export class NetworkInterceptor {
 
       return response;
     } catch (error) {
-      // Send error event
       if (this.pulse.isNetworkMonitoringEnabled()) {
         this.pulse.sendNetworkErrorEvent({
           type: 'error',

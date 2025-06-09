@@ -1,6 +1,7 @@
 import { ConsoleInterceptor } from './interceptors/console';
 import { NetworkInterceptor } from './interceptors/network';
 import { ReduxInterceptor } from './interceptors/redux';
+import { WebSocketManager } from './websocket/WebSocketManager';
 import type {
   ConsoleEvent,
   NetworkRequestEvent,
@@ -20,8 +21,8 @@ export class PulseDebugger {
     enableBatching: true,
     enableThrottling: true,
     monitoring: {
-      network: false,
-      console: false,
+      network: true,
+      console: true,
       redux: false,
     },
   };
@@ -29,11 +30,13 @@ export class PulseDebugger {
   private consoleInterceptor: ConsoleInterceptor;
   private networkInterceptor: NetworkInterceptor;
   private reduxInterceptor: ReduxInterceptor;
+  private wsManager: WebSocketManager;
 
   private constructor() {
     this.consoleInterceptor = new ConsoleInterceptor(this);
     this.networkInterceptor = new NetworkInterceptor(this);
     this.reduxInterceptor = new ReduxInterceptor(this);
+    this.wsManager = new WebSocketManager(this.config);
   }
 
   static getInstance(): PulseDebugger {
@@ -52,6 +55,12 @@ export class PulseDebugger {
         ...(config.monitoring || {}),
       },
     };
+
+    // Update WebSocket manager with new config
+    this.wsManager = new WebSocketManager(this.config);
+    if (this.config.autoConnect) {
+      this.wsManager.connect();
+    }
 
     // Setup interceptors based on monitoring config
     if (this.config.monitoring?.console) {
@@ -106,7 +115,6 @@ export class PulseDebugger {
       ...this.config.monitoring,
       console: false,
     };
-    this.consoleInterceptor.restore();
   }
 
   enableReduxMonitoring(): void {
@@ -135,33 +143,31 @@ export class PulseDebugger {
     return this.config.monitoring?.redux ?? false;
   }
 
+  isConnected(): boolean {
+    return this.wsManager.isConnected();
+  }
+
   // Event sending methods
   sendConsoleEvent(event: ConsoleEvent): void {
-    // TODO: Implement WebSocket connection and event sending
-    console.log('Console Event:', event);
+    this.wsManager.sendEvent('console', event);
   }
 
   sendNetworkRequestEvent(event: NetworkRequestEvent): void {
-    // TODO: Implement WebSocket connection and event sending
-    console.log('Network Request Event:', event);
+    this.wsManager.sendEvent('network_request', event);
   }
 
   sendNetworkResponseEvent(event: NetworkResponseEvent): void {
-    // TODO: Implement WebSocket connection and event sending
-    console.log('Network Response Event:', event);
+    this.wsManager.sendEvent('network_response', event);
   }
 
   sendNetworkErrorEvent(event: NetworkErrorEvent): void {
-    // TODO: Implement WebSocket connection and event sending
-    console.log('Network Error Event:', event);
+    this.wsManager.sendEvent('network_error', event);
   }
 
   sendReduxEvent(event: ReduxEvent): void {
-    // TODO: Implement WebSocket connection and event sending
-    console.log('Redux Event:', event);
+    this.wsManager.sendEvent('redux', event);
   }
 
-  // Redux middleware getter
   getReduxMiddleware() {
     const middleware = this.reduxInterceptor.createMiddleware();
     if (!middleware) {

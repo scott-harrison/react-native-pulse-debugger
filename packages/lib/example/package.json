@@ -1,5 +1,5 @@
 {
-  "name": "@react-native-pulse-debugger/example",
+  "name": "example",
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
@@ -9,16 +9,19 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@react-native-pulse-debugger/lib": "workspace:*",
-    "expo": "~50.0.0",
-    "expo-status-bar": "~1.11.1",
+    "@react-native-pulse-debugger/lib": "link:../",
+    "@reduxjs/toolkit": "^2.8.2",
+    "expo": "~53.0.11",
+    "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
-    "react-native": "0.79.3"
+    "react-native": "0.79.3",
+    "react-redux": "^9.2.0",
+    "redux": "^5.0.1"
   },
   "devDependencies": {
-    "@babel/core": "7.25.2",
-    "@types/react": "19.0.0",
-    "typescript": "5.0.4"
+    "@babel/core": "^7.25.2",
+    "@types/react": "~19.0.10",
+    "typescript": "~5.8.3"
   },
   "private": true
 }
