@@ -1,38 +1,47 @@
 {
-  "name": "@react-native-pulse-debugger/lib",
-  "version": "0.0.1",
-  "private": true,
-  "source": "./src/index.ts",
-  "main": "lib/index.js",
-  "types": "lib/typescript/src/index.d.ts",
-  "scripts": {
-    "prepare": "yarn build",
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "clean": "rm -rf lib",
-    "lint": "eslint src/",
-    "test": "jest"
-  },
-  "peerDependencies": {
-    "react": ">=19.0.0",
-    "react-native": ">=0.79.3",
-    "redux": ">=4.0.0"
-  },
-  "peerDependenciesMeta": {
-    "redux": {
-      "optional": true
+    "name": "@react-native-pulse-debugger/lib",
+    "version": "0.0.1",
+    "private": true,
+    "source": "./src/index.ts",
+    "main": "lib/index.js",
+    "types": "lib/typescript/src/index.d.ts",
+    "scripts": {
+        "prepare": "yarn build",
+        "build": "tsc",
+        "dev": "tsc --watch",
+        "clean": "rm -rf lib",
+        "lint": "eslint src/",
+        "test": "jest"
+    },
+    "peerDependencies": {
+        "expo-constants": ">=15.0.0",
+        "react": ">=19.0.0",
+        "react-native": ">=0.79.3",
+        "react-native-device-info": ">=14.0.0",
+        "redux": ">=4.0.0"
+    },
+    "peerDependenciesMeta": {
+        "redux": {
+            "optional": true
+        }
+    },
+    "dependencies": {
+        "@babel/core": "7.25.2",
+        "@react-native-pulse-debugger/types": "workspace:*",
+        "@react-native-pulse-debugger/utils": "workspace:*",
+        "react": "19.0.0",
+        "react-native": "0.79.3",
+        "react-native-get-random-values": "^1.11.0"
+    },
+    "devDependencies": {
+        "@types/react": "19.0.0",
+        "@types/react-native-get-random-values": "^1",
+        "@types/redux": "^3.6.0",
+        "expo-application": "^6.1.4",
+        "expo-constants": "17.0.8",
+        "expo-device": "^7.1.4",
+        "mock-socket": "^9.3.1",
+        "react-native-device-info": "^14.0.4",
+        "typescript": "5.0.4"
     }
-  },
-  "dependencies": {
-    "@babel/core": "7.25.2",
-    "@react-native-pulse-debugger/types": "workspace:*",
-    "react": "19.0.0",
-    "react-native": "0.79.3"
-  },
-  "devDependencies": {
-    "@types/react": "19.0.0",
-    "@types/redux": "^3.6.0",
-    "mock-socket": "^9.3.1",
-    "typescript": "5.0.4"
-  }
 }

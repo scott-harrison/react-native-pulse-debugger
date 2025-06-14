@@ -1639,6 +1639,12 @@ __metadata:
   languageName: node
   linkType: soft
 
+"@react-native-pulse-debugger/utils@link:../::locator=example%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@react-native-pulse-debugger/utils@link:../::locator=example%40workspace%3A."
+  languageName: node
+  linkType: soft
+
 "@react-native/assets-registry@npm:0.79.3":
   version: 0.79.3
   resolution: "@react-native/assets-registry@npm:0.79.3"
@@ -3096,9 +3102,12 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.25.2"
     "@react-native-pulse-debugger/lib": "link:../"
+    "@react-native-pulse-debugger/utils": "link:../"
     "@reduxjs/toolkit": "npm:^2.8.2"
     "@types/react": "npm:~19.0.10"
     expo: "npm:~53.0.11"
+    expo-constants: "npm:^17.1.6"
+    expo-device: "npm:^7.1.4"
     expo-status-bar: "npm:~2.2.3"
     react: "npm:19.0.0"
     react-native: "npm:0.79.3"
@@ -3129,7 +3138,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo-constants@npm:~17.1.5, expo-constants@npm:~17.1.6":
+"expo-constants@npm:^17.1.6, expo-constants@npm:~17.1.5, expo-constants@npm:~17.1.6":
   version: 17.1.6
   resolution: "expo-constants@npm:17.1.6"
   dependencies:
@@ -3139,6 +3148,17 @@ __metadata:
     expo: "*"
     react-native: "*"
   checksum: 10/13f52198286dee3bc1746a34b9b952d8d53687bf3c2e0d34f3c7f7d78ed4bac79bb6083b14e46b829251da96226bd8e8a30e02922ad93940a11fc81808d92551
+  languageName: node
+  linkType: hard
+
+"expo-device@npm:^7.1.4":
+  version: 7.1.4
+  resolution: "expo-device@npm:7.1.4"
+  dependencies:
+    ua-parser-js: "npm:^0.7.33"
+  peerDependencies:
+    expo: "*"
+  checksum: 10/7ac5d0af134c2dff036de55e412d89e2158a31fad76ff751c8de8a08c9411e448498b50e5c92c13bb2a9866f0508b2bc072e8f7fc7d974cdd769940744af8a67
   languageName: node
   linkType: hard
 
@@ -6117,6 +6137,15 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 10/b9b1e73dabac5dc730c041325dbd9c99467c1b0d239f1b74ec3b90d831384af3e2ba973946232df670519147eb51a2c20f6f96163cea2b359f03de1e2091cc4f
+  languageName: node
+  linkType: hard
+
+"ua-parser-js@npm:^0.7.33":
+  version: 0.7.40
+  resolution: "ua-parser-js@npm:0.7.40"
+  bin:
+    ua-parser-js: script/cli.js
+  checksum: 10/914b8134894e0060a695e519c4b25625613572911466fdcd60f995babc2a61e75a318d98f5e777961ab428069b6ee2f7c5e3a4595eee858a1e86de694579baac
   languageName: node
   linkType: hard
 

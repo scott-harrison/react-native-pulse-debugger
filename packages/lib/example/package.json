@@ -1,27 +1,30 @@
 {
-  "name": "example",
-  "version": "1.0.0",
-  "main": "index.ts",
-  "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
-  },
-  "dependencies": {
-    "@react-native-pulse-debugger/lib": "link:../",
-    "@reduxjs/toolkit": "^2.8.2",
-    "expo": "~53.0.11",
-    "expo-status-bar": "~2.2.3",
-    "react": "19.0.0",
-    "react-native": "0.79.3",
-    "react-redux": "^9.2.0",
-    "redux": "^5.0.1"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.25.2",
-    "@types/react": "~19.0.10",
-    "typescript": "~5.8.3"
-  },
-  "private": true
+    "name": "example",
+    "version": "1.0.0",
+    "main": "index.ts",
+    "scripts": {
+        "start": "expo start",
+        "android": "expo start --android",
+        "ios": "expo start --ios",
+        "web": "expo start --web"
+    },
+    "dependencies": {
+        "@react-native-pulse-debugger/lib": "link:../",
+        "@react-native-pulse-debugger/utils": "link:../",
+        "@reduxjs/toolkit": "^2.8.2",
+        "expo": "~53.0.11",
+        "expo-constants": "^17.1.6",
+        "expo-device": "^7.1.4",
+        "expo-status-bar": "~2.2.3",
+        "react": "19.0.0",
+        "react-native": "0.79.3",
+        "react-redux": "^9.2.0",
+        "redux": "^5.0.1"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.25.2",
+        "@types/react": "~19.0.10",
+        "typescript": "~5.8.3"
+    },
+    "private": true
 }

@@ -1,54 +1,69 @@
-export interface ConsoleEvent {
-  type: 'log' | 'info' | 'warn' | 'error' | 'debug';
-  timestamp: number;
-  args: unknown[];
-}
+import { Monitoring } from './config';
+import { DeviceInfo } from './device';
+import { SessionId } from './session';
 
-export interface NetworkRequestEvent {
-  type: 'request';
-  id: string;
-  url: string;
-  method: string;
-  headers: Record<string, string>;
-  body: unknown;
-  timestamp: number;
-}
+export type JSONValue =
+    | string
+    | number
+    | boolean
+    | null
+    | JSONValue[]
+    | { [key: string]: JSONValue };
 
-export interface NetworkResponseEvent {
-  type: 'response';
-  id: string;
-  status: number;
-  statusText: string;
-  headers: Record<string, string>;
-  body: unknown;
-  duration: number;
-}
+export type EventType = 'handshake' | 'console' | 'network_request' | 'network_response' | 'redux';
 
-export interface NetworkErrorEvent {
-  type: 'error';
-  id: string;
-  error: string;
-  duration: number;
-}
+export type HandshakePayload = {
+    id: string;
+    deviceInfo: DeviceInfo;
+    monitoring: Monitoring;
+};
 
-export interface ReduxEvent {
-  type: 'action';
-  action: {
-    type: string;
-    payload: unknown;
+export type ConsolePayload = {
+    type: 'log' | 'info' | 'warn' | 'error' | 'debug';
+    message: string;
+    data?: JSONValue;
+    stack?: string;
+};
+
+export type NetworkPayload = {
+    status: 'pending' | 'fulfilled' | 'rejected';
+    startTime: number;
+    url: string;
+    method: string;
+    headers: object;
+    body: object | string | null;
+    response?: {
+        status: number;
+        headers: Record<string, string>;
+        body: string;
+        error?: Error;
+        duration: number;
+        startTime: number;
+        endTime: number;
+    };
+};
+
+export type ReduxPayload = {
+    action: {
+        type: string;
+        payload: unknown;
+    };
+    prevState: unknown;
+    nextState: unknown;
+};
+
+export type PulseEventPayload = {
+    handshake: HandshakePayload;
+    console: ConsolePayload;
+    network_request: NetworkPayload;
+    network_response: NetworkPayload;
+    redux: ReduxPayload;
+};
+
+export interface PulseEvent<T extends EventType = EventType> {
+    type: T;
+    payload: PulseEventPayload[T];
+    eventId: string;
+    sessionId: SessionId;
     timestamp: number;
-  };
-  state: {
-    prev: Record<string, unknown>;
-    next: Record<string, unknown>;
-    diff: Record<string, { prev: unknown; next: unknown }> | null;
-  };
-  duration: number;
 }
-
-export type PulseEvent =
-  | ConsoleEvent
-  | NetworkRequestEvent
-  | NetworkResponseEvent
-  | NetworkErrorEvent
-  | ReduxEvent;

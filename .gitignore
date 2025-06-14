@@ -18,6 +18,7 @@ thumbs.db
 
 # Generated files
 .idea/**/contentModel.xml
+tsconfig.tsbuildinfo
 
 # Sensitive or high-churn files
 .idea/**/dataSources/
