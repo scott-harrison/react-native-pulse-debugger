@@ -12,11 +12,11 @@
         "test:lib": "yarn workspace @react-native-pulse-debugger/lib test",
         "test:utils": "yarn workspace @react-native-pulse-debugger/utils test",
         "test": "yarn test:lib && yarn test:utils",
+        "clean": "rimraf packages/*/dist",
         "dev:types": "yarn workspace @react-native-pulse-debugger/types dev",
-        "dev:tool": "yarn workspace @react-native-pulse-debugger/tool dev",
         "dev:lib": "yarn workspace @react-native-pulse-debugger/lib dev",
         "dev:utils": "yarn workspace @react-native-pulse-debugger/utils dev",
-        "dev": "concurrently \"yarn dev:types\" \"yarn dev:utils\" \"yarn dev:lib\" \"yarn dev:tool\"",
+        "dev": "yarn clean && concurrently \"yarn dev:types\" \"yarn dev:utils\" \"yarn dev:lib\"",
         "example": "cd packages/lib/example && yarn start"
     },
     "devDependencies": {
