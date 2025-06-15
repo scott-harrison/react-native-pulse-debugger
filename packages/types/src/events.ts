@@ -10,7 +10,7 @@ export type JSONValue =
     | JSONValue[]
     | { [key: string]: JSONValue };
 
-export type EventType = 'handshake' | 'console' | 'network_request' | 'network_response' | 'redux';
+export type EventType = 'handshake' | 'console' | 'network' | 'redux';
 
 export type HandshakePayload = {
     id: string;
@@ -21,17 +21,19 @@ export type HandshakePayload = {
 export type ConsolePayload = {
     type: 'log' | 'info' | 'warn' | 'error' | 'debug';
     message: string;
-    data?: JSONValue;
+    data: JSONValue | null;
     stack?: string;
 };
 
 export type NetworkPayload = {
-    status: 'pending' | 'fulfilled' | 'rejected';
+    requestId: string;
+    requestStatus: 'pending' | 'fulfilled' | 'rejected';
     startTime: number;
     url: string;
     method: string;
     headers: object;
     body: object | string | null;
+    error?: Error | string;
     response?: {
         status: number;
         headers: Record<string, string>;
@@ -55,8 +57,7 @@ export type ReduxPayload = {
 export type PulseEventPayload = {
     handshake: HandshakePayload;
     console: ConsolePayload;
-    network_request: NetworkPayload;
-    network_response: NetworkPayload;
+    network: NetworkPayload;
     redux: ReduxPayload;
 };
 

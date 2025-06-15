@@ -1,5 +1,6 @@
 import { generateUUID } from '@react-native-pulse-debugger/utils';
 import { PulseDebugger } from '../index';
+import { NetworkPayload } from '@react-native-pulse-debugger/types';
 
 type RequestInfo = Request | string | URL;
 
@@ -40,51 +41,46 @@ export class NetworkInterceptor {
         const requestId = generateUUID();
 
         const request = new Request(input, init);
-        const requestData = {
-            id: requestId,
+        let payload: NetworkPayload = {
+            requestId,
             url: request.url,
             method: request.method,
             headers: Object.fromEntries(request.headers.entries()),
             body: await this.getRequestBody(request),
-            timestamp: startTime,
+            requestStatus: 'pending',
+            startTime,
         };
 
         try {
             if (this.pulse.isNetworkMonitoringEnabled() && !this.isBlacklisted(request.url)) {
-                this.pulse.sendNetworkRequestEvent({
-                    type: 'request',
-                    ...requestData,
-                });
+                this.pulse.sendNetworkEvent(payload);
             }
 
             const response = await this.originalFetch(request);
-
             const responseClone = response.clone();
 
-            const responseData = {
-                id: requestId,
+            payload.requestStatus = 'fulfilled';
+            payload.response = {
                 status: response.status,
-                statusText: response.statusText,
                 headers: Object.fromEntries(response.headers.entries()),
                 body: await this.getResponseBody(responseClone),
+                error: undefined,
                 duration: Date.now() - startTime,
+                startTime,
+                endTime: Date.now(),
             };
 
             if (this.pulse.isNetworkMonitoringEnabled() && !this.isBlacklisted(request.url)) {
-                this.pulse.sendNetworkResponseEvent({
-                    type: 'response',
-                    ...responseData,
-                });
+                this.pulse.sendNetworkEvent(payload);
             }
 
             return response;
         } catch (error) {
-            if (this.pulse.isNetworkMonitoringEnabled() && !this.isBlacklisted(request.url)) {
-                this.pulse.sendNetworkErrorEvent({
-                    type: 'error',
-                    id: requestId,
+            if (!this.isBlacklisted(request.url)) {
+                payload.requestStatus = 'rejected';
+                this.pulse.sendNetworkEvent({
+                    ...payload,
                     error: error instanceof Error ? error.message : String(error),
-                    duration: Date.now() - startTime,
                 });
             }
             throw error;

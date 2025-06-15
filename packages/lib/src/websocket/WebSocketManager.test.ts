@@ -102,13 +102,15 @@ describe('WebSocketManager', () => {
         // Send multiple events
         wsManager.sendEvent('console', {
             type: 'log',
-            args: ['test1'],
-            id: 'test1',
+            message: 'test1',
+            data: null,
+            stack: undefined,
         });
         wsManager.sendEvent('console', {
             type: 'log',
-            args: ['test2'],
-            id: 'test2',
+            message: 'test2',
+            data: null,
+            stack: undefined,
         });
 
         // Run all timers to ensure messages are processed
@@ -145,13 +147,15 @@ describe('WebSocketManager', () => {
         // Send multiple events
         wsManager.sendEvent('console', {
             type: 'log',
-            args: ['test1'],
-            id: 'test1',
+            message: 'test1',
+            data: null,
+            stack: undefined,
         });
         wsManager.sendEvent('console', {
             type: 'log',
-            args: ['test2'],
-            id: 'test2',
+            message: 'test2',
+            data: null,
+            stack: undefined,
         });
 
         // Run all timers to ensure messages are processed
@@ -201,13 +205,15 @@ describe('WebSocketManager', () => {
         // Send multiple events in quick succession
         wsManager.sendEvent('console', {
             type: 'log',
-            args: ['test1'],
-            id: 'test1',
+            message: 'test1',
+            data: null,
+            stack: undefined,
         });
         wsManager.sendEvent('console', {
             type: 'log',
-            args: ['test2'],
-            id: 'test2',
+            message: 'test2',
+            data: null,
+            stack: undefined,
         });
 
         // Run all timers to ensure messages are processed
@@ -223,13 +229,15 @@ describe('WebSocketManager', () => {
         // Send more events
         wsManager.sendEvent('console', {
             type: 'log',
-            args: ['test4'],
-            id: 'test4',
+            message: 'test4',
+            data: null,
+            stack: undefined,
         });
         wsManager.sendEvent('console', {
             type: 'log',
-            args: ['test5'],
-            id: 'test5',
+            message: 'test5',
+            data: null,
+            stack: undefined,
         });
 
         // Run all timers to ensure messages are processed
@@ -256,13 +264,15 @@ describe('WebSocketManager', () => {
         // Send events before connecting
         wsManager.sendEvent('console', {
             type: 'log',
-            args: ['test1'],
-            id: 'test1',
+            message: 'test1',
+            data: null,
+            stack: undefined,
         });
         wsManager.sendEvent('console', {
             type: 'log',
-            args: ['test2'],
-            id: 'test2',
+            message: 'test2',
+            data: null,
+            stack: undefined,
         });
 
         // Connect after sending events

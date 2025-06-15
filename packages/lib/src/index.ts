@@ -154,19 +154,11 @@ export class PulseDebugger {
         this.wsManager.sendEvent('console', payload);
     }
 
-    sendNetworkRequestEvent(event: any): void {
-        this.wsManager.sendEvent('network_request', event);
+    sendNetworkEvent(event: PulseEventPayload['network']): void {
+        this.wsManager.sendEvent('network', event);
     }
 
-    sendNetworkResponseEvent(event: any): void {
-        this.wsManager.sendEvent('network_response', event);
-    }
-
-    sendNetworkErrorEvent(event: any): void {
-        this.wsManager.sendEvent('network_response', event);
-    }
-
-    sendReduxEvent(event: any): void {
+    sendReduxEvent(event: PulseEventPayload['redux']): void {
         this.wsManager.sendEvent('redux', event);
     }
 

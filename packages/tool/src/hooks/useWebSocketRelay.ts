@@ -3,6 +3,7 @@ import { useEffect, useCallback } from 'react';
 import useSessionStore from '@/store/sessionStore';
 import useConsoleStore from '@/store/consoleStore';
 import { PulseEvent, Session, EventType, SessionId } from '@react-native-pulse-debugger/types';
+import { useNetworkStore } from '@/store/networkStore';
 
 type PulseEventHandler = (connectionId: string, event: PulseEvent | PulseEvent[]) => void;
 type PulseDisconnectionHandler = (sessionId: string) => void;
@@ -10,6 +11,7 @@ type PulseDisconnectionHandler = (sessionId: string) => void;
 export const useWebSocketRelay = () => {
     const { addSession, getSessionById, removeSessionById } = useSessionStore(state => state);
     const { addConsole } = useConsoleStore(state => state);
+    const { addNetworkRequest } = useNetworkStore(state => state);
 
     const handlePulseEvent: PulseEventHandler = useCallback(
         (sessionId: SessionId, event: PulseEvent | PulseEvent[]) => {
@@ -39,9 +41,8 @@ export const useWebSocketRelay = () => {
                         case 'console':
                             addConsole(event as PulseEvent<'console'>);
                             break;
-                        case 'network_request':
-                            break;
-                        case 'network_response':
+                        case 'network':
+                            addNetworkRequest(event as PulseEvent<'network'>);
                             break;
                         default:
                             console.warn('Unknown event type:', parsed.type);

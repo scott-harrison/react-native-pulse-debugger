@@ -1,4 +1,5 @@
 import { PulseDebugger } from '../index';
+import { JSONValue } from '@react-native-pulse-debugger/types';
 
 type ConsoleMethod = 'log' | 'info' | 'warn' | 'error' | 'debug';
 
@@ -30,14 +31,15 @@ export class ConsoleInterceptor {
         });
     }
 
-    private processArgs(args: unknown[]) {
+    private processArgs(args: JSONValue[]) {
         const messageParts: string[] = [];
-        const data: unknown[] = [];
+        const data: JSONValue[] = [];
 
-        args.forEach(arg => {
+        args.forEach((arg: JSONValue) => {
             if (typeof arg === 'string') {
                 messageParts.push(arg); // Add strings to the message
             } else if (typeof arg === 'object' && arg !== null) {
+                // Cast to JSONValue since we know it's a valid object
                 data.push(arg); // Add objects/arrays to the data
             } else {
                 // Handle other types (e.g., numbers, booleans)
@@ -59,7 +61,7 @@ export class ConsoleInterceptor {
         const methods: ConsoleMethod[] = ['log', 'info', 'warn', 'error', 'debug'];
 
         methods.forEach(method => {
-            global.console[method] = (...args: any[]) => {
+            global.console[method] = (...args: JSONValue[]) => {
                 // Prevent recursion
                 if (this.isIntercepting) {
                     return this.originalConsole[method].apply(console, args);
@@ -79,7 +81,7 @@ export class ConsoleInterceptor {
                         this.pulse.sendConsoleEvent({
                             type: method,
                             message,
-                            data: error ? undefined : data,
+                            data: error ? null : data?.length ? data : null,
                             stack: error?.stack,
                         });
                     }
