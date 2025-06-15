@@ -6,6 +6,9 @@ import { WebSocketManager } from './websocket/WebSocketManager';
 import { PulseDebuggerConfig } from './types';
 import { PulseEventPayload } from '@react-native-pulse-debugger/types';
 
+/**
+ * PulseDebugger is the main class for the Pulse Debugger library.
+ */
 export class PulseDebugger {
     private static instance: PulseDebugger;
     private config: PulseDebuggerConfig = {

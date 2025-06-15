@@ -1,15 +1,14 @@
 {
-  "name": "@react-native-pulse-debugger/types",
-  "version": "0.0.1",
-  "private": true,
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "clean": "rm -rf dist"
-  },
-  "devDependencies": {
-    "typescript": "5.0.4"
-  }
+    "name": "@react-native-pulse-debugger/types",
+    "version": "0.0.1",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch",
+        "clean": "rm -rf dist"
+    },
+    "devDependencies": {
+        "typescript": "5.0.4"
+    }
 }

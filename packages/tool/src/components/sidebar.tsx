@@ -1,7 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/utils/styling';
-// Import icons from a popular icon library
-import { Terminal, Database, Network, Settings, Layers, Smartphone, Circle } from 'lucide-react';
+import { Terminal, Database, Network, Smartphone, Circle } from 'lucide-react';
 import Button from './button';
 import Modal from './modal';
 import SessionsWindow from './SessionsWindow';

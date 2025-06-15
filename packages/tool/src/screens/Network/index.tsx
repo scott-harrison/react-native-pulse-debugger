@@ -3,7 +3,7 @@ import ResizablePanel from '@/components/ResizeablePanel';
 import { useNetworkStore } from '@/store/networkStore';
 import useSessionStore from '@/store/sessionStore';
 import { cn } from '@/utils/styling';
-import { NetworkPayload, PulseEvent } from '@react-native-pulse-debugger/types';
+import { JSONValue, NetworkPayload, PulseEvent } from '@react-native-pulse-debugger/types';
 import React, { useState } from 'react';
 
 const getMethodColor = (method: string) => {
@@ -275,7 +275,9 @@ const NetworkScreen: React.FC = () => {
                                     <div>
                                         <span className="text-[10px] text-zinc-500">Headers</span>
                                         <div className="bg-zinc-900 p-2 rounded-md mt-1">
-                                            <JSONViewer data={selectedRequest.payload.headers} />
+                                            <JSONViewer
+                                                data={selectedRequest.payload.headers as JSONValue}
+                                            />
                                         </div>
                                     </div>
                                 )}

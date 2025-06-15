@@ -1,7 +1,6 @@
 {
     "name": "@react-native-pulse-debugger/lib",
     "version": "0.0.1",
-    "private": true,
     "source": "./src/index.ts",
     "main": "lib/index.js",
     "types": "lib/typescript/src/index.d.ts",
@@ -43,5 +42,8 @@
         "mock-socket": "^9.3.1",
         "react-native-device-info": "^14.0.4",
         "typescript": "5.0.4"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }

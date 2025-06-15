@@ -3,7 +3,7 @@ import ResizablePanel from '@/components/ResizeablePanel';
 import JSONViewer from '@/components/JsonViewer';
 import { useReduxStore } from '@/store/reduxStore';
 import useSessionStore from '@/store/sessionStore';
-import { PulseEvent } from '@react-native-pulse-debugger/types';
+import { JSONValue, PulseEvent } from '@react-native-pulse-debugger/types';
 import { cn } from '@/utils/styling';
 
 const ReduxScreen: React.FC = () => {
@@ -97,7 +97,10 @@ const ReduxScreen: React.FC = () => {
                                                         Action Details
                                                     </h4>
                                                     <JSONViewer
-                                                        data={selectedAction?.payload.action}
+                                                        data={
+                                                            selectedAction?.payload
+                                                                .action as JSONValue
+                                                        }
                                                     />
                                                 </div>
                                             )}
@@ -115,7 +118,7 @@ const ReduxScreen: React.FC = () => {
                             <div className="space-y-2">
                                 <p className="text-xs text-zinc-400">
                                     {reduxState?.state ? (
-                                        <JSONViewer data={reduxState?.state} />
+                                        <JSONViewer data={reduxState?.state as JSONValue} />
                                     ) : (
                                         <p className="text-xs text-zinc-400">
                                             Please trigger action to update state

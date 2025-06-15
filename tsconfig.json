@@ -19,5 +19,6 @@
             "@pulse-debugger/types/*": ["packages/types/src/*"]
         }
     },
+    "include": ["src/**/*", "package.json"],
     "references": [{ "path": "packages/types" }]
 }

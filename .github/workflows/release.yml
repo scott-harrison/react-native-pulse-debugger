@@ -1,105 +1,185 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'packages/debugger-lib/**'
-      - 'packages/debugger-tool/**'
-      - 'packages/shared-types/**'
-      - 'package.json'
-      - 'yarn.lock'
-  workflow_dispatch:
+    push:
+        tags:
+            - 'v*.*.*'
+        branches:
+            - main
+            - release-workflow
+        paths:
+            - 'packages/**'
+            - 'package.json'
+            - 'yarn.lock'
+    workflow_dispatch:
 
 jobs:
-  build-shared-types:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+    build-packages:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '18'
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+            - name: Enable Corepack
+              run: corepack enable
 
-      - name: Build shared-types
-        run: cd packages/shared-types && yarn build
+            - name: Setup Yarn
+              run: corepack prepare yarn@4.9.2 --activate
 
-      - name: Upload shared-types build
-        uses: actions/upload-artifact@v4
-        with:
-          name: shared-types-build
-          path: packages/shared-types/dist
+            - name: Install dependencies
+              run: yarn install --immutable
 
-  release-lib:
-    needs: build-shared-types
-    runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'packages/debugger-lib/') || contains(github.event.head_commit.added, 'packages/debugger-lib/')
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+            - name: Build shared-types
+              run: cd packages/types && yarn build
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          registry-url: 'https://registry.npmjs.org'
+            - name: Build utils
+              run: cd packages/utils && yarn build
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+            - name: Build lib
+              run: cd packages/lib && yarn build
 
-      - name: Download shared-types build
-        uses: actions/download-artifact@v3
-        with:
-          name: shared-types-build
-          path: packages/shared-types/dist
+            - name: Upload built packages
+              uses: actions/upload-artifact@v4
+              with:
+                  name: built-packages
+                  path: |
+                      packages/types/dist
+                      packages/utils/dist
+                      packages/lib/dist
 
-      - name: Build debugger-lib
-        run: cd packages/debugger-lib && yarn prepare
+    publish-lib:
+        needs: build-packages
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
 
-      - name: Release debugger-lib
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: cd packages/debugger-lib && yarn release
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '18'
+                  registry-url: 'https://registry.npmjs.org'
 
-  release-tool:
-    needs: build-shared-types
-    runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'packages/debugger-tool/') || contains(github.event.head_commit.added, 'packages/debugger-tool/')
-    steps:
-      - uses: actions/checkout@v3
+            - name: Enable Corepack
+              run: corepack enable
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+            - name: Setup Yarn
+              run: corepack prepare yarn@4.9.2 --activate
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+            - name: Install dependencies
+              run: yarn install --immutable
 
-      - name: Download shared-types build
-        uses: actions/download-artifact@v3
-        with:
-          name: shared-types-build
-          path: packages/shared-types/dist
+            - name: Download built packages
+              uses: actions/download-artifact@v4
+              with:
+                  name: built-packages
+                  path: packages
 
-      - name: Build debugger-tool
-        run: cd packages/debugger-tool && yarn build
+            - name: Publish lib to npm
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: cd packages/lib && npm publish
 
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            packages/debugger-tool/dist/**/*.dmg
-            packages/debugger-tool/dist/**/*.exe
-            packages/debugger-tool/dist/**/*.AppImage
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    build-electron-mac:
+        needs: build-packages
+        runs-on: macos-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '18'
+
+            - name: Enable Corepack
+              run: corepack enable
+
+            - name: Setup Yarn
+              run: corepack prepare yarn@4.9.2 --activate
+
+            - name: Install dependencies
+              run: yarn install --immutable
+
+            - name: Download built packages
+              uses: actions/download-artifact@v4
+              with:
+                  name: built-packages
+                  path: packages
+
+            - name: Build electron app for macOS
+              run: cd packages/tool && yarn build:mac
+
+            - name: Upload macOS build
+              uses: actions/upload-artifact@v4
+              with:
+                  name: mac-build
+                  path: packages/tool/release/*/Pulse Debugger_*.dmg
+
+    build-electron-windows:
+        needs: build-packages
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '18'
+
+            - name: Enable Corepack
+              run: corepack enable
+
+            - name: Setup Yarn
+              run: corepack prepare yarn@4.9.2 --activate
+
+            - name: Install dependencies
+              run: yarn install --immutable
+
+            - name: Download built packages
+              uses: actions/download-artifact@v4
+              with:
+                  name: built-packages
+                  path: packages
+
+            - name: Build electron app for Windows
+              run: cd packages/tool && yarn build:win
+
+            - name: Upload Windows build
+              uses: actions/upload-artifact@v4
+              with:
+                  name: win-build
+                  path: packages/tool/release/*/Pulse Debugger_*.exe
+
+    create-release:
+        needs: [build-electron-mac, build-electron-windows]
+        runs-on: ubuntu-latest
+        steps:
+            - name: Download macOS build
+              uses: actions/download-artifact@v4
+              with:
+                  name: mac-build
+                  path: dist/mac
+
+            - name: Download Windows build
+              uses: actions/download-artifact@v4
+              with:
+                  name: win-build
+                  path: dist/win
+
+            - name: Create Release
+              id: create_release
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: ${{ github.ref_name }}
+                  name: Release ${{ github.ref_name }}
+                  files: |
+                      dist/mac/**/*.dmg
+                      dist/win/**/*.exe
+                  generate_release_notes: true
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
