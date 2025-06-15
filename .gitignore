@@ -112,3 +112,4 @@ yarn-error.log*
 *.asar.unpacked
 
 backup/
+*.tsbuildinfo
