@@ -62,19 +62,17 @@ export class ReduxInterceptor {
 
                 if (this.pulse.isReduxMonitoringEnabled()) {
                     const nextState = store.getState();
-                    // this.pulse.sendReduxEvent({
-                    //   type: 'action',
-                    //   action: {
-                    //     type: action.type,
-                    //     payload: action.payload,
-                    //   },
-                    //   state: {
-                    //     prev: prevState,
-                    //     next: nextState,
-                    //     diff: this.getStateDiff(prevState, nextState),
-                    //   },
-                    //   duration: Date.now() - startTime,
-                    // });
+                    this.pulse.sendReduxEvent({
+                        action: {
+                            type: action.type,
+                            payload: action.payload,
+                        },
+                        state: {
+                            prev: prevState,
+                            next: nextState,
+                        },
+                        duration: Date.now() - startTime,
+                    });
                 }
 
                 return result;

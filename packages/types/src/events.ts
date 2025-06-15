@@ -50,8 +50,11 @@ export type ReduxPayload = {
         type: string;
         payload: unknown;
     };
-    prevState: unknown;
-    nextState: unknown;
+    state: {
+        prev: unknown;
+        next: unknown;
+    };
+    duration: number;
 };
 
 export type PulseEventPayload = {

@@ -96,7 +96,9 @@ const NetworkScreen: React.FC = () => {
     const [copiedTimeout, setCopiedTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
     const [isCopied, setIsCopied] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<PulseEvent<'network'> | null>(null);
-    const requests = allRequests.filter(request => request.sessionId === sessionId);
+    const requests = allRequests
+        .filter(request => request.sessionId === sessionId)
+        .sort((a, b) => b.payload.startTime - a.payload.startTime);
 
     const handleClear = () => {
         if (!sessionId) return;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { cva } from 'class-variance-authority';
 import { ClipboardIcon } from 'lucide-react';
+import { JSONValue } from '@react-native-pulse-debugger/types';
 
 const jsonStyles = cva('font-mono text-sm', {
     variants: {
