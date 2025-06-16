@@ -1,8 +1,11 @@
 {
     "name": "@react-native-pulse-debugger/types",
-    "version": "0.0.3",
+    "version": "0.0.7",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
     "scripts": {
         "build": "tsc",
         "dev": "tsc --watch",

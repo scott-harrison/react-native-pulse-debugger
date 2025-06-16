@@ -10,9 +10,11 @@
     },
     "dependencies": {
         "@react-native-pulse-debugger/lib": "link:../",
+        "@react-native-pulse-debugger/types": "link:../",
         "@react-native-pulse-debugger/utils": "link:../",
         "@reduxjs/toolkit": "^2.8.2",
         "expo": "~53.0.11",
+        "expo-application": "^6.1.4",
         "expo-constants": "^17.1.6",
         "expo-device": "^7.1.4",
         "expo-status-bar": "~2.2.3",

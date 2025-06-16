@@ -15,7 +15,7 @@
         "dev:types": "yarn workspace @react-native-pulse-debugger/types dev",
         "dev:lib": "yarn workspace @react-native-pulse-debugger/lib dev",
         "dev:utils": "yarn workspace @react-native-pulse-debugger/utils dev",
-        "dev": "yarn clean && concurrently \"yarn dev:types\" \"yarn dev:utils\" \"yarn dev:lib\"",
+        "dev": "concurrently \"yarn dev:types\" \"yarn dev:utils\" \"yarn dev:lib\"",
         "example": "cd packages/lib/example && yarn start"
     },
     "devDependencies": {

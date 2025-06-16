@@ -1639,6 +1639,12 @@ __metadata:
   languageName: node
   linkType: soft
 
+"@react-native-pulse-debugger/types@link:../::locator=example%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@react-native-pulse-debugger/types@link:../::locator=example%40workspace%3A."
+  languageName: node
+  linkType: soft
+
 "@react-native-pulse-debugger/utils@link:../::locator=example%40workspace%3A.":
   version: 0.0.0-use.local
   resolution: "@react-native-pulse-debugger/utils@link:../::locator=example%40workspace%3A."
@@ -3102,10 +3108,12 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.25.2"
     "@react-native-pulse-debugger/lib": "link:../"
+    "@react-native-pulse-debugger/types": "link:../"
     "@react-native-pulse-debugger/utils": "link:../"
     "@reduxjs/toolkit": "npm:^2.8.2"
     "@types/react": "npm:~19.0.10"
     expo: "npm:~53.0.11"
+    expo-application: "npm:^6.1.4"
     expo-constants: "npm:^17.1.6"
     expo-device: "npm:^7.1.4"
     expo-status-bar: "npm:~2.2.3"
@@ -3121,6 +3129,15 @@ __metadata:
   version: 2.2.0
   resolution: "exec-async@npm:2.2.0"
   checksum: 10/35932a49c825245e1fe022848a3ffef71717955149a3af8d56bf15b04a21c8f098581ffe2e4916a9dbd7736ce559365ccd55327e72422136adb9f4af867e1203
+  languageName: node
+  linkType: hard
+
+"expo-application@npm:^6.1.4":
+  version: 6.1.4
+  resolution: "expo-application@npm:6.1.4"
+  peerDependencies:
+    expo: "*"
+  checksum: 10/9f25eceea43cc93c7f1add49c2d9d510b4fe682b7c5669f976bb8061de66090c45fad049a84f5ae098ddcd428222631984c80387e58df2d5fab674d010f96c4c
   languageName: node
   linkType: hard
 

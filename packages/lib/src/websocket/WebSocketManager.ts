@@ -31,6 +31,10 @@ export class WebSocketManager {
 
         // fetch device details
         this.deviceDetails = await getDeviceInfo();
+        if (!this.deviceDetails) {
+            console.error('[PulseDebuggerLib] - [WebSocketManager] Failed to fetch device details');
+            return;
+        }
 
         // create a unique session ID using deviceId and appName
         const { deviceId, appName } = this.deviceDetails;
@@ -109,7 +113,6 @@ export class WebSocketManager {
 
     sendEvent(type: EventType, payload: PulseEventPayload[EventType]): void {
         if (!this.session) {
-            console.warn('No session found, skipping event');
             return;
         }
 
