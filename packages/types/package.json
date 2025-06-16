@@ -1,6 +1,6 @@
 {
     "name": "@react-native-pulse-debugger/types",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "scripts": {
@@ -10,5 +10,8 @@
     },
     "devDependencies": {
         "typescript": "5.0.4"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }

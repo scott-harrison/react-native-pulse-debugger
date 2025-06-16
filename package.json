@@ -11,7 +11,6 @@
         "test:lib": "yarn workspace @react-native-pulse-debugger/lib test",
         "test:utils": "yarn workspace @react-native-pulse-debugger/utils test",
         "test": "yarn test:lib && yarn test:utils",
-        "clean": "rimraf packages/*/dist",
         "dev:tool": "yarn workspace @react-native-pulse-debugger/tool dev",
         "dev:types": "yarn workspace @react-native-pulse-debugger/types dev",
         "dev:lib": "yarn workspace @react-native-pulse-debugger/lib dev",

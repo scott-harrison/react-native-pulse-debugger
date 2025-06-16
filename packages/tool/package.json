@@ -1,6 +1,6 @@
 {
     "name": "@react-native-pulse-debugger/tool",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "main": "./dist-electron/main/index.js",
     "description": "A desktop application for debugging React Native applications, providing real-time monitoring, network inspection, and state inspection.",
     "scripts": {

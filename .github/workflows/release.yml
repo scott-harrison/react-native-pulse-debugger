@@ -51,7 +51,7 @@ jobs:
                       packages/utils/dist
                       packages/lib/dist
 
-    publish-lib:
+    publish-types:
         needs: build-packages
         runs-on: ubuntu-latest
         steps:
@@ -63,7 +63,6 @@ jobs:
               uses: actions/setup-node@v3
               with:
                   node-version: '18'
-                  registry-url: 'https://registry.npmjs.org'
 
             - name: Enable Corepack
               run: corepack enable
@@ -80,10 +79,91 @@ jobs:
                   name: built-packages
                   path: packages
 
+            - name: Configure npm authentication for Yarn
+              run: yarn config set npmAuthToken $NPM_TOKEN
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Publish types to npm
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: cd packages/types && yarn npm publish --access public
+
+    publish-utils:
+        needs: [build-packages, publish-types]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '18'
+
+            - name: Enable Corepack
+              run: corepack enable
+
+            - name: Setup Yarn
+              run: corepack prepare yarn@4.9.2 --activate
+
+            - name: Install dependencies
+              run: yarn install --immutable
+
+            - name: Download built packages
+              uses: actions/download-artifact@v4
+              with:
+                  name: built-packages
+                  path: packages
+
+            - name: Configure npm authentication for Yarn
+              run: yarn config set npmAuthToken $NPM_TOKEN
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Publish utils to npm
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: cd packages/utils && yarn npm publish --access public
+
+    publish-lib:
+        needs: [build-packages, publish-types, publish-utils]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '18'
+
+            - name: Enable Corepack
+              run: corepack enable
+
+            - name: Setup Yarn
+              run: corepack prepare yarn@4.9.2 --activate
+
+            - name: Install dependencies
+              run: yarn install --immutable
+
+            - name: Download built packages
+              uses: actions/download-artifact@v4
+              with:
+                  name: built-packages
+                  path: packages
+
+            - name: Configure npm authentication for Yarn
+              run: yarn config set npmAuthToken $NPM_TOKEN
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
             - name: Publish lib to npm
               env:
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-              run: cd packages/lib && npm publish
+              run: cd packages/lib && yarn npm publish --access public
 
     build-electron-mac:
         needs: build-packages
