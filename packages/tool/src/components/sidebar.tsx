@@ -76,7 +76,7 @@ const Sidebar = () => {
 
     return (
         <>
-            <aside className="w-64 h-full border-r border-zinc-800 bg-gray-900/80 flex flex-col">
+            <aside className="w-64 h-full border-r border-zinc-800 bg-gray-900/80 flex flex-col flex-shrink-0">
                 <div className="p-4 border-b border-zinc-800/50 flex items-center justify-between bg-gradient-to-r from-gray-900 to-gray-900/95">
                     <div className="flex items-center gap-3">
                         <img

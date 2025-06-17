@@ -22,6 +22,7 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
     data,
     allowCopy = true,
     defaultExpanded = true,
+    defaultExpandedLevels = 1,
 }) => {
     const [expanded, setExpanded] = useState<Map<string, boolean>>(new Map());
 
@@ -35,11 +36,12 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
     };
 
     // Initialize expansion state
-    const isExpanded = (path: string): boolean => {
+    const isExpanded = (path: string, depth: number): boolean => {
         if (!expanded.has(path)) {
-            expanded.set(path, defaultExpanded);
+            // Expand if depth is less than defaultExpandedLevels
+            expanded.set(path, depth < defaultExpandedLevels);
         }
-        return expanded.get(path) ?? defaultExpanded;
+        return expanded.get(path) ?? false;
     };
 
     // Copy JSON to clipboard
@@ -103,7 +105,7 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
 
         if (Array.isArray(node)) {
             const pathKey = `${path}.array`;
-            const isNodeExpanded = isExpanded(pathKey);
+            const isNodeExpanded = isExpanded(pathKey, depth);
             return (
                 <div className="flex flex-col">
                     <div className="flex items-center gap-1">
@@ -138,7 +140,7 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
 
         if (typeof node === 'object') {
             const pathKey = `${path}.object`;
-            const isNodeExpanded = isExpanded(pathKey);
+            const isNodeExpanded = isExpanded(pathKey, depth);
             const entries = Object.entries(node);
             return (
                 <div className="flex flex-col">

@@ -81,15 +81,6 @@ const ReduxScreen: React.FC = () => {
                                                         ).toLocaleTimeString()}
                                                     </span>
                                                 </div>
-                                                {action.payload.action.payload ? (
-                                                    <pre className="text-xs text-zinc-400 overflow-x-auto">
-                                                        {JSON.stringify(
-                                                            action.payload.action.payload,
-                                                            null,
-                                                            2
-                                                        )}
-                                                    </pre>
-                                                ) : null}
                                             </div>
                                             {selectedAction?.eventId === action.eventId && (
                                                 <div className="px-4 py-2 rounded-md">
@@ -118,7 +109,10 @@ const ReduxScreen: React.FC = () => {
                             <div className="space-y-2">
                                 <p className="text-xs text-zinc-400">
                                     {reduxState?.state ? (
-                                        <JSONViewer data={reduxState?.state as JSONValue} />
+                                        <JSONViewer
+                                            data={reduxState?.state as JSONValue}
+                                            defaultExpanded={false}
+                                        />
                                     ) : (
                                         <p className="text-xs text-zinc-400">
                                             Please trigger action to update state
