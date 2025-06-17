@@ -1,4 +1,3 @@
-import 'react-native-get-random-values';
 import { ConsoleInterceptor } from './interceptors/console';
 import { NetworkInterceptor } from './interceptors/network';
 import { ReduxInterceptor } from './interceptors/redux';

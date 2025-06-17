@@ -2,6 +2,7 @@
     "name": "example",
     "version": "1.0.0",
     "main": "index.ts",
+    "packageManager": "yarn@4.9.2",
     "scripts": {
         "start": "expo start",
         "android": "expo start --android",

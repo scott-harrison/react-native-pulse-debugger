@@ -1,91 +1,93 @@
-import { Platform } from 'react-native';
-import type { DeviceInfo as PulseDeviceInfo } from '@react-native-pulse-debugger/types';
-
-export interface DeviceInfo {
-    appName: string;
-    appVersion: string;
-    brand: string;
-    buildNumber: string;
-    deviceId: string;
-    model: string;
-    systemName: string;
-    systemVersion: string;
+// Define interfaces for type safety
+interface DeviceInfoModule {
+    getApplicationName: () => string;
+    getVersion: () => string;
+    getBrand: () => string;
+    getBuildNumber: () => string;
+    getModel: () => string;
+    getSystemName: () => string;
+    getSystemVersion: () => string;
+    getUniqueId: () => Promise<string>;
 }
 
-export async function getDeviceInfo(): Promise<PulseDeviceInfo | null> {
+interface ConstantsModule {
+    expoConfig?: {
+        name?: string;
+        version?: string;
+        ios?: { buildNumber?: string };
+        android?: { versionCode?: string };
+    };
+    manifest2?: { id?: string };
+}
+
+interface DeviceModule {
+    brand: string;
+    deviceName: string;
+    osName: string;
+    osVersion: string;
+}
+
+// Conditional imports with typed variables
+let DeviceInfo: DeviceInfoModule | null;
+try {
+    DeviceInfo = require('react-native-device-info');
+} catch (e) {
+    DeviceInfo = null;
+}
+
+let Constants: ConstantsModule | null;
+let Device: DeviceModule | null;
+try {
+    Constants = require('expo-constants').default;
+    Device = require('expo-device');
+} catch (e) {
+    Constants = null;
+    Device = null;
+}
+
+export const getDeviceInfo = async () => {
     try {
-        // @ts-ignore
-        const expoConstants = await import('expo-constants');
-        // @ts-ignore
-        const expoApplication = await import('expo-application');
-        // @ts-ignore
-        const expoDevice = await import('expo-device');
+        let appName: string | undefined,
+            appVersion: string | undefined,
+            brand: string | undefined,
+            buildNumber: string | undefined,
+            model: string | undefined,
+            systemName: string | undefined,
+            systemVersion: string | undefined,
+            deviceId: string | undefined;
 
-        if (expoConstants.default && expoApplication && expoDevice) {
-            const { manifest, manifest2 } = expoConstants.default;
-
-            const deviceId =
-                Platform.OS === 'android'
-                    ? await expoApplication.getAndroidId()
-                    : await expoApplication.getIosIdForVendorAsync();
-            const appName = manifest?.name || manifest2?.extra?.expoClient?.name;
-            const appVersion = manifest?.version || manifest2?.extra?.expoClient?.version;
-            const buildNumber =
-                manifest?.revisionId || manifest2?.extra?.expoClient?.buildNumber || '0';
-
-            const model = expoDevice.deviceName;
-            const systemName = expoDevice.osName;
-            const systemVersion = expoDevice.osVersion;
-            const brand = expoDevice.brand;
-
-            if (
-                !appName ||
-                !appVersion ||
-                !buildNumber ||
-                !deviceId ||
-                !model ||
-                !systemName ||
-                !systemVersion
-            ) {
-                return null;
-            }
-
-            return {
-                appName,
-                appVersion,
-                brand,
-                buildNumber,
-                deviceId,
-                model,
-                systemName,
-                systemVersion,
-            };
+        if (Constants && Device) {
+            appName = Constants.expoConfig?.name;
+            appVersion = Constants.expoConfig?.version;
+            brand = Device.brand;
+            buildNumber =
+                Constants.expoConfig?.ios?.buildNumber ||
+                Constants.expoConfig?.android?.versionCode;
+            model = Device.deviceName;
+            systemName = Device.osName;
+            systemVersion = Device.osVersion;
+            deviceId = Constants.manifest2?.id;
+        } else if (DeviceInfo) {
+            appName = DeviceInfo.getApplicationName();
+            appVersion = DeviceInfo.getVersion();
+            brand = DeviceInfo.getBrand();
+            buildNumber = DeviceInfo.getBuildNumber();
+            model = DeviceInfo.getModel();
+            systemName = DeviceInfo.getSystemName();
+            systemVersion = DeviceInfo.getSystemVersion();
+            deviceId = await DeviceInfo.getUniqueId();
+        } else {
+            return null;
         }
-    } catch {
-        return null;
-    }
-
-    try {
-        // @ts-ignore
-        const DeviceInfo = await import('react-native-device-info');
-        const appName = DeviceInfo.getApplicationName();
-        const appVersion = DeviceInfo.getVersion();
-        const brand = DeviceInfo.getBrand();
-        const buildNumber = DeviceInfo.getBuildNumber();
-        const deviceId = DeviceInfo.getDeviceId();
-        const model = DeviceInfo.getModel();
-        const systemName = DeviceInfo.getSystemName();
-        const systemVersion = DeviceInfo.getSystemVersion();
 
         if (
             !appName ||
             !appVersion ||
             !brand ||
-            !buildNumber ||
-            !deviceId ||
             !model ||
             !systemName ||
-            !systemVersion
+            !systemVersion ||
+            !deviceId
         ) {
             return null;
         }
@@ -95,14 +97,12 @@ export async function getDeviceInfo(): Promise<PulseDeviceInfo | null> {
             appVersion,
             brand,
             buildNumber,
-            deviceId,
             model,
             systemName,
             systemVersion,
+            deviceId,
         };
-    } catch {
+    } catch (error) {
         return null;
     }
-
-    return null;
-}
+};

@@ -31,7 +31,7 @@ export class WebSocketManager {
 
         // fetch device details
         this.deviceDetails = await getDeviceInfo();
-        if (!this.deviceDetails) {
+        if (!this.deviceDetails || !this.deviceDetails?.deviceId || !this.deviceDetails?.appName) {
             console.error('[PulseDebuggerLib] - [WebSocketManager] Failed to fetch device details');
             return;
         }
