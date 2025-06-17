@@ -134,7 +134,6 @@ async function createWindow() {
             win.webContents.openDevTools();
         } else {
             win.loadFile(indexHtml);
-            win.webContents.openDevTools();
         }
 
         // Log when the window is ready to receive messages

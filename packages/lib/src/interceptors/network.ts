@@ -20,7 +20,6 @@ export class NetworkInterceptor {
         if (!blacklist) return false;
 
         // Check if the URL matches any blacklisted patterns
-        debugger;
         if (blacklist?.length) {
             return blacklist.some(pattern => {
                 try {

@@ -1,22 +1,13 @@
-/**
- * Generates a random UUID v4
- * @returns {string} A random UUID v4 string
- */
-export const generateUUID = (): string => {
-    // Create a buffer of 16 bytes (128 bits)
-    const buffer = new Uint8Array(16);
-
-    // Fill with random values
-    crypto.getRandomValues(buffer);
+export function generateUUID(): string {
+    // Generate 16 random bytes
+    const bytes = Array.from({ length: 16 }, () => Math.floor(Math.random() * 256));
 
     // Set version (4) and variant bits
-    buffer[6] = (buffer[6] & 0x0f) | 0x40; // version 4
-    buffer[8] = (buffer[8] & 0x3f) | 0x80; // variant 1
+    bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+    bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 1
 
     // Convert to hex string
-    const hex = Array.from(buffer)
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
+    const hex = bytes.map(b => b.toString(16).padStart(2, '0')).join('');
 
     // Format as UUID
     return [
@@ -26,4 +17,4 @@ export const generateUUID = (): string => {
         hex.slice(16, 20),
         hex.slice(20, 32),
     ].join('-');
-};
+}

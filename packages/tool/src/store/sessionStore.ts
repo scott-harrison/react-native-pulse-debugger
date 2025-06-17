@@ -20,6 +20,7 @@ const useSessionStore = create<SessionStore>((set, get) => ({
         set(state => ({ sessions: [...state.sessions, session] }));
     },
     setCurrentSession: (sessionId: Session['id']) => {
+        console.log('sessionId', sessionId);
         set({ currentSessionId: sessionId });
     },
     removeCurrentSession: () => {

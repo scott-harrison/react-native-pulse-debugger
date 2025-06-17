@@ -4,4 +4,5 @@ export interface JSONViewerProps {
     data: JSONValue;
     allowCopy?: boolean;
     defaultExpanded?: boolean;
+    defaultExpandedLevels?: number;
 }
