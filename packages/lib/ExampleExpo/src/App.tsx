@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { initializePulse, PulseDebugger } from '@react-native-pulse-debugger/lib';
 import { Provider } from 'react-redux';
 import { createStore } from './store';
@@ -288,17 +289,19 @@ const Debugger = () => {
 
 export default function App() {
     return (
-        <Provider store={store}>
-            <SafeAreaView style={styles.safeArea}>
-                <StatusBar style="auto" />
-                <ScrollView
-                    contentContainerStyle={styles.scrollContent}
-                    showsVerticalScrollIndicator={false}
-                >
-                    <Debugger />
-                </ScrollView>
-            </SafeAreaView>
-        </Provider>
+        <SafeAreaProvider>
+            <Provider store={store}>
+                <StatusBar style="dark" />
+                <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+                    <ScrollView
+                        contentContainerStyle={styles.scrollContent}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <Debugger />
+                    </ScrollView>
+                </SafeAreaView>
+            </Provider>
+        </SafeAreaProvider>
     );
 }
 

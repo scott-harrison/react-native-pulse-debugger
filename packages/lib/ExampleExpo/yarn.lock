@@ -3119,6 +3119,7 @@ __metadata:
     expo-status-bar: "npm:~2.2.3"
     react: "npm:19.0.0"
     react-native: "npm:0.79.3"
+    react-native-safe-area-context: "npm:^5.4.1"
     react-redux: "npm:^9.2.0"
     redux: "npm:^5.0.1"
     typescript: "npm:~5.8.3"
@@ -5268,6 +5269,16 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10/4cdf2b2fb5b131f2015c26d2cb7688b4a0c5f3c8474b1bf0ddfa9eabb0263df440c87262ae8f812a6ecab0d5310df0373bddad4b51f53dabb2ffee01e9ef0f44
+  languageName: node
+  linkType: hard
+
+"react-native-safe-area-context@npm:^5.4.1":
+  version: 5.4.1
+  resolution: "react-native-safe-area-context@npm:5.4.1"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10/1d8de402c4af8ee1bd00dec0c2fdb35b34ba64a62d7e235884c98216a2068f8d89e5bb89f27d2e9cd711ee9b173d9aafde53ebd2b39e64d0a1e83567de95305b
   languageName: node
   linkType: hard
 
