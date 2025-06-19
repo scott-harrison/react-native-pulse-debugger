@@ -1,8 +1,14 @@
 {
     "name": "@react-native-pulse-debugger/tool",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "main": "./dist-electron/main/index.js",
     "description": "A desktop application for debugging React Native applications, providing real-time monitoring, network inspection, and state inspection.",
+    "author": "Scott Harrison",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/scott-harrison/react-native-pulse-debugger"
+    },
     "scripts": {
         "start": "electron-forge start",
         "package": "electron-forge package",

@@ -1,8 +1,14 @@
 {
     "name": "@react-native-pulse-debugger/utils",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "author": "Scott Harrison",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/scott-harrison/react-native-pulse-debugger"
+    },
     "files": [
         "dist"
     ],
