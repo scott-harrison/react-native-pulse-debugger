@@ -18,7 +18,7 @@ export class PulseDebugger {
         enableBatching: true,
         enableThrottling: true,
         consoleBlacklist: ['[PulseDebuggerLib]'],
-        networkBlacklist: ['/symbolicate'],
+        networkBlacklist: ['/symbolicate', '/__pulse_debugger__/host'],
         monitoring: {
             network: true,
             console: true,

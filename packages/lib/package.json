@@ -17,7 +17,8 @@
         "debugger"
     ],
     "files": [
-        "dist"
+        "dist",
+        "metro-middleware.js"
     ],
     "scripts": {
         "prepare": "yarn build",
