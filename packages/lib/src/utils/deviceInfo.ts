@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 // Define interfaces for type safety
 interface DeviceInfoModule {
     getApplicationName: () => string;
@@ -64,7 +66,7 @@ export const getDeviceInfo = async () => {
                 Constants.expoConfig?.ios?.buildNumber ||
                 Constants.expoConfig?.android?.versionCode;
             model = Device.deviceName;
-            systemName = Device.osName;
+            systemName = Platform.OS;
             systemVersion = Device.osVersion;
             deviceId = Constants.manifest2?.id;
         } else if (DeviceInfo) {

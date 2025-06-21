@@ -68,6 +68,6 @@ export interface PulseEvent<T extends EventType = EventType> {
     type: T;
     payload: PulseEventPayload[T];
     eventId: string;
-    sessionId: SessionId;
+    sessionId: SessionId | null;
     timestamp: number;
 }

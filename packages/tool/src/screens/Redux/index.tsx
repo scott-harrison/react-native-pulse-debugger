@@ -107,7 +107,7 @@ const ReduxScreen: React.FC = () => {
                         <div className="h-full bg-gray-900/30 p-4">
                             <h3 className="text-sm font-semibold text-zinc-100 mb-4">State</h3>
                             <div className="space-y-2">
-                                <p className="text-xs text-zinc-400">
+                                <div className="text-xs text-zinc-400">
                                     {reduxState?.state ? (
                                         <JSONViewer
                                             data={reduxState?.state as JSONValue}
@@ -118,7 +118,7 @@ const ReduxScreen: React.FC = () => {
                                             Please trigger action to update state
                                         </p>
                                     )}
-                                </p>
+                                </div>
                             </div>
                         </div>
                     }
