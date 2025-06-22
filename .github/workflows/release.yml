@@ -193,6 +193,8 @@ jobs:
 
             - name: Build electron app for macOS
               run: cd packages/tool && yarn build:mac
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload macOS build
               uses: actions/upload-artifact@v4
@@ -228,6 +230,8 @@ jobs:
 
             - name: Build electron app for Windows
               run: cd packages/tool && yarn build:win
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Upload Windows build
               uses: actions/upload-artifact@v4

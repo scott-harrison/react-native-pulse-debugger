@@ -61,7 +61,10 @@ const ReduxScreen: React.FC = () => {
                             <div className="space-y-2">
                                 {reduxActions.length > 0 ? (
                                     reduxActions.map(action => (
-                                        <div className="border-b border-zinc-800">
+                                        <div
+                                            className="border-b border-zinc-800"
+                                            key={action.eventId}
+                                        >
                                             <div
                                                 onClick={() => setSelectedAction(action)}
                                                 className={cn(
