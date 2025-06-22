@@ -1,15 +1,26 @@
 {
-  "name": "@react-native-pulse-debugger/types",
-  "version": "0.0.1",
-  "private": true,
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "clean": "rm -rf dist"
-  },
-  "devDependencies": {
-    "typescript": "5.0.4"
-  }
+    "name": "@react-native-pulse-debugger/types",
+    "version": "0.0.9",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "author": "Scott Harrison",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/scott-harrison/react-native-pulse-debugger"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch",
+        "clean": "rm -rf dist"
+    },
+    "devDependencies": {
+        "typescript": "5.0.4"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
 }

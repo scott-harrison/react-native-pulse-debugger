@@ -19,6 +19,6 @@
             "@/assets/*": ["src/assets/*"]
         }
     },
-    "include": ["src/**/*"],
+    "include": ["src/**/*", "package.json"],
     "exclude": ["node_modules", "dist"]
 }

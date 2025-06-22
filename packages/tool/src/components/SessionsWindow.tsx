@@ -1,5 +1,6 @@
 import Button from '@/components/button';
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Session } from '@react-native-pulse-debugger/types';
 import { useNavigate } from 'react-router-dom';
 import useSessionStore from '@/store/sessionStore';
@@ -13,14 +14,20 @@ const SessionsWindow: React.FC<SessionsWindowProps> = ({ onClose }) => {
     const navigate = useNavigate();
 
     const handleOpenSession = (sessionId: Session['id']) => {
-        onClose();
         setCurrentSession(sessionId);
         navigate('/debugger');
         onClose();
     };
 
     return (
-        <div className="flex flex-col max-h-[80vh] items-start relative backdrop-blur-xl bg-gray-900/80 rounded-lg border border-gray-800/50 p-6 w-[80vw] max-w-4xl overflow-hidden">
+        <motion.div
+            key="sessions"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col max-h-2/3 items-start relative inset-0 backdrop-blur-xl bg-gray-900/80 rounded-lg border border-gray-800/50 p-6 w-full max-w-max-4xl overflow-hidden"
+        >
             <div className="flex flex-col gap-4 w-full h-full">
                 <div className="flex justify-between items-center w-full">
                     <h2 className="text-xl font-semibold">Available Sessions</h2>
@@ -73,7 +80,7 @@ const SessionsWindow: React.FC<SessionsWindowProps> = ({ onClose }) => {
                     </div>
                 )}
             </div>
-        </div>
+        </motion.div>
     );
 };
 

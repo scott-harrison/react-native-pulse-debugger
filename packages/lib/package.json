@@ -1,10 +1,25 @@
 {
     "name": "@react-native-pulse-debugger/lib",
-    "version": "0.0.1",
-    "private": true,
+    "version": "0.0.9",
     "source": "./src/index.ts",
-    "main": "lib/index.js",
-    "types": "lib/typescript/src/index.d.ts",
+    "main": "dist/index.js",
+    "types": "dist/typescript/src/index.d.ts",
+    "description": "React Native Pulse Debugger Library",
+    "author": "Scott Harrison",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/scott-harrison/react-native-pulse-debugger"
+    },
+    "keywords": [
+        "react-native",
+        "pulse-debugger",
+        "debugger"
+    ],
+    "files": [
+        "dist",
+        "metro-middleware.js"
+    ],
     "scripts": {
         "prepare": "yarn build",
         "build": "tsc",
@@ -14,34 +29,26 @@
         "test": "jest"
     },
     "peerDependencies": {
-        "expo-constants": ">=15.0.0",
-        "react": ">=19.0.0",
-        "react-native": ">=0.79.3",
-        "react-native-device-info": ">=14.0.0",
-        "redux": ">=4.0.0"
-    },
-    "peerDependenciesMeta": {
-        "redux": {
-            "optional": true
-        }
+        "@babel/runtime": "^7.0.0",
+        "expo-application": ">=6.0.0",
+        "expo-constants": ">=16.0.0",
+        "expo-device": ">=8.0.0",
+        "react": ">=18.0.0",
+        "react-native": ">=0.74.0"
     },
     "dependencies": {
         "@babel/core": "7.25.2",
         "@react-native-pulse-debugger/types": "workspace:*",
         "@react-native-pulse-debugger/utils": "workspace:*",
-        "react": "19.0.0",
-        "react-native": "0.79.3",
-        "react-native-get-random-values": "^1.11.0"
+        "react-native-device-info": "^14.0.4"
     },
     "devDependencies": {
         "@types/react": "19.0.0",
-        "@types/react-native-get-random-values": "^1",
         "@types/redux": "^3.6.0",
-        "expo-application": "^6.1.4",
-        "expo-constants": "17.0.8",
-        "expo-device": "^7.1.4",
         "mock-socket": "^9.3.1",
-        "react-native-device-info": "^14.0.4",
         "typescript": "5.0.4"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }

@@ -1,9 +1,17 @@
 {
     "name": "@react-native-pulse-debugger/utils",
-    "version": "0.0.1",
-    "private": true,
+    "version": "0.0.9",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "author": "Scott Harrison",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/scott-harrison/react-native-pulse-debugger"
+    },
+    "files": [
+        "dist"
+    ],
     "scripts": {
         "build": "tsc",
         "test": "jest",
@@ -11,8 +19,15 @@
     },
     "devDependencies": {
         "@types/jest": "^29.5.14",
+        "@types/react-native-get-random-values": "^1",
         "jest": "^29.7.0",
         "ts-jest": "^29.3.4",
         "typescript": "^5.0.4"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "react-native-get-random-values": "^1.11.0"
     }
 }

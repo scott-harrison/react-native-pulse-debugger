@@ -1,6 +1,5 @@
 {
     "name": "react-native-pulse-debugger",
-    "private": true,
     "packageManager": "yarn@4.9.2",
     "workspaces": [
         "packages/*"
@@ -12,13 +11,13 @@
         "test:lib": "yarn workspace @react-native-pulse-debugger/lib test",
         "test:utils": "yarn workspace @react-native-pulse-debugger/utils test",
         "test": "yarn test:lib && yarn test:utils",
-        "clean": "rimraf packages/*/dist",
         "dev:tool": "yarn workspace @react-native-pulse-debugger/tool dev",
         "dev:types": "yarn workspace @react-native-pulse-debugger/types dev",
         "dev:lib": "yarn workspace @react-native-pulse-debugger/lib dev",
         "dev:utils": "yarn workspace @react-native-pulse-debugger/utils dev",
-        "dev": "yarn clean && concurrently \"yarn dev:types\" \"yarn dev:utils\" \"yarn dev:lib\"",
-        "example": "cd packages/lib/example && yarn start"
+        "dev": "concurrently \"yarn dev:types\" \"yarn dev:utils\" \"yarn dev:lib\"",
+        "example:expo": "cd packages/lib/ExampleExpo && yarn start",
+        "example:native": "cd packages/lib/ExampleNative && yarn start"
     },
     "devDependencies": {
         "@babel/core": "^7.25.2",

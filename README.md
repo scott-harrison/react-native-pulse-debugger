@@ -5,7 +5,7 @@
 ██╔═══╝ ██║   ██║██║     ╚════██║██╔══╝
 ██║     ╚██████╔╝███████╗███████║███████╗
 ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚══════╝
-      React Native Debugging Reimagined
+      React Native Debugging
 ```
 
 **Pulse** is a standalone devtool built to debug your React Native 0.78+ apps with clarity and control.
@@ -17,7 +17,7 @@ It provides a **real-time dashboard** to visualize:
 - 📝 Console logs and system events
 - 🔍 Detailed request/response inspection
 
-> Built for developers who want to go beyond Flipper — Pulse gives you a focused debugging experience that works reliably across devices and emulators.
+> Built for developers who want to go beyond Flipper — Pulse gives you a focused debugging experience that works across devices and emulators.
 
 ---
 
@@ -27,8 +27,11 @@ This repo contains two packages:
 
 | Package                                                                          | Description                                                                                    |
 | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| [`packages/react-native-pulse-debugger`](./packages/react-native-pulse-debugger) | The Pulse SDK for React Native apps. Includes Redux middleware and network tracking utilities. |
-| [`packages/debugger`](./packages/debugger)                                       | The Electron + React app that serves as the Pulse desktop debugger.                            |
+| [`packages/tool`](./packages/tool)                                               | The Electron + React app that serves as the Pulse desktop debugger.                            |
+| [`packages/lib`](./packages/lib)                                                 | The Pulse SDK for React Native apps. Includes Redux middleware and network tracking utilities. |
+| [`packages/utils`](./packages/utils)                                             | Shared utils that both lib and tool can use                                                    |
+| [`packages/types`](./packages/types)                                             | Shared types that both lib and tool can use                                                    |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 
 ---
 
@@ -47,24 +50,29 @@ This repo contains two packages:
 
 ## 🚀 Quick Start
 
-### For Users (Using the Released App)
+### For Users
 
-1. Download the latest release from the [Releases page](https://github.com/your-org/react-native-pulse-debugger/releases)
+1. Download the latest release from the [Releases page](https://github.com/scott-harrison/react-native-pulse-debugger/releases)
 2. Install the app on your computer
 3. Launch the Pulse Debugger app
-4. Install the Pulse SDK in your React Native app:
-
-TODO - UPDATE WITH PACKAGE NAME ONCE UPLOADED TO NPM
+4. Install the Pulse debugger lib in your React Native app:
 
 ```bash
-yarn add <NPM_PACKAGE_NAME>
+yarn add @react-native-pulse-debugger/lib --dev
 # or
-npm install <NPM_PACKAGE_NAME>
+npm i @react-native-pulse-debugger/lib --save-dev
 ```
 
 5. Connect your React Native app by following the [Client SDK Usage](#-client-sdk-usage) instructions below
 
 ### For Developers (Building from Source)
+
+This repo is setup as a monorepo. It contains under packages:
+
+- tool - The debugger tool itself.
+- lib - the lib which is used to communicate from your app to the debugger tool
+- utils - shared utils
+- types - shared types
 
 1. Clone the repo
 
@@ -83,18 +91,20 @@ yarn install
 3. Run the debugger app in development mode
 
 ```bash
-yarn debugger:dev
+yarn dev:tool
 ```
 
 This starts the Pulse debugger UI at `ws://localhost:8973`.
 
-4. Build the app for distribution
+4. Watch and build
 
 ```bash
-yarn debugger:build
+yarn dev
 ```
 
-This will create distributable packages in the `packages/debugger/dist` directory.
+5. You can then run example apps (ExampleExpo or ExampleNative)
+   `yarn example:expo`
+   `yarn example:native`
 
 ---
 
@@ -103,7 +113,7 @@ This will create distributable packages in the `packages/debugger/dist` director
 Inside your React Native app:
 
 ```bash
-yarn add react-native-pulse-debugger
+yarn add react-native-pulse-debugger -dev
 ```
 
 ### 1. Initialize Pulse Debugger
@@ -115,20 +125,11 @@ import { initializePulse, getPulse } from 'react-native-pulse-debugger';
 
 // Initialize Pulse Debugger
 initializePulse({
-  host: 'localhost',
-  port: 8973,
-  autoConnect: true,
-  retryInterval: 5000,
+    host: 'localhost', // optional if you don't supply it will detect development machine ip
+    port: 8973,
+    autoConnect: true,
+    retryInterval: 5000,
 });
-
-// Optional: Configure event handling
-const pulse = getPulse();
-if (pulse) {
-  pulse.updateEventConfig({
-    enableBatching: false,
-    enableThrottling: false,
-  });
-}
 ```
 
 ### 2. Set up Redux Middleware
@@ -140,10 +141,10 @@ import { configureStore } from '@reduxjs/toolkit';
 import { pulseReduxMiddleware } from 'react-native-pulse-debugger';
 
 export const store = configureStore({
-  reducer: {
-    // your reducers...
-  },
-  middleware: getDefaultMiddleware => getDefaultMiddleware().concat(pulseReduxMiddleware),
+    reducer: {
+        // your reducers...
+    },
+    middleware: getDefaultMiddleware => getDefaultMiddleware().concat(pulseReduxMiddleware),
 });
 ```
 
@@ -168,20 +169,20 @@ import { getPulse } from 'react-native-pulse-debugger';
 import type { ConnectionStatus } from 'react-native-pulse-debugger';
 
 function YourComponent() {
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+    const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
 
-  useEffect(() => {
-    const pulse = getPulse();
-    if (pulse) {
-      setConnectionStatus(pulse.getStatus());
-    }
-  }, []);
+    useEffect(() => {
+        const pulse = getPulse();
+        if (pulse) {
+            setConnectionStatus(pulse.getStatus());
+        }
+    }, []);
 
-  return (
-    <View>
-      <Text>Debugger Status: {connectionStatus}</Text>
-    </View>
-  );
+    return (
+        <View>
+            <Text>Debugger Status: {connectionStatus}</Text>
+        </View>
+    );
 }
 ```
 

@@ -1,4 +1,3 @@
-import 'react-native-get-random-values';
 import { ConsoleInterceptor } from './interceptors/console';
 import { NetworkInterceptor } from './interceptors/network';
 import { ReduxInterceptor } from './interceptors/redux';
@@ -6,6 +5,9 @@ import { WebSocketManager } from './websocket/WebSocketManager';
 import { PulseDebuggerConfig } from './types';
 import { PulseEventPayload } from '@react-native-pulse-debugger/types';
 
+/**
+ * PulseDebugger is the main class for the Pulse Debugger library.
+ */
 export class PulseDebugger {
     private static instance: PulseDebugger;
     private config: PulseDebuggerConfig = {
@@ -16,7 +18,7 @@ export class PulseDebugger {
         enableBatching: true,
         enableThrottling: true,
         consoleBlacklist: ['[PulseDebuggerLib]'],
-        networkBlacklist: ['/symbolicate'],
+        networkBlacklist: ['/symbolicate', '/__pulse_debugger__/host'],
         monitoring: {
             network: true,
             console: true,
