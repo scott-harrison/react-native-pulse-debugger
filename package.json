@@ -17,7 +17,11 @@
         "dev:utils": "yarn workspace @react-native-pulse-debugger/utils dev",
         "dev": "concurrently \"yarn dev:types\" \"yarn dev:utils\" \"yarn dev:lib\"",
         "example:expo": "cd packages/lib/ExampleExpo && yarn start",
-        "example:native": "cd packages/lib/ExampleNative && yarn start"
+        "example:expo:android": "cd packages/lib/ExampleExpo && yarn android",
+        "example:expo:ios": "cd packages/lib/ExampleExpo && yarn ios",
+        "example:native": "cd packages/lib/ExampleNative && yarn start",
+        "example:native:android": "cd packages/lib/ExampleNative && yarn android",
+        "example:native:ios": "cd packages/lib/ExampleNative && yarn ios"
     },
     "devDependencies": {
         "@babel/core": "^7.25.2",
