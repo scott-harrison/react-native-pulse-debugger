@@ -1,6 +1,6 @@
 {
     "name": "@react-native-pulse-debugger/lib",
-    "version": "0.0.9",
+    "version": "0.1.1",
     "source": "./src/index.ts",
     "main": "dist/index.js",
     "types": "dist/typescript/src/index.d.ts",
