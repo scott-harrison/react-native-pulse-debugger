@@ -12,11 +12,11 @@ import { getDevelopmentHost } from '../utils/networkUtils';
 
 export class WebSocketManager {
     private ws: WebSocket | null = null;
-    private isConnecting: boolean = false;
+    private isConnecting = false;
     private reconnectTimeout: NodeJS.Timeout | null = null;
     private eventQueue: PulseEvent[] = [];
     private batchTimeout: NodeJS.Timeout | null = null;
-    private lastSentTime: number = 0;
+    private lastSentTime = 0;
     private readonly BATCH_INTERVAL = 100;
     private readonly THROTTLE_INTERVAL = 100;
     private deviceDetails: DeviceInfo | null = null;
@@ -44,7 +44,7 @@ export class WebSocketManager {
 
         // fetch device details
         this.deviceDetails = await getDeviceInfo();
-        if (!this.deviceDetails || !this.deviceDetails?.deviceId || !this.deviceDetails?.appName) {
+        if (!this.deviceDetails?.deviceId || !this.deviceDetails.appName) {
             console.error('[PulseDebuggerLib] - [WebSocketManager] Failed to fetch device details');
             return;
         }
@@ -160,7 +160,7 @@ export class WebSocketManager {
             type,
             payload,
             eventId: generateUUID(),
-            sessionId: this.session?.id,
+            sessionId: this.session.id,
             timestamp: Date.now(),
         };
 

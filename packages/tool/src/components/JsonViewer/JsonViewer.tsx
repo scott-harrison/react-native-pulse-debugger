@@ -21,7 +21,6 @@ const jsonStyles = cva('font-mono text-sm', {
 const JSONViewer: React.FC<JSONViewerProps> = ({
     data,
     allowCopy = true,
-    defaultExpanded = true,
     defaultExpandedLevels = 1,
 }) => {
     const [expanded, setExpanded] = useState<Map<string, boolean>>(new Map());
@@ -53,8 +52,8 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
     // Render JSON node
     const renderNode = (
         node: JSONValue,
-        path: string = '',
-        depth: number = 0,
+        path = '',
+        depth = 0,
         key?: string | number
     ): React.ReactNode | null => {
         const renderKey = () => {
@@ -111,7 +110,9 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
                     <div className="flex items-center gap-1">
                         <span
                             className={jsonStyles({ type: 'bracket' }) + ' cursor-pointer w-4'}
-                            onClick={() => toggleNode(pathKey)}
+                            onClick={() => {
+                                toggleNode(pathKey);
+                            }}
                         >
                             {isNodeExpanded ? '▼' : '▶'}
                         </span>
@@ -149,7 +150,9 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
                     <div className="flex items-center gap-1">
                         <span
                             className={jsonStyles({ type: 'bracket' }) + ' cursor-pointer w-4'}
-                            onClick={() => toggleNode(pathKey)}
+                            onClick={() => {
+                                toggleNode(pathKey);
+                            }}
                         >
                             {isNodeExpanded ? '▼' : '▶'}
                         </span>
@@ -165,7 +168,7 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
                     </div>
                     {isNodeExpanded && (
                         <div className="ml-8">
-                            {entries.map(([entryKey, value], index) => (
+                            {entries.map(([entryKey, value], _index) => (
                                 <div key={entryKey}>
                                     {renderNode(value, `${path}.${entryKey}`, depth + 1, entryKey)}
                                 </div>

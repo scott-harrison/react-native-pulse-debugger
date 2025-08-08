@@ -10,9 +10,9 @@ interface ConsoleState {
 const useConsoleStore = create<ConsoleState>(set => ({
     logs: [],
     addConsole: event =>
-        set(state => ({
+        { set(state => ({
             logs: [...state.logs, event],
-        })),
+        })); },
     clearConsoleBySessionId(sessionId) {
         set(state => ({
             logs: state.logs.filter(log => log.sessionId !== sessionId),

@@ -70,7 +70,7 @@ const SessionsWindow: React.FC<SessionsWindowProps> = ({ onClose }) => {
                                         <Button
                                             variant="primary"
                                             size="sm"
-                                            onClick={() => handleOpenSession(session.id)}
+                                            onClick={() => { handleOpenSession(session.id); }}
                                         >
                                             Open
                                         </Button>

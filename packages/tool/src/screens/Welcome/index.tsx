@@ -34,7 +34,7 @@ const WelcomeScreen: React.FC = () => {
                             <Button
                                 variant="primary"
                                 size="md"
-                                onClick={() => setShowSessions(true)}
+                                onClick={() => { setShowSessions(true); }}
                             >
                                 Get Started
                             </Button>
@@ -49,8 +49,8 @@ const WelcomeScreen: React.FC = () => {
                     </div>
                 </motion.div>
             )}
-            <Modal isOpen={showSessions} onClose={() => setShowSessions(false)}>
-                <SessionsWindow onClose={() => setShowSessions(false)} />
+            <Modal isOpen={showSessions} onClose={() => { setShowSessions(false); }}>
+                <SessionsWindow onClose={() => { setShowSessions(false); }} />
             </Modal>
             <Fireflies />
         </div>

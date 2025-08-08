@@ -138,7 +138,7 @@ const Sidebar = () => {
                                 variant="secondary"
                                 size="sm"
                                 className="w-full"
-                                onClick={() => setShowSessions(true)}
+                                onClick={() => { setShowSessions(true); }}
                             >
                                 Switch Session
                             </Button>
@@ -147,8 +147,8 @@ const Sidebar = () => {
                 </div>
             </aside>
 
-            <Modal isOpen={showSessions} onClose={() => setShowSessions(false)}>
-                <SessionsWindow onClose={() => setShowSessions(false)} />
+            <Modal isOpen={showSessions} onClose={() => { setShowSessions(false); }}>
+                <SessionsWindow onClose={() => { setShowSessions(false); }} />
             </Modal>
         </>
     );

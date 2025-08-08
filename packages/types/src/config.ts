@@ -1,5 +1,5 @@
-export type Monitoring = {
+export interface Monitoring {
     network?: boolean;
     console?: boolean;
     redux?: boolean;
-};
+}

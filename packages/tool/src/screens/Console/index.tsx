@@ -64,7 +64,7 @@ const ConsoleScreen: React.FC = () => {
                     logs.map((log: PulseEvent<'console'>) => (
                         <div key={log.eventId} className="py-2 border-b border-zinc-800">
                             <div
-                                onClick={() => handleSelectLog(log)}
+                                onClick={() => { handleSelectLog(log); }}
                                 className={cn(
                                     'px-4 py-3 text-sm font-mono text-zinc-200 cursor-pointer rounded',
                                     selectedLog?.eventId === log.eventId
@@ -130,7 +130,7 @@ const ConsoleScreen: React.FC = () => {
                             </p>
                         </div>
                         <div>
-                            {selectedLog.payload?.data &&
+                            {selectedLog.payload.data &&
                                 typeof selectedLog.payload.data === 'object' &&
                                 (!Array.isArray(selectedLog.payload.data) ||
                                     selectedLog.payload.data.length > 0) && (
@@ -143,7 +143,7 @@ const ConsoleScreen: React.FC = () => {
                                 )}
                         </div>
                         <div>
-                            {selectedLog.payload?.stack && (
+                            {selectedLog.payload.stack && (
                                 <>
                                     <h3 className="text-xs font-medium text-zinc-400 mb-1">
                                         Error Stack

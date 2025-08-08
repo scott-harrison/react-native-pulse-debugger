@@ -11,7 +11,7 @@ const DebuggerLayout = () => {
         if (!currentSessionId) {
             navigate('/welcome');
         }
-    }, [currentSessionId]);
+    }, [currentSessionId, navigate]);
 
     return (
         <div className="flex h-full">

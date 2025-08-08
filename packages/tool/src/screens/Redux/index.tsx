@@ -125,7 +125,9 @@ const ReduxScreen: React.FC = () => {
                                             )}
                                         >
                                             <div
-                                                onClick={() => setSelectedAction(action)}
+                                                onClick={() => {
+                                                    setSelectedAction(action);
+                                                }}
                                                 className="p-4 cursor-pointer min-w-0"
                                             >
                                                 <div className="flex items-start justify-between mb-3 min-w-0">
@@ -189,7 +191,7 @@ const ReduxScreen: React.FC = () => {
                                                         <div className="overflow-auto max-h-96">
                                                             <JSONViewer
                                                                 data={
-                                                                    selectedAction?.payload
+                                                                    selectedAction.payload
                                                                         .action as JSONValue
                                                                 }
                                                                 defaultExpanded={false}
@@ -223,7 +225,7 @@ const ReduxScreen: React.FC = () => {
                                 <h3 className="text-sm font-semibold text-zinc-100 flex-shrink-0">
                                     State
                                 </h3>
-                                {reduxState?.state && (
+                                {reduxState?.state !== undefined && (
                                     <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded-full flex-shrink-0">
                                         Live
                                     </span>
@@ -235,7 +237,7 @@ const ReduxScreen: React.FC = () => {
                                         <div className="bg-zinc-900/30 rounded-lg p-3 border border-zinc-700/30 min-w-0 overflow-hidden">
                                             <div className="overflow-auto max-h-96">
                                                 <JSONViewer
-                                                    data={reduxState?.state as JSONValue}
+                                                    data={reduxState.state as JSONValue}
                                                     defaultExpanded={false}
                                                 />
                                             </div>

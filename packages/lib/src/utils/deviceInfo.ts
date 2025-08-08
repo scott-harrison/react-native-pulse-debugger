@@ -30,18 +30,23 @@ interface DeviceModule {
 }
 
 // Conditional imports with typed variables
-let DeviceInfo: DeviceInfoModule | null;
+let DeviceInfo: DeviceInfoModule | null = null;
 try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     DeviceInfo = require('react-native-device-info');
 } catch (e) {
     DeviceInfo = null;
 }
 
-let Constants: ConstantsModule | null;
-let Device: DeviceModule | null;
+let Constants: ConstantsModule | null = null;
+let Device: DeviceModule | null = null;
 try {
-    Constants = require('expo-constants').default;
-    Device = require('expo-device');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const expoConstants = require('expo-constants');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const expoDevice = require('expo-device');
+    Constants = expoConstants.default;
+    Device = expoDevice.default;
 } catch (e) {
     Constants = null;
     Device = null;

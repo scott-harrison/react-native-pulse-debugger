@@ -5,9 +5,10 @@
         "rootDir": "src",
         "module": "ESNext",
         "jsx": "react-native",
-        "target": "es6",
+        "target": "ES2022",
         "declaration": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "moduleResolution": "bundler"
     },
     "include": ["src"]
 }

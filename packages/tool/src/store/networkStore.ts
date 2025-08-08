@@ -10,7 +10,7 @@ interface NetworkState {
 export const useNetworkStore = create<NetworkState>(set => ({
     requests: [],
     addNetworkRequest: event =>
-        set(state => {
+        { set(state => {
             const existingIndex = state.requests.findIndex(
                 req => req.payload.requestId === event.payload.requestId
             );
@@ -20,7 +20,7 @@ export const useNetworkStore = create<NetworkState>(set => ({
                 return { requests: updatedRequests };
             }
             return { requests: [...state.requests, event] };
-        }),
+        }); },
     clearNetworkRequestsBySessionId: (sessionId: string) => {
         set(state => ({
             requests: state.requests.filter(request => request.sessionId !== sessionId),

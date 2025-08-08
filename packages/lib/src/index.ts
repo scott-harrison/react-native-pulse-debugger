@@ -45,7 +45,7 @@ export class PulseDebugger {
         return PulseDebugger.instance;
     }
 
-    configure(config: Partial<PulseDebuggerConfig>): PulseDebugger {
+    configure(config: Partial<PulseDebuggerConfig>): this {
         this.config = {
             ...this.config,
             ...config,
@@ -164,7 +164,7 @@ export class PulseDebugger {
         this.wsManager.sendEvent('redux', event);
     }
 
-    getReduxMiddleware() {
+    getReduxMiddleware(): unknown[] {
         const middleware = this.reduxInterceptor.createMiddleware();
         if (!middleware) {
             console.warn(

@@ -54,7 +54,7 @@ function generateCurlCommand(requestPayload: NetworkPayload): string {
         // Handle different content types
         if (typeof requestPayload.body === 'string') {
             bodyStr = requestPayload.body;
-        } else if (contentType?.includes('application/x-www-form-urlencoded')) {
+        } else if (contentType.includes('application/x-www-form-urlencoded')) {
             // Handle form data
             bodyStr = new URLSearchParams(requestPayload.body as Record<string, string>).toString();
         } else {
@@ -65,7 +65,7 @@ function generateCurlCommand(requestPayload: NetworkPayload): string {
         // Escape single quotes and special characters in body
         bodyStr = bodyStr.replace(/'/g, "'\\''").replace(/\n/g, '\\n');
 
-        if (contentType?.includes('application/x-www-form-urlencoded')) {
+        if (contentType.includes('application/x-www-form-urlencoded')) {
             curl += ` \\\n  --data-urlencode '${bodyStr}'`;
         } else {
             curl += ` \\\n  -d '${bodyStr}'`;
@@ -156,7 +156,7 @@ const NetworkScreen: React.FC = () => {
                     requests.map(request => (
                         <div key={request.eventId} className="py-2 border-b border-zinc-800">
                             <div
-                                onClick={() => setSelectedRequest(request)}
+                                onClick={() => { setSelectedRequest(request); }}
                                 role="button"
                                 tabIndex={0}
                                 onKeyDown={e => {
@@ -327,7 +327,7 @@ const NetworkScreen: React.FC = () => {
                                     </p>
                                 </div>
                                 {(() => {
-                                    const headers = selectedRequest?.payload?.response?.headers;
+                                    const headers = selectedRequest.payload.response.headers;
                                     if (
                                         !headers ||
                                         (typeof headers === 'object' &&
@@ -347,7 +347,7 @@ const NetworkScreen: React.FC = () => {
                                     );
                                 })()}
                                 {(() => {
-                                    const body = selectedRequest?.payload?.response?.body;
+                                    const body = selectedRequest.payload.response.body;
                                     if (!body) return null;
 
                                     let data;

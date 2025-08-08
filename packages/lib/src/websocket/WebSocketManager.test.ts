@@ -31,7 +31,7 @@ describe('WebSocketManager', () => {
                 if (typeof data === 'string') {
                     messages.push(data);
                 }
-                return originalSend.call(ws, data);
+                originalSend.call(ws, data);
             };
 
             // Set readyState using Object.defineProperty
@@ -56,7 +56,7 @@ describe('WebSocketManager', () => {
             CLOSED: { value: 3, configurable: true },
         });
 
-        // @ts-ignore - Mock WebSocket implementation
+        // @ts-expect-error - Mock WebSocket implementation
         global.WebSocket = mockWebSocket;
     });
 
@@ -167,7 +167,7 @@ describe('WebSocketManager', () => {
         expect(receivedMessage).toBeDefined();
 
         // Parse the received message and compare the object structure
-        expect(JSON.parse(receivedMessage!)).toEqual([
+        expect(JSON.parse(receivedMessage)).toEqual([
             {
                 type: 'test1',
                 payload: { data: 'test1' },

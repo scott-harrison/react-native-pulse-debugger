@@ -23,7 +23,7 @@ export const useReduxStore = create<ReduxState>(set => ({
     actions: [],
     states: [],
     addReduxAction: event => {
-        return set(state => {
+        set(state => {
             const reduxActions = [...state.actions, event];
             const isSessionStateExist = state.states.some(s => s.sessionId === event.sessionId);
 

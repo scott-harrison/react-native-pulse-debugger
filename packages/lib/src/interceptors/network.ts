@@ -15,12 +15,12 @@ export class NetworkInterceptor {
 
     private isBlacklisted(url: string): boolean {
         const config = this.pulse.getConfig();
-        const blacklist = config?.networkBlacklist;
+        const blacklist = config.networkBlacklist;
 
         if (!blacklist) return false;
 
         // Check if the URL matches any blacklisted patterns
-        if (blacklist?.length) {
+        if (blacklist.length) {
             return blacklist.some(pattern => {
                 try {
                     const regex = new RegExp(pattern);
@@ -40,7 +40,7 @@ export class NetworkInterceptor {
         const requestId = generateUUID();
 
         const request = new Request(input, init);
-        let payload: NetworkPayload = {
+        const payload: NetworkPayload = {
             requestId,
             url: request.url,
             method: request.method,
@@ -86,32 +86,36 @@ export class NetworkInterceptor {
         }
     }
 
-    private async getRequestBody(request: Request): Promise<any> {
+    private async getRequestBody(request: Request): Promise<string> {
         try {
             const clone = request.clone();
             const text = await clone.text();
-            if (!text) return null;
+            if (!text) return '';
             try {
-                return JSON.parse(text);
+                // If it's JSON, stringify it back to ensure it's always a string
+                const parsed = JSON.parse(text);
+                return JSON.stringify(parsed);
             } catch {
                 return text;
             }
         } catch {
-            return null;
+            return '';
         }
     }
 
-    private async getResponseBody(response: Response): Promise<any> {
+    private async getResponseBody(response: Response): Promise<string> {
         try {
             const text = await response.text();
-            if (!text) return null;
+            if (!text) return '';
             try {
-                return JSON.parse(text);
+                // If it's JSON, stringify it back to ensure it's always a string
+                const parsed = JSON.parse(text);
+                return JSON.stringify(parsed);
             } catch {
                 return text;
             }
         } catch {
-            return null;
+            return '';
         }
     }
 

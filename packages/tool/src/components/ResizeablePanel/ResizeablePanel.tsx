@@ -1,4 +1,4 @@
-import { use, useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { cn } from '@/utils/styling';
 import { ResizablePanelProps } from './ResizeablePanel.types';
 
@@ -73,7 +73,9 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 
         resizeObserver.observe(element);
 
-        return () => resizeObserver.disconnect();
+        return () => {
+            resizeObserver.disconnect();
+        };
     }, [leftPanelWidth, minLeftPanelWidth, maxLeftPanelWidth]);
 
     // If no panels are provided, return null

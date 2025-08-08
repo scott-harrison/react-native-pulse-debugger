@@ -9,9 +9,11 @@ interface ConstantsModule {
     manifest2?: { id?: string };
 }
 
-let Constants: ConstantsModule | null;
+let Constants: ConstantsModule | null = null;
 try {
-    Constants = require('expo-constants').default;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const expoConstants = require('expo-constants');
+    Constants = expoConstants.default;
 } catch (e) {
     Constants = null;
 }
@@ -41,7 +43,7 @@ export const getDevelopmentHost = async () => {
         }
 
         const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
+        if (!contentType?.includes('application/json')) {
             throw new Error(`Expected JSON response but got: ${contentType}`);
         }
 
