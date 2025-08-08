@@ -118,14 +118,16 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
                         {key !== undefined && (
                             <>
                                 <span className={jsonStyles({ type: 'key' })}>{key}</span>
-                                <span>:</span>
+                                {isNodeExpanded && <span>:</span>}
                             </>
                         )}
-                        <span className={jsonStyles({ type: 'bracket' })}>[ </span>
-                        <span className={jsonStyles({ type: 'meta' })}>{node.length} items</span>
+                        {isNodeExpanded && (
+                            <span className={jsonStyles({ type: 'bracket' })}>[ </span>
+                        )}
+                        <span className={jsonStyles({ type: 'meta' })}>- {node.length} items</span>
                     </div>
                     {isNodeExpanded && (
-                        <div className="ml-4">
+                        <div className="ml-8">
                             {node.map((item, index) => (
                                 <div key={index}>
                                     {renderNode(item, `${path}.${index}`, depth + 1, index)}
@@ -154,13 +156,15 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
                         {key !== undefined && (
                             <>
                                 <span className={jsonStyles({ type: 'key' })}>{key}</span>
-                                <span>:</span>
+                                {isNodeExpanded && <span>:</span>}
                             </>
                         )}
-                        <span className={jsonStyles({ type: 'bracket' })}>{'{'}</span>
+                        {isNodeExpanded && (
+                            <span className={jsonStyles({ type: 'bracket' })}>{'{'}</span>
+                        )}
                     </div>
                     {isNodeExpanded && (
-                        <div className="ml-4">
+                        <div className="ml-8">
                             {entries.map(([entryKey, value], index) => (
                                 <div key={entryKey}>
                                     {renderNode(value, `${path}.${entryKey}`, depth + 1, entryKey)}
