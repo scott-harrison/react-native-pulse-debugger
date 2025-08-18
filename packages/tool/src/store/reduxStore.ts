@@ -13,6 +13,7 @@ interface ReduxState {
     // addReduxState: (event: IEvent<'redux_state_event'>) => void;
     setReduxState: (sessionId: string, nextState: unknown) => void;
     clearReduxBySessionId: (sessionId: string) => void;
+    removeReduxAction: (eventId: string) => void;
 }
 
 // {
@@ -23,7 +24,7 @@ export const useReduxStore = create<ReduxState>(set => ({
     actions: [],
     states: [],
     addReduxAction: event => {
-        return set(state => {
+        set(state => {
             const reduxActions = [...state.actions, event];
             const isSessionStateExist = state.states.some(s => s.sessionId === event.sessionId);
 
@@ -58,6 +59,11 @@ export const useReduxStore = create<ReduxState>(set => ({
         set(state => ({
             actions: state.actions.filter(action => action.sessionId !== sessionId),
             states: state.states.filter(state => state.sessionId !== sessionId),
+        }));
+    },
+    removeReduxAction: eventId => {
+        set(state => ({
+            actions: state.actions.filter(action => action.eventId !== eventId),
         }));
     },
 }));

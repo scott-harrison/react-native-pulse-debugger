@@ -12,20 +12,20 @@ export type JSONValue =
 
 export type EventType = 'handshake' | 'console' | 'network' | 'redux';
 
-export type HandshakePayload = {
+export interface HandshakePayload {
     id: string;
     deviceInfo: DeviceInfo;
     monitoring: Monitoring;
-};
+}
 
-export type ConsolePayload = {
+export interface ConsolePayload {
     type: 'log' | 'info' | 'warn' | 'error' | 'debug';
     message: string;
     data: JSONValue | null;
     stack?: string;
-};
+}
 
-export type NetworkPayload = {
+export interface NetworkPayload {
     requestId: string;
     requestStatus: 'pending' | 'fulfilled' | 'rejected';
     startTime: number;
@@ -43,9 +43,9 @@ export type NetworkPayload = {
         startTime: number;
         endTime: number;
     };
-};
+}
 
-export type ReduxPayload = {
+export interface ReduxPayload {
     action: {
         type: string;
         payload: unknown;
@@ -55,19 +55,19 @@ export type ReduxPayload = {
         next: unknown;
     };
     duration: number;
-};
+}
 
-export type PulseEventPayload = {
+export interface PulseEventPayload {
     handshake: HandshakePayload;
     console: ConsolePayload;
     network: NetworkPayload;
     redux: ReduxPayload;
-};
+}
 
 export interface PulseEvent<T extends EventType = EventType> {
     type: T;
     payload: PulseEventPayload[T];
     eventId: string;
-    sessionId: SessionId;
+    sessionId: SessionId | null;
     timestamp: number;
 }

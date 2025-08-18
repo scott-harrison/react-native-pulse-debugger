@@ -1,179 +1,161 @@
-import { DeviceInfo } from '@react-native-pulse-debugger/types';
 import { Platform } from 'react-native';
 
-const DEFAULT_INFO: DeviceInfo = {
-    deviceId: 'unknown',
-    model: 'unknown',
-    brand: 'unknown',
-    systemName: Platform.OS || 'unknown',
-    systemVersion: 'unknown',
-    appName: 'unknown',
-    appVersion: '1.0.0',
-    buildNumber: '1',
+// Define interfaces for type safety
+interface DeviceInfoModule {
+    getApplicationName: () => string;
+    getVersion: () => string;
+    getBrand: () => string;
+    getBuildNumber: () => string;
+    getModel: () => string;
+    getSystemName: () => string;
+    getSystemVersion: () => string;
+    getUniqueId: () => Promise<string>;
+}
+
+interface ConstantsModule {
+    expoConfig?: {
+        name?: string;
+        version?: string;
+        ios?: { buildNumber?: string };
+        android?: { versionCode?: string };
+    };
+    manifest2?: { id?: string };
+    deviceName?: string;
+    platform?: {
+        ios?: { buildNumber?: string | null };
+    };
+}
+
+interface DeviceModule {
+    brand: string;
+    deviceName: string;
+    osName: string;
+    osVersion: string;
+}
+
+// Try to load modules dynamically
+const loadModules = () => {
+    let DeviceInfo: DeviceInfoModule | null = null;
+    let Constants: ConstantsModule | null = null;
+    let Device: DeviceModule | null = null;
+
+    // Try to load react-native-device-info (for native React Native)
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        DeviceInfo = require('react-native-device-info');
+    } catch {
+        // Swallow error and continue
+    }
+
+    // Try to load expo modules (for Expo)
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const expoConstants = require('expo-constants');
+        Constants = expoConstants.default;
+    } catch {
+        // Swallow error and continue
+    }
+
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const expoDevice = require('expo-device');
+        Device = expoDevice.default;
+    } catch {
+        // Swallow error and continue
+    }
+
+    return { DeviceInfo, Constants, Device };
 };
 
-/**
- * Checks if the app is running in an Expo environment
- */
-export function detectEnvironment(): {
-    isExpo: boolean;
-    isDeviceInfoAvailable: boolean;
-} {
-    let isExpo = false;
-    let isDeviceInfoAvailable = false;
-
-    // Check for Expo
+export const getDeviceInfo = async () => {
     try {
-        const expoConstants = require('expo-constants');
-        isExpo = !!expoConstants.default;
-    } catch (e) {
-        isExpo = false;
-    }
+        const { DeviceInfo, Constants, Device } = loadModules();
 
-    // Check for react-native-device-info
-    try {
-        const DeviceInfo = require('react-native-device-info');
-        isDeviceInfoAvailable = typeof DeviceInfo.getUniqueId === 'function';
-    } catch (e) {
-        isDeviceInfoAvailable = false;
-    }
+        let appName: string | undefined,
+            appVersion: string | undefined,
+            brand: string | undefined,
+            buildNumber: string | undefined,
+            model: string | undefined,
+            systemName: string | undefined,
+            systemVersion: string | undefined,
+            deviceId: string | undefined;
 
-    return { isExpo, isDeviceInfoAvailable };
-}
+        if (DeviceInfo) {
+            appName = DeviceInfo.getApplicationName();
+            appVersion = DeviceInfo.getVersion();
+            brand = DeviceInfo.getBrand();
+            buildNumber = DeviceInfo.getBuildNumber();
+            model = DeviceInfo.getModel();
+            systemName = DeviceInfo.getSystemName();
+            systemVersion = DeviceInfo.getSystemVersion();
+            deviceId = await DeviceInfo.getUniqueId();
+        } else if (Constants) {
+            appName = Constants.expoConfig?.name;
+            appVersion = Constants.expoConfig?.version;
 
-/**
- * Gets device ID using available methods
- */
-async function getDeviceId(isExpo: boolean, isDeviceInfoAvailable: boolean): Promise<string> {
-    try {
-        // Try Expo Application API first
-        if (isExpo) {
-            try {
-                const Application = require('expo-application');
-                if (Platform.OS === 'android') {
-                    return Application.getAndroidId() || DEFAULT_INFO.deviceId;
-                } else if (Platform.OS === 'ios') {
-                    return (await Application.getIosIdForVendorAsync()) || DEFAULT_INFO.deviceId;
-                }
-            } catch (error) {
-                console.warn('[pulse-debugger] Error getting Expo device ID:', error);
+            if (Device) {
+                brand = Device.brand;
+                model = Device.deviceName;
+                systemVersion = Device.osVersion;
+            } else {
+                // Fallback using Constants data
+                brand = Platform.OS === 'ios' ? 'Apple' : 'Android';
+                model = Constants.deviceName || 'Unknown Device';
+                systemVersion = 'Unknown';
             }
+
+            buildNumber =
+                Constants.expoConfig?.ios?.buildNumber ||
+                Constants.expoConfig?.android?.versionCode ||
+                Constants.platform?.ios?.buildNumber ||
+                undefined;
+            systemName = Platform.OS;
+            deviceId = Constants.manifest2?.id;
+        } else {
+            appName = 'Unknown App';
+            appVersion = '1.0.0';
+            brand = Platform.OS === 'ios' ? 'Apple' : 'Android';
+            buildNumber = '1';
+            model = 'Unknown Device';
+            systemName = Platform.OS;
+            systemVersion = 'Unknown';
+            deviceId = `device-${Date.now()}`;
         }
 
-        // Try react-native-device-info as fallback
-        if (isDeviceInfoAvailable) {
-            try {
-                const DeviceInfo = require('react-native-device-info');
-                return (await DeviceInfo.getUniqueId()) || DEFAULT_INFO.deviceId;
-            } catch (error) {
-                console.warn('[pulse-debugger] Error getting device ID from device-info:', error);
-            }
+        if (
+            !appName ||
+            !appVersion ||
+            !brand ||
+            !model ||
+            !systemName ||
+            !systemVersion ||
+            !deviceId
+        ) {
+            console.warn('[PulseDebugger] Missing required device info fields:', {
+                appName,
+                appVersion,
+                brand,
+                model,
+                systemName,
+                systemVersion,
+                deviceId,
+                buildNumber,
+            });
+            return null;
         }
-
-        // Generate a pseudo-random ID as last resort
-        return `mock-${Platform.OS}-id-${Date.now().toString(36)}`;
-    } catch (error) {
-        console.error('[pulse-debugger] Error getting device ID:', error);
-        return DEFAULT_INFO.deviceId;
-    }
-}
-
-/**
- * Gets Expo-specific device information
- */
-async function getExpoDeviceInfo(deviceId: string): Promise<DeviceInfo> {
-    try {
-        const Constants = require('expo-constants').default;
-        const Device = require('expo-device');
-
-        // Extract app name with fallbacks for different Expo SDK versions
-        const appName =
-            Constants.manifest?.name ||
-            Constants.manifest2?.extra?.expoClient?.name ||
-            DEFAULT_INFO.appName;
-
-        // Extract versions with fallbacks
-        const appVersion =
-            Constants.manifest?.version ||
-            Constants.manifest2?.extra?.expoClient?.version ||
-            DEFAULT_INFO.appVersion;
-
-        const buildNumber =
-            Constants.manifest?.revisionId ||
-            Constants.manifest2?.extra?.expoClient?.buildNumber ||
-            DEFAULT_INFO.buildNumber;
 
         return {
-            deviceId,
-            model: Device.modelName || DEFAULT_INFO.model,
-            brand: Device.brand || DEFAULT_INFO.brand,
-            systemName: Device.osName || Platform.OS || DEFAULT_INFO.systemName,
-            systemVersion: Device.osVersion || DEFAULT_INFO.systemVersion,
             appName,
             appVersion,
+            brand,
             buildNumber,
-        };
-    } catch (error) {
-        console.error('[pulse-debugger] Error getting Expo device info:', error);
-        return { ...DEFAULT_INFO, deviceId };
-    }
-}
-
-/**
- * Gets react-native-device-info specific information
- */
-async function getDeviceInfoPackageInfo(deviceId: string): Promise<DeviceInfo> {
-    try {
-        const DeviceInfo = require('react-native-device-info');
-
-        return {
+            model,
+            systemName,
+            systemVersion,
             deviceId,
-            model: DeviceInfo.getModel() || DEFAULT_INFO.model,
-            brand: DeviceInfo.getBrand() || DEFAULT_INFO.brand,
-            systemName: DeviceInfo.getSystemName() || Platform.OS || DEFAULT_INFO.systemName,
-            systemVersion: DeviceInfo.getSystemVersion() || DEFAULT_INFO.systemVersion,
-            appName: DeviceInfo.getApplicationName() || DEFAULT_INFO.appName,
-            appVersion: DeviceInfo.getVersion() || DEFAULT_INFO.appVersion,
-            buildNumber: DeviceInfo.getBuildNumber() || DEFAULT_INFO.buildNumber,
         };
     } catch (error) {
-        console.error('[pulse-debugger] Error getting device-info package data:', error);
-        return { ...DEFAULT_INFO, deviceId };
-    }
-}
-
-/**
- * Retrieves device information using the best available method
- */
-export const getDeviceInfo = async (): Promise<DeviceInfo> => {
-    try {
-        // Detect environment
-        const { isExpo, isDeviceInfoAvailable } = detectEnvironment();
-
-        // Get device ID
-        const deviceId = await getDeviceId(isExpo, isDeviceInfoAvailable);
-
-        // Collect device info based on available libraries
-        let deviceInfo: DeviceInfo;
-
-        if (isExpo) {
-            deviceInfo = await getExpoDeviceInfo(deviceId);
-        } else if (isDeviceInfoAvailable) {
-            deviceInfo = await getDeviceInfoPackageInfo(deviceId);
-        } else {
-            // Fallback to basic info if neither library is available
-            deviceInfo = {
-                ...DEFAULT_INFO,
-                deviceId,
-                systemName: Platform.OS || DEFAULT_INFO.systemName,
-            };
-        }
-
-        // Convert DeviceInfo to Record<string, string>
-        return { ...deviceInfo };
-    } catch (error) {
-        console.error('[pulse-debugger] Failed to get device info:', error);
-        // Convert DeviceInfo to Record<string, string>
-        return { ...DEFAULT_INFO };
+        console.error('[PulseDebugger] Error getting device info:', error);
+        return null;
     }
 };

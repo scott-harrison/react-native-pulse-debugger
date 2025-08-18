@@ -8,20 +8,33 @@ import {
 import { generateUUID } from '@react-native-pulse-debugger/utils';
 import { PulseDebuggerConfig } from '../types';
 import { getDeviceInfo } from '../utils/deviceInfo';
+import { getDevelopmentHost } from '../utils/networkUtils';
 
 export class WebSocketManager {
     private ws: WebSocket | null = null;
-    private isConnecting: boolean = false;
+    private isConnecting = false;
     private reconnectTimeout: NodeJS.Timeout | null = null;
     private eventQueue: PulseEvent[] = [];
     private batchTimeout: NodeJS.Timeout | null = null;
-    private lastSentTime: number = 0;
+    private lastSentTime = 0;
     private readonly BATCH_INTERVAL = 100;
     private readonly THROTTLE_INTERVAL = 100;
     private deviceDetails: DeviceInfo | null = null;
     private session: Session | null = null;
 
-    constructor(private config: PulseDebuggerConfig) {}
+    constructor(private config: PulseDebuggerConfig) {
+        this.initializeAutoDiscovery();
+    }
+
+    private async initializeAutoDiscovery(): Promise<void> {
+        if (!this.config.host || this.config.host === 'localhost') {
+            const host = await getDevelopmentHost();
+            if (host) {
+                this.config.host = host.host;
+                this.config.port = host.port;
+            }
+        }
+    }
 
     private async initializeSession(): Promise<void> {
         // if session already exists, skip initialization
@@ -31,6 +44,10 @@ export class WebSocketManager {
 
         // fetch device details
         this.deviceDetails = await getDeviceInfo();
+        if (!this.deviceDetails?.deviceId || !this.deviceDetails.appName) {
+            console.error('[PulseDebuggerLib] - [WebSocketManager] Failed to fetch device details');
+            return;
+        }
 
         // create a unique session ID using deviceId and appName
         const { deviceId, appName } = this.deviceDetails;
@@ -74,12 +91,39 @@ export class WebSocketManager {
                 this.scheduleReconnect();
             }
         };
+        this.ws.onerror = (event: Event) => {
+            // Use proper WebSocket error event typing
+            const errorEvent = event as ErrorEvent;
+            const ws = event.target as WebSocket;
 
-        this.ws.onerror = event => {
-            // Only log non-connection-refused errors
-            const error = event as unknown as Error;
-            if (!error.message?.toLowerCase().includes('connection refused')) {
-                console.error('PulseDebugger WebSocket error:', error);
+            // Don't handle errors if the connection is already closed
+            if (ws.readyState === WebSocket.CLOSED) {
+                return;
+            }
+
+            // Extract error information safely
+            const errorMessage =
+                errorEvent.message || errorEvent.error?.message || 'Unknown WebSocket error';
+            const errorType = errorEvent.error?.name || 'WebSocketError';
+
+            // Filter out common connection errors that don't need logging
+            const shouldLogError =
+                !this.isConnectionRefusedError(errorMessage) &&
+                !this.isNetworkUnreachableError(errorMessage);
+
+            if (shouldLogError) {
+                console.error('[PulseDebugger] WebSocket error:', {
+                    type: errorType,
+                    message: errorMessage,
+                    readyState: ws.readyState,
+                    url: ws.url,
+                    timestamp: new Date().toISOString(),
+                });
+            }
+
+            // Update connection state if we're still connecting
+            if (this.isConnecting) {
+                this.isConnecting = false;
             }
         };
 
@@ -109,7 +153,6 @@ export class WebSocketManager {
 
     sendEvent(type: EventType, payload: PulseEventPayload[EventType]): void {
         if (!this.session) {
-            console.warn('No session found, skipping event');
             return;
         }
 
@@ -117,7 +160,7 @@ export class WebSocketManager {
             type,
             payload,
             eventId: generateUUID(),
-            sessionId: this.session?.id,
+            sessionId: this.session.id,
             timestamp: Date.now(),
         };
 
@@ -226,5 +269,37 @@ export class WebSocketManager {
 
     isConnected(): boolean {
         return this.ws?.readyState === WebSocket.OPEN;
+    }
+
+    /**
+     * Check if the error is a connection refused error
+     */
+    private isConnectionRefusedError(message: string): boolean {
+        const connectionRefusedPatterns = [
+            'connection refused',
+            'connection reset',
+            'connection failed',
+            'network is unreachable',
+            'no route to host',
+            'connection timed out',
+        ];
+
+        const lowerMessage = message.toLowerCase();
+        return connectionRefusedPatterns.some(pattern => lowerMessage.includes(pattern));
+    }
+
+    /**
+     * Check if the error is a network unreachable error
+     */
+    private isNetworkUnreachableError(message: string): boolean {
+        const networkUnreachablePatterns = [
+            'network is unreachable',
+            'no route to host',
+            'host unreachable',
+            'network unreachable',
+        ];
+
+        const lowerMessage = message.toLowerCase();
+        return networkUnreachablePatterns.some(pattern => lowerMessage.includes(pattern));
     }
 }

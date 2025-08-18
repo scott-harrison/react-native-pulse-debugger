@@ -24,7 +24,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         transition={{ duration: 0.2 }}
-                        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50"
+                        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-4/5 max-w-4xl overflow-auto"
                     >
                         {children}
                     </motion.div>

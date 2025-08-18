@@ -2,22 +2,15 @@ import Button from '@/components/button';
 import Fireflies from '@/components/fireflies';
 import SessionsWindow from '@/components/SessionsWindow';
 import Modal from '@/components/modal';
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useState } from 'react';
 import useSessionStore from '@/store/sessionStore';
 import { motion } from 'framer-motion';
 import { useConnectionCheck } from '@/hooks/useConnectionCheck';
 
 const WelcomeScreen: React.FC = () => {
-    const { sessions, removeCurrentSession, currentSessionId } = useSessionStore(state => state);
+    const { sessions } = useSessionStore(state => state);
     const [showSessions, setShowSessions] = useState(false);
     useConnectionCheck();
-
-    useLayoutEffect(() => {
-        // Only remove session if we're on the welcome screen and have a current session
-        if (currentSessionId && window.location.pathname === '/') {
-            removeCurrentSession();
-        }
-    }, [currentSessionId]);
 
     return (
         <div className="relative flex flex-col items-center justify-center h-full bg-gradient-to-b from-gray-900 to-purple-950 text-white">
@@ -41,7 +34,7 @@ const WelcomeScreen: React.FC = () => {
                             <Button
                                 variant="primary"
                                 size="md"
-                                onClick={() => setShowSessions(true)}
+                                onClick={() => { setShowSessions(true); }}
                             >
                                 Get Started
                             </Button>
@@ -56,8 +49,8 @@ const WelcomeScreen: React.FC = () => {
                     </div>
                 </motion.div>
             )}
-            <Modal isOpen={showSessions} onClose={() => setShowSessions(false)}>
-                <SessionsWindow onClose={() => setShowSessions(false)} />
+            <Modal isOpen={showSessions} onClose={() => { setShowSessions(false); }}>
+                <SessionsWindow onClose={() => { setShowSessions(false); }} />
             </Modal>
             <Fireflies />
         </div>

@@ -2,15 +2,15 @@ import { PulseDebugger } from '../index';
 
 type ReduxState = Record<string, unknown>;
 
-type ReduxAction<T = unknown> = {
+interface ReduxAction<T = unknown> {
     type: string;
     payload?: T;
-};
+}
 
-type ReduxStore = {
+interface ReduxStore {
     getState: () => ReduxState;
     dispatch: <T>(action: ReduxAction<T>) => ReduxAction<T>;
-};
+}
 
 type ReduxDispatch = <T>(action: ReduxAction<T>) => ReduxAction<T>;
 
@@ -18,12 +18,10 @@ type ReduxMiddleware = (
     store: ReduxStore
 ) => (next: ReduxDispatch) => <T>(action: ReduxAction<T>) => ReduxAction<T>;
 
-type StateDiff = {
-    [key: string]: {
+type StateDiff = Record<string, {
         prev: unknown;
         next: unknown;
-    };
-};
+    }>;
 
 export class ReduxInterceptor {
     private pulse: PulseDebugger;

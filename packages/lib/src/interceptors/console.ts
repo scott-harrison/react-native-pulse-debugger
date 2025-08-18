@@ -5,8 +5,14 @@ type ConsoleMethod = 'log' | 'info' | 'warn' | 'error' | 'debug';
 
 export class ConsoleInterceptor {
     private pulse: PulseDebugger;
-    private originalConsole: any;
-    private isIntercepting: boolean = false;
+    private originalConsole: {
+        log: typeof console.log;
+        info: typeof console.info;
+        warn: typeof console.warn;
+        error: typeof console.error;
+        debug: typeof console.debug;
+    };
+    private isIntercepting = false;
 
     constructor(pulse: PulseDebugger) {
         this.pulse = pulse;
@@ -22,7 +28,7 @@ export class ConsoleInterceptor {
 
     isBlacklisted(message: string) {
         const config = this.pulse.getConfig();
-        const blacklist = config?.consoleBlacklist;
+        const blacklist = config.consoleBlacklist;
 
         if (!blacklist) return false;
 
@@ -81,7 +87,7 @@ export class ConsoleInterceptor {
                         this.pulse.sendConsoleEvent({
                             type: method,
                             message,
-                            data: error ? null : data?.length ? data : null,
+                            data: error ? null : data.length ? data : null,
                             stack: error?.stack,
                         });
                     }

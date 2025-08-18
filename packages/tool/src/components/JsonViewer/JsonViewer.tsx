@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { cva } from 'class-variance-authority';
 import { ClipboardIcon } from 'lucide-react';
 import { JSONValue } from '@react-native-pulse-debugger/types';
+import { JSONViewerProps } from './JsonViewer.types';
 
 const jsonStyles = cva('font-mono text-sm', {
     variants: {
@@ -20,7 +21,7 @@ const jsonStyles = cva('font-mono text-sm', {
 const JSONViewer: React.FC<JSONViewerProps> = ({
     data,
     allowCopy = true,
-    defaultExpanded = true,
+    defaultExpandedLevels = 1,
 }) => {
     const [expanded, setExpanded] = useState<Map<string, boolean>>(new Map());
 
@@ -34,11 +35,12 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
     };
 
     // Initialize expansion state
-    const isExpanded = (path: string): boolean => {
+    const isExpanded = (path: string, depth: number): boolean => {
         if (!expanded.has(path)) {
-            expanded.set(path, defaultExpanded);
+            // Expand if depth is less than defaultExpandedLevels
+            expanded.set(path, depth < defaultExpandedLevels);
         }
-        return expanded.get(path) ?? defaultExpanded;
+        return expanded.get(path) ?? false;
     };
 
     // Copy JSON to clipboard
@@ -50,8 +52,8 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
     // Render JSON node
     const renderNode = (
         node: JSONValue,
-        path: string = '',
-        depth: number = 0,
+        path = '',
+        depth = 0,
         key?: string | number
     ): React.ReactNode | null => {
         const renderKey = () => {
@@ -102,27 +104,41 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
 
         if (Array.isArray(node)) {
             const pathKey = `${path}.array`;
-            const isNodeExpanded = isExpanded(pathKey);
+            const isNodeExpanded = isExpanded(pathKey, depth);
             return (
                 <div className="flex flex-col">
                     <div className="flex items-center gap-1">
                         <span
                             className={jsonStyles({ type: 'bracket' }) + ' cursor-pointer w-4'}
-                            onClick={() => toggleNode(pathKey)}
+                            onClick={() => {
+                                toggleNode(pathKey);
+                            }}
                         >
                             {isNodeExpanded ? '▼' : '▶'}
                         </span>
                         {key !== undefined && (
                             <>
-                                <span className={jsonStyles({ type: 'key' })}>{key}</span>
-                                <span>:</span>
+                                <span
+                                    className={
+                                        jsonStyles({ type: 'key' }) +
+                                        ' cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-1 rounded'
+                                    }
+                                    onClick={() => {
+                                        toggleNode(pathKey);
+                                    }}
+                                >
+                                    {key}
+                                </span>
+                                {isNodeExpanded && <span>:</span>}
                             </>
                         )}
-                        <span className={jsonStyles({ type: 'bracket' })}>[ </span>
-                        <span className={jsonStyles({ type: 'meta' })}>{node.length} items</span>
+                        {isNodeExpanded && (
+                            <span className={jsonStyles({ type: 'bracket' })}>[ </span>
+                        )}
+                        <span className={jsonStyles({ type: 'meta' })}>- {node.length} items</span>
                     </div>
                     {isNodeExpanded && (
-                        <div className="ml-4">
+                        <div className="ml-8">
                             {node.map((item, index) => (
                                 <div key={index}>
                                     {renderNode(item, `${path}.${index}`, depth + 1, index)}
@@ -137,28 +153,42 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
 
         if (typeof node === 'object') {
             const pathKey = `${path}.object`;
-            const isNodeExpanded = isExpanded(pathKey);
+            const isNodeExpanded = isExpanded(pathKey, depth);
             const entries = Object.entries(node);
             return (
                 <div className="flex flex-col">
                     <div className="flex items-center gap-1">
                         <span
                             className={jsonStyles({ type: 'bracket' }) + ' cursor-pointer w-4'}
-                            onClick={() => toggleNode(pathKey)}
+                            onClick={() => {
+                                toggleNode(pathKey);
+                            }}
                         >
                             {isNodeExpanded ? '▼' : '▶'}
                         </span>
                         {key !== undefined && (
                             <>
-                                <span className={jsonStyles({ type: 'key' })}>{key}</span>
-                                <span>:</span>
+                                <span
+                                    className={
+                                        jsonStyles({ type: 'key' }) +
+                                        ' cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-1 rounded'
+                                    }
+                                    onClick={() => {
+                                        toggleNode(pathKey);
+                                    }}
+                                >
+                                    {key}
+                                </span>
+                                {isNodeExpanded && <span>:</span>}
                             </>
                         )}
-                        <span className={jsonStyles({ type: 'bracket' })}>{'{'}</span>
+                        {isNodeExpanded && (
+                            <span className={jsonStyles({ type: 'bracket' })}>{'{'}</span>
+                        )}
                     </div>
                     {isNodeExpanded && (
-                        <div className="ml-4">
-                            {entries.map(([entryKey, value], index) => (
+                        <div className="ml-8">
+                            {entries.map(([entryKey, value], _index) => (
                                 <div key={entryKey}>
                                     {renderNode(value, `${path}.${entryKey}`, depth + 1, entryKey)}
                                 </div>

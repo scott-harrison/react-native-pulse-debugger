@@ -16,8 +16,10 @@
         "sourceMap": true,
         "baseUrl": ".",
         "paths": {
-            "@pulse-debugger/types/*": ["packages/types/src/*"]
+            "@react-native-pulse-debugger/types/*": ["packages/types/src/*"],
+            "@react-native-pulse-debugger/utils/*": ["packages/utils/src/*"]
         }
     },
-    "references": [{ "path": "packages/types" }]
+    "include": ["src/**/*", "package.json"],
+    "references": [{ "path": "packages/types" }, { "path": "packages/utils" }]
 }
