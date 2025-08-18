@@ -20,6 +20,10 @@ interface ConstantsModule {
         android?: { versionCode?: string };
     };
     manifest2?: { id?: string };
+    deviceName?: string;
+    platform?: {
+        ios?: { buildNumber?: string | null };
+    };
 }
 
 interface DeviceModule {
@@ -29,31 +33,44 @@ interface DeviceModule {
     osVersion: string;
 }
 
-// Conditional imports with typed variables
-let DeviceInfo: DeviceInfoModule | null = null;
-try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    DeviceInfo = require('react-native-device-info');
-} catch (e) {
-    DeviceInfo = null;
-}
+// Try to load modules dynamically
+const loadModules = () => {
+    let DeviceInfo: DeviceInfoModule | null = null;
+    let Constants: ConstantsModule | null = null;
+    let Device: DeviceModule | null = null;
 
-let Constants: ConstantsModule | null = null;
-let Device: DeviceModule | null = null;
-try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const expoConstants = require('expo-constants');
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const expoDevice = require('expo-device');
-    Constants = expoConstants.default;
-    Device = expoDevice.default;
-} catch (e) {
-    Constants = null;
-    Device = null;
-}
+    // Try to load react-native-device-info (for native React Native)
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        DeviceInfo = require('react-native-device-info');
+    } catch {
+        // Swallow error and continue
+    }
+
+    // Try to load expo modules (for Expo)
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const expoConstants = require('expo-constants');
+        Constants = expoConstants.default;
+    } catch {
+        // Swallow error and continue
+    }
+
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const expoDevice = require('expo-device');
+        Device = expoDevice.default;
+    } catch {
+        // Swallow error and continue
+    }
+
+    return { DeviceInfo, Constants, Device };
+};
 
 export const getDeviceInfo = async () => {
     try {
+        const { DeviceInfo, Constants, Device } = loadModules();
+
         let appName: string | undefined,
             appVersion: string | undefined,
             brand: string | undefined,
@@ -63,18 +80,7 @@ export const getDeviceInfo = async () => {
             systemVersion: string | undefined,
             deviceId: string | undefined;
 
-        if (Constants && Device) {
-            appName = Constants.expoConfig?.name;
-            appVersion = Constants.expoConfig?.version;
-            brand = Device.brand;
-            buildNumber =
-                Constants.expoConfig?.ios?.buildNumber ||
-                Constants.expoConfig?.android?.versionCode;
-            model = Device.deviceName;
-            systemName = Platform.OS;
-            systemVersion = Device.osVersion;
-            deviceId = Constants.manifest2?.id;
-        } else if (DeviceInfo) {
+        if (DeviceInfo) {
             appName = DeviceInfo.getApplicationName();
             appVersion = DeviceInfo.getVersion();
             brand = DeviceInfo.getBrand();
@@ -83,8 +89,37 @@ export const getDeviceInfo = async () => {
             systemName = DeviceInfo.getSystemName();
             systemVersion = DeviceInfo.getSystemVersion();
             deviceId = await DeviceInfo.getUniqueId();
+        } else if (Constants) {
+            appName = Constants.expoConfig?.name;
+            appVersion = Constants.expoConfig?.version;
+
+            if (Device) {
+                brand = Device.brand;
+                model = Device.deviceName;
+                systemVersion = Device.osVersion;
+            } else {
+                // Fallback using Constants data
+                brand = Platform.OS === 'ios' ? 'Apple' : 'Android';
+                model = Constants.deviceName || 'Unknown Device';
+                systemVersion = 'Unknown';
+            }
+
+            buildNumber =
+                Constants.expoConfig?.ios?.buildNumber ||
+                Constants.expoConfig?.android?.versionCode ||
+                Constants.platform?.ios?.buildNumber ||
+                undefined;
+            systemName = Platform.OS;
+            deviceId = Constants.manifest2?.id;
         } else {
-            return null;
+            appName = 'Unknown App';
+            appVersion = '1.0.0';
+            brand = Platform.OS === 'ios' ? 'Apple' : 'Android';
+            buildNumber = '1';
+            model = 'Unknown Device';
+            systemName = Platform.OS;
+            systemVersion = 'Unknown';
+            deviceId = `device-${Date.now()}`;
         }
 
         if (
@@ -96,6 +131,16 @@ export const getDeviceInfo = async () => {
             !systemVersion ||
             !deviceId
         ) {
+            console.warn('[PulseDebugger] Missing required device info fields:', {
+                appName,
+                appVersion,
+                brand,
+                model,
+                systemName,
+                systemVersion,
+                deviceId,
+                buildNumber,
+            });
             return null;
         }
 
@@ -110,6 +155,7 @@ export const getDeviceInfo = async () => {
             deviceId,
         };
     } catch (error) {
+        console.error('[PulseDebugger] Error getting device info:', error);
         return null;
     }
 };

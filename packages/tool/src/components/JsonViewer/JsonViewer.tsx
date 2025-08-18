@@ -118,7 +118,17 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
                         </span>
                         {key !== undefined && (
                             <>
-                                <span className={jsonStyles({ type: 'key' })}>{key}</span>
+                                <span
+                                    className={
+                                        jsonStyles({ type: 'key' }) +
+                                        ' cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-1 rounded'
+                                    }
+                                    onClick={() => {
+                                        toggleNode(pathKey);
+                                    }}
+                                >
+                                    {key}
+                                </span>
                                 {isNodeExpanded && <span>:</span>}
                             </>
                         )}
@@ -158,7 +168,17 @@ const JSONViewer: React.FC<JSONViewerProps> = ({
                         </span>
                         {key !== undefined && (
                             <>
-                                <span className={jsonStyles({ type: 'key' })}>{key}</span>
+                                <span
+                                    className={
+                                        jsonStyles({ type: 'key' }) +
+                                        ' cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-1 rounded'
+                                    }
+                                    onClick={() => {
+                                        toggleNode(pathKey);
+                                    }}
+                                >
+                                    {key}
+                                </span>
                                 {isNodeExpanded && <span>:</span>}
                             </>
                         )}

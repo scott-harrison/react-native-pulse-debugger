@@ -122,13 +122,12 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
                         }
                     };
                 }}
-                className={cn('flex flex-1 h-full overflow-y-auto', className)}
+                className={cn('flex flex-1 h-full overflow-hidden', className)}
             >
                 <div
-                    className="flex flex-col"
+                    className="flex flex-col flex-shrink-0 overflow-y-auto"
                     style={{
                         width: leftPanelWidth,
-                        flexShrink: 0,
                     }}
                 >
                     {leftPanel}
